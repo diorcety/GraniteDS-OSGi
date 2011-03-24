@@ -1,0 +1,102 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.graniteds-osgi</groupId>
+        <artifactId>granite</artifactId>
+        <version>2.2.0.GA</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.graniteds-osgi</groupId>
+    <artifactId>granite-gravity</artifactId>
+
+    <name>GraniteDS - OSGi :: Gravity</name>
+
+    <packaging>bundle</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.graniteds</groupId>
+            <artifactId>granite-core</artifactId>
+            <version>2.2.0.GA</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>${osgi.compendium.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>${osgi.core.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+            <version>${ipojo.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>${servlet.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}
+                        </Bundle-SymbolicName>
+                        <Activator>org.granite.gravity.osgi.Activator
+                        </Activator>
+                        <Import-Package>
+                            org.apache.log4j;resolution:=optional,
+                            org.mortbay.jetty.*;resolution:=optional,
+                            org.apache.activemq.*;resolution:=optional,
+                            javax.jms.*;resolution:=optional,
+                            com.google.apphosting.*;resolution:=optional,
+                            com.google.appengine.*;resolution:=optional,
+                            org.jboss.*;resolution:=optional,
+                            org.mortbay.*;resolution:=optional,
+                            org.apache.catalina.*;resolution:=optional,
+                            *
+                        </Import-Package>
+                        <Export-Package>
+                            org.granite.gravity.*;version=${project.version};-split-package:=merge-first,
+                        </Export-Package>
+                        <Private-Package>
+                            org.granite.gravity.osgi.*
+                        </Private-Package>
+                        <_nouses>true</_nouses>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-ipojo-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>ipojo-bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
