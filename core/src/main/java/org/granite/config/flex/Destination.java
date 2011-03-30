@@ -38,13 +38,13 @@ public class Destination implements Serializable {
 
     private static final String SECURIZER_PROPERTY_KEY = "securizer";
 
-    private final String id;
-    private final List<String> channelRefs;
-    private final XMap properties;
-    private final List<String> roles;
-    private final Adapter adapter;
-    private final Class<?> scannedClass;
-    private final DestinationSecurizer securizer;
+    protected String id;
+    protected List<String> channelRefs;
+    protected XMap properties;
+    protected List<String> roles;
+    protected Adapter adapter;
+    protected Class<?> scannedClass;
+    protected DestinationSecurizer securizer;
 
     private DestinationRemoveListener removeListener;
 

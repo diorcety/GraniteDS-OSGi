@@ -50,9 +50,9 @@ public class ServicesConfig implements ScannedItemHandler {
     private static final Logger log = Logger.getLogger(ServicesConfig.class);
     private static final String SERVICES_CONFIG_PROPERTIES = "META-INF/services-config.properties";
 
-    private final Map<String, Service> services = new HashMap<String, Service>();
-    private final Map<String, Channel> channels = new HashMap<String, Channel>();
-    private final Map<String, Factory> factories = new HashMap<String, Factory>();
+    protected Map<String, Service> services = new HashMap<String, Service>();
+    protected Map<String, Channel> channels = new HashMap<String, Channel>();
+    protected Map<String, Factory> factories = new HashMap<String, Factory>();
 
 
     ///////////////////////////////////////////////////////////////////////////

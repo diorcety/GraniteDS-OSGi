@@ -81,11 +81,13 @@
                             flex.messaging.*,
                             org.granite.context.*;version=${project.version},
                             org.granite.config.*;version=${project.version};-split-package:=merge-first,
-                            org.granite.messaging.*;version=${project.version},
+                            org.granite.messaging.*;version=${project.version};-split-package:=merge-first,
                             org.granite.jmx.*;version=${project.version},
                             org.granite.scan.*;version=${project.version},
                             org.granite.util.*;version=${project.version},
-                            org.granite.logging.*;version=${project.version};-split-package:=merge-first
+                            org.granite.logging.*;version=${project.version};-split-package:=merge-first,
+                            org.granite.osgi.config.*;version=${project.version},
+                            org.granite.osgi.service.*;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.apache.log4j;resolution:=optional,
@@ -112,6 +114,7 @@
                             org.granite.messaging.amf.io.convert.impl,
                             org.granite.osgi.*;-split-package:=merge-first,
                         </Private-Package>
+                        <Bundle-Activator>org.granite.osgi.impl.Activator</Bundle-Activator>
                         <_nouses>true</_nouses>
                     </instructions>
                 </configuration>
