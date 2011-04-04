@@ -20,12 +20,27 @@
 
 package org.granite.config.flex;
 
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
+
+import org.granite.logging.Logger;
+import org.granite.osgi.util.Converter;
 import org.granite.util.XMap;
+
+import java.util.Dictionary;
 
 /**
  * @author Franck WOLFF
  */
-public class Channel {
+@Component
+@Provides
+public class Channel implements ChannelInterface {
+
+    private static final Logger LOG = Logger.getLogger(Channel.class);
 
     private static final String LEGACY_XML = "serialization/legacy-xml";
     private static final String LEGACY_COLLECTION = "serialization/legacy-collection";
@@ -38,13 +53,16 @@ public class Channel {
     private final boolean legacyXml;
     private final boolean legacyCollection;
 
-    public Channel(String id, String className, EndPoint endPoint, XMap properties) {
+    public Channel(String id, String className, EndPoint endPoint,
+                   XMap properties) {
         this.id = id;
         this.className = className;
         this.endPoint = endPoint;
         this.properties = properties;
-        this.legacyCollection = Boolean.TRUE.toString().equals(properties.get(LEGACY_COLLECTION));
-        this.legacyXml = Boolean.TRUE.toString().equals(properties.get(LEGACY_XML));
+        this.legacyCollection = Boolean.TRUE.toString().equals(
+                properties.get(LEGACY_COLLECTION));
+        this.legacyXml = Boolean.TRUE.toString().equals(
+                properties.get(LEGACY_XML));
     }
 
     public String getId() {
@@ -80,7 +98,8 @@ public class Channel {
 
         XMap endPointElt = element.getOne("endpoint");
         if (endPointElt == null)
-            throw new RuntimeException("Excepting a 'endpoint' element in 'channel-definition': " + id);
+            throw new RuntimeException(
+                    "Excepting a 'endpoint' element in 'channel-definition': " + id);
         EndPoint endPoint = EndPoint.forElement(endPointElt);
 
         XMap properties = new XMap(element.getOne("properties"));
@@ -95,7 +114,8 @@ public class Channel {
 
         Channel channel = (Channel) o;
 
-        if (id != null ? !id.equals(channel.id) : channel.id != null) return false;
+        if (id != null ? !id.equals(channel.id) : channel.id != null)
+            return false;
 
         return true;
     }
@@ -115,5 +135,76 @@ public class Channel {
                 ", legacyXml=" + legacyXml +
                 ", legacyCollection=" + legacyCollection +
                 '}';
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // OSGi
+
+    @Requires
+    private ServicesConfigInterface servicesConfig;
+
+    public String ENDPOINT_URI;
+
+    public String ENDPOINT_CLASS;
+
+    public Channel() {
+        this.id = null;
+        this.className = null;
+        this.endPoint = null;
+        this.properties = new XMap();
+        this.legacyCollection = false;
+        this.legacyXml = false;
+    }
+
+    @Property(name = "ID", mandatory = true)
+    private void setId(String id) {
+        this.id = id;
+    }
+
+    @Property(name = "CLASS", mandatory = false,
+              value = "mx.messaging.channels.AMFChannel")
+    private void setClass(String className) {
+        this.className = className;
+    }
+
+    @Property(name = "ENDPOINT_URI", mandatory = true)
+    private void setEndPointURI(String epURI) {
+        this.ENDPOINT_URI = epURI;
+        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+    }
+
+    @Property(name = "ENDPOINT_CLASS", mandatory = false,
+              value = "flex.messaging.endpoints.AMFEndpoint")
+    private void setEndPointClass(String epClass) {
+        this.ENDPOINT_CLASS = epClass;
+        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+    }
+
+
+    @Property(name = "PROPERTIES", mandatory = false)
+    private void setProperties(Dictionary<String, String> properties) {
+        this.properties = Converter.getXMap(properties);
+    }
+
+    @Validate
+    public void starting() {
+        start();
+    }
+
+    public void start() {
+        LOG.debug("Start Channel:" + this.id);
+        servicesConfig.addChannel(this);
+    }
+
+    @Invalidate
+    public void stopping() {
+        stop();
+    }
+
+    public void stop() {
+        LOG.debug("Stop Channel:" + this.id);
+        if (servicesConfig != null) {
+            servicesConfig.removeChannel(this.id);
+        }
     }
 }

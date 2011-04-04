@@ -20,15 +20,31 @@
 
 package org.granite.config.flex;
 
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceController;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+
+import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author Franck WOLFF
  */
-public class Service {
+@Component
+@Provides
+public class Service implements ServiceInterface {
+
+    private static final Logger LOG = Logger.getLogger(Service.class);
 
     protected String id;
     protected String className;
@@ -38,7 +54,9 @@ public class Service {
     protected Map<String, Destination> destinations;
 
 
-    public Service(String id, String className, String messageTypes, Adapter defaultAdapter, Map<String, Adapter> adapters, Map<String, Destination> destinations) {
+    public Service(String id, String className, String messageTypes,
+                   Adapter defaultAdapter, Map<String, Adapter> adapters,
+                   Map<String, Destination> destinations) {
         this.id = id;
         this.className = className;
         this.messageTypes = messageTypes;
@@ -120,11 +138,14 @@ public class Service {
 
         Map<String, Destination> destinations = new HashMap<String, Destination>();
         for (XMap destinationElt : element.getAll("destination")) {
-            Destination destination = Destination.forElement(destinationElt, defaultAdapter, adaptersMap);
+            Destination destination = Destination.forElement(destinationElt,
+                                                             defaultAdapter,
+                                                             adaptersMap);
             destinations.put(destination.getId(), destination);
         }
 
-        return new Service(id, className, messageTypes, defaultAdapter, adaptersMap, destinations);
+        return new Service(id, className, messageTypes, defaultAdapter,
+                           adaptersMap, destinations);
     }
 
     @Override
@@ -134,7 +155,8 @@ public class Service {
 
         Service service = (Service) o;
 
-        if (id != null ? !id.equals(service.id) : service.id != null) return false;
+        if (id != null ? !id.equals(service.id) : service.id != null)
+            return false;
 
         return true;
     }
@@ -154,5 +176,123 @@ public class Service {
                 ", defaultAdapter=" + defaultAdapter +
                 ", destinations=" + destinations +
                 '}';
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // OSGi
+
+    @Requires
+    private ServicesConfigInterface servicesConfig;
+
+    @Property
+    public Collection<String> ADAPTER_LIST;
+
+    @Property
+    public String DEFAULT_ADAPTER;
+
+    //
+    @ServiceController
+    private boolean state = false;
+
+    private boolean started = false;
+
+    public Service() {
+        this.id = null;
+        this.className = null;
+        this.messageTypes = null;
+        this.defaultAdapter = null;
+        this.adapters = new HashMap<String, Adapter>();
+        this.destinations = new HashMap<String, Destination>();
+    }
+
+    @Property(name = "ID", mandatory = true)
+    private void setId(String id) {
+        this.id = id;
+    }
+
+    @Property(name = "MESSAGETYPES", mandatory = false,
+              value = "flex.messaging.messages.RemotingMessage")
+    private void setMessageTypes(String messageTypes) {
+        this.messageTypes = messageTypes;
+    }
+
+    @Property(name = "CLASS", mandatory = false,
+              value = "flex.messaging.services.RemotingService")
+    private void setClass(String className) {
+        this.className = className;
+    }
+
+    @Bind(aggregate = true, optional = true)
+    private void bindAdapter(AdapterInterface adapter) {
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
+                adapter.getId())) {
+            this.adapters.put(adapter.getId(), (Adapter) adapter);   //HACK
+
+            if (this.DEFAULT_ADAPTER != null &&
+                    this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+                this.defaultAdapter = (Adapter) adapter;    //HACK
+            }
+            checkState();
+        }
+    }
+
+    @Unbind
+    private void unbindAdapter(AdapterInterface adapter) {
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
+                adapter.getId())) {
+            this.adapters.remove(adapter.getId());
+
+            if (this.DEFAULT_ADAPTER != null &&
+                    this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+                this.defaultAdapter = null;
+            }
+            checkState();
+        }
+    }
+
+    private void checkState() {
+        boolean new_state;
+        if (started && (adapters == null || ADAPTER_LIST == null
+                || adapters.size() == ADAPTER_LIST.size())) {
+            new_state = true;
+        } else {
+            new_state = false;
+        }
+        if (new_state != this.state) {
+            if (new_state)
+                start();
+            else
+                stop();
+
+            this.state = new_state;
+        }
+    }
+
+    @Validate
+    public void starting() {
+        started = true;
+        checkState();
+    }
+
+    public void start() {
+        LOG.debug("Start Service:" + this.id);
+        getDestinations().clear();
+        servicesConfig.addService(this);
+    }
+
+    @Invalidate
+    public void stopping() {
+        if (this.state) {
+            stop();
+            this.state = false;
+        }
+        started = false;
+    }
+
+    public void stop() {
+        LOG.debug("Stop Service:" + this.id);
+        if (servicesConfig != null) {
+            servicesConfig.removeService(this.id);
+        }
     }
 }

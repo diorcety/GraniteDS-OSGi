@@ -60,7 +60,8 @@ public class EndPoint {
 
         EndPoint endPoint = (EndPoint) o;
 
-        if (uri != null ? !uri.equals(endPoint.uri) : endPoint.uri != null) return false;
+        if (uri != null ? !uri.equals(endPoint.uri) : endPoint.uri != null)
+            return false;
 
         return true;
     }

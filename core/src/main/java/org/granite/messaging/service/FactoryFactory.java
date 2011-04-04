@@ -5,6 +5,7 @@ import org.granite.config.flex.Destination;
 import org.granite.config.flex.Factory;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
+import org.granite.osgi.impl.Tracker;
 import org.granite.util.ClassUtil;
 
 import java.util.Map;
@@ -48,13 +49,22 @@ public class FactoryFactory {
                                              String factoryId, String key) {
         lock.lock();
         try {
+            Factory config = context.getServicesConfig().findFactoryById(factoryId);
+
+            if (config != null && config.getProperties().get("OSGi") != null) {
+                ServiceFactory factory = Tracker.getFactory(config.getId());
+                if(factory == null)
+                    throw new ServiceException("Invalid object factory: "
+                                                       + factory);
+                return factory;
+            }
+
             ServiceFactory factory = (ServiceFactory) cache.get(key);
             if (factory == null) {
 
                 log.debug(">> No cached factory for: %s", factoryId);
 
-                Factory config = context.getServicesConfig().findFactoryById(
-                        factoryId);
+
                 if (config == null)
                     config = getDefaultFactoryConfig();
                 try {

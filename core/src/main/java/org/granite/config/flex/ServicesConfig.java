@@ -21,6 +21,13 @@
 package org.granite.config.flex;
 
 import flex.messaging.messages.RemotingMessage;
+
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Validate;
+
 import org.granite.config.api.Configuration;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.annotations.RemoteDestination;
@@ -30,24 +37,34 @@ import org.granite.scan.Scanner;
 import org.granite.scan.ScannerFactory;
 import org.granite.util.ClassUtil;
 import org.granite.util.XMap;
+
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
  * @author Franck WOLFF
  */
-public class ServicesConfig implements ScannedItemHandler {
+@Component
+@Instantiate
+@Provides(specifications = ServicesConfigInterface.class)
+public class ServicesConfig implements
+        ScannedItemHandler, ServicesConfigInterface {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields.
 
-    private static final Logger log = Logger.getLogger(ServicesConfig.class);
+    private static final Logger LOG = Logger.getLogger(ServicesConfig.class);
     private static final String SERVICES_CONFIG_PROPERTIES = "META-INF/services-config.properties";
 
     protected Map<String, Service> services = new HashMap<String, Service>();
@@ -58,13 +75,15 @@ public class ServicesConfig implements ScannedItemHandler {
     ///////////////////////////////////////////////////////////////////////////
     // Classpath scan initialization.
 
-    private void scanConfig(String serviceConfigProperties, List<ScannedItemHandler> handlers) {
-        Scanner scanner = ScannerFactory.createScanner(this, serviceConfigProperties != null ? serviceConfigProperties : SERVICES_CONFIG_PROPERTIES);
+    private void scanConfig(String serviceConfigProperties,
+                            List<ScannedItemHandler> handlers) {
+        Scanner scanner = ScannerFactory.createScanner(this,
+                                                       serviceConfigProperties != null ? serviceConfigProperties : SERVICES_CONFIG_PROPERTIES);
         scanner.addHandlers(handlers);
         try {
             scanner.scan();
         } catch (Exception e) {
-            log.error(e, "Could not scan classpath for configuration");
+            LOG.error(e, "Could not scan classpath for configuration");
         }
     }
 
@@ -73,11 +92,12 @@ public class ServicesConfig implements ScannedItemHandler {
     }
 
     public void handleScannedItem(ScannedItem item) {
-        if ("class".equals(item.getExtension()) && item.getName().indexOf('$') == -1) {
+        if ("class".equals(item.getExtension()) && item.getName().indexOf(
+                '$') == -1) {
             try {
                 handleClass(item.loadAsClass());
             } catch (Throwable t) {
-                log.error(t, "Could not load class: %s", item);
+                LOG.error(t, "Could not load class: %s", item);
             }
         }
     }
@@ -95,18 +115,21 @@ public class ServicesConfig implements ScannedItemHandler {
                 // Lookup remoting service
                 int count = 0;
                 for (Service s : this.services.values()) {
-                    if (RemotingMessage.class.getName().equals(s.getMessageTypes())) {
+                    if (RemotingMessage.class.getName().equals(
+                            s.getMessageTypes())) {
                         service = s;
                         count++;
                     }
                 }
                 if (count == 1 && service != null)
-                    log.info("Service " + service.getId() + " selected for destination in class: " + clazz.getName());
+                    LOG.info(
+                            "Service " + service.getId() + " selected for destination in class: " + clazz.getName());
                 else
                     service = null;
             }
             if (service == null)
-                throw new RuntimeException("No service found for destination in class: " + clazz.getName());
+                throw new RuntimeException(
+                        "No service found for destination in class: " + clazz.getName());
 
             // Channel reference.
             List<String> channelIds = null;
@@ -116,9 +139,11 @@ public class ServicesConfig implements ScannedItemHandler {
                 channelIds = Collections.singletonList(anno.channel());
             else if (this.channels.size() == 1) {
                 channelIds = new ArrayList<String>(this.channels.keySet());
-                log.info("Channel " + channelIds.get(0) + " selected for destination in class: " + clazz.getName());
+                LOG.info("Channel " + channelIds.get(
+                        0) + " selected for destination in class: " + clazz.getName());
             } else {
-                log.warn("No (or ambiguous) channel definition found for destination in class: " + clazz.getName());
+                LOG.warn(
+                        "No (or ambiguous) channel definition found for destination in class: " + clazz.getName());
                 channelIds = Collections.emptyList();
             }
 
@@ -129,12 +154,15 @@ public class ServicesConfig implements ScannedItemHandler {
             else if (this.factories.isEmpty()) {
                 props.put("scope", anno.scope());
                 props.put("source", clazz.getName());
-                log.info("Default POJO factory selected for destination in class: " + clazz.getName() + " with scope: " + anno.scope());
+                LOG.info(
+                        "Default POJO factory selected for destination in class: " + clazz.getName() + " with scope: " + anno.scope());
             } else if (this.factories.size() == 1) {
                 factoryId = this.factories.keySet().iterator().next();
-                log.info("Factory " + factoryId + " selected for destination in class: " + clazz.getName());
+                LOG.info(
+                        "Factory " + factoryId + " selected for destination in class: " + clazz.getName());
             } else
-                throw new RuntimeException("No (or ambiguous) factory definition found for destination in class: " + clazz.getName());
+                throw new RuntimeException(
+                        "No (or ambiguous) factory definition found for destination in class: " + clazz.getName());
 
             if (factoryId != null)
                 props.put("factory", factoryId);
@@ -149,7 +177,9 @@ public class ServicesConfig implements ScannedItemHandler {
                     roles.add(role);
             }
 
-            Destination destination = new Destination(anno.id(), channelIds, props, roles, null, clazz);
+            Destination destination = new Destination(anno.id(), channelIds,
+                                                      props, roles, null,
+                                                      clazz);
 
             service.getDestinations().put(destination.getId(), destination);
         }
@@ -158,7 +188,9 @@ public class ServicesConfig implements ScannedItemHandler {
     ///////////////////////////////////////////////////////////////////////////
     // Static ServicesConfig loaders.
 
-    public ServicesConfig(InputStream customConfigIs, Configuration configuration, boolean scan) throws IOException, SAXException {
+    public ServicesConfig(InputStream customConfigIs,
+                          Configuration configuration,
+                          boolean scan) throws IOException, SAXException {
         if (customConfigIs != null)
             loadConfig(customConfigIs);
 
@@ -173,22 +205,31 @@ public class ServicesConfig implements ScannedItemHandler {
                 Class<?> clazz = ClassUtil.forName(factory.getClassName());
                 Method method = clazz.getMethod("getScannedItemHandler");
                 if ((Modifier.STATIC & method.getModifiers()) != 0 && method.getParameterTypes().length == 0) {
-                    ScannedItemHandler handler = (ScannedItemHandler) method.invoke(null);
+                    ScannedItemHandler handler = (ScannedItemHandler) method.invoke(
+                            null);
                     handlers.add(handler);
                 } else
-                    log.warn("Factory class %s contains an unexpected signature for method: %s", factory.getClassName(), method);
+                    LOG.warn(
+                            "Factory class %s contains an unexpected signature for method: %s",
+                            factory.getClassName(), method);
             } catch (NoSuchMethodException e) {
                 // ignore
             } catch (ClassNotFoundException e) {
-                log.error(e, "Could not load factory class: %s", factory.getClassName());
+                LOG.error(e, "Could not load factory class: %s",
+                          factory.getClassName());
             } catch (Exception e) {
-                log.error(e, "Error while calling %s.getScannedItemHandler() method", factory.getClassName());
+                LOG.error(e,
+                          "Error while calling %s.getScannedItemHandler() method",
+                          factory.getClassName());
             }
         }
-        scanConfig(configuration != null ? configuration.getFlexServicesConfigProperties() : null, handlers);
+        scanConfig(
+                configuration != null ? configuration.getFlexServicesConfigProperties() : null,
+                handlers);
     }
 
-    private void loadConfig(InputStream configIs) throws IOException, SAXException {
+    private void loadConfig(
+            InputStream configIs) throws IOException, SAXException {
         XMap doc = new XMap(configIs);
         forElement(doc);
     }
@@ -264,7 +305,8 @@ public class ServicesConfig implements ScannedItemHandler {
 
     public Destination findDestinationById(String messageType, String id) {
         for (Service service : services.values()) {
-            if (messageType == null || messageType.equals(service.getMessageTypes())) {
+            if (messageType == null || messageType.equals(
+                    service.getMessageTypes())) {
                 Destination destination = service.findDestinationById(id);
                 if (destination != null)
                     return destination;
@@ -307,9 +349,14 @@ public class ServicesConfig implements ScannedItemHandler {
                 this.channels.put(chan.getId(), chan);
             }
         } else {
-            log.info("No channel definition found, using defaults");
-            EndPoint defaultEndpoint = new EndPoint("http://{server.name}:{server.port}/{context.root}/graniteamf/amf", "flex.messaging.endpoints.AMFEndpoint");
-            Channel defaultChannel = new Channel("my-graniteamf", "mx.messaging.channels.AMFChannel", defaultEndpoint, XMap.EMPTY_XMAP);
+            LOG.info("No channel definition found, using defaults");
+            EndPoint defaultEndpoint = new EndPoint(
+                    "http://{server.name}:{server.port}/{context.root}/graniteamf/amf",
+                    "flex.messaging.endpoints.AMFEndpoint");
+            Channel defaultChannel = new Channel("my-graniteamf",
+                                                 "mx.messaging.channels.AMFChannel",
+                                                 defaultEndpoint,
+                                                 XMap.EMPTY_XMAP);
             this.channels.put(defaultChannel.getId(), defaultChannel);
         }
 
@@ -329,5 +376,21 @@ public class ServicesConfig implements ScannedItemHandler {
                 ", services=" + services +
                 ", factories=" + factories +
                 '}';
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // OSGi
+
+    public ServicesConfig() {
+    }
+
+    @Validate
+    public void starting() {
+        LOG.debug("Start ServicesConfig");
+    }
+
+    @Invalidate
+    public void stopping() {
+        LOG.debug("Stop ServicesConfig");
     }
 }

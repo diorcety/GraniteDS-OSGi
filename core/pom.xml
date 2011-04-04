@@ -43,14 +43,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.handler.eventadmin</artifactId>
-            <version>1.6.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.handler.extender</artifactId>
-            <version>1.4.0</version>
+            <artifactId>org.apache.felix.ipojo</artifactId>
+            <version>${ipojo.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -84,10 +78,9 @@
                             org.granite.messaging.*;version=${project.version};-split-package:=merge-first,
                             org.granite.jmx.*;version=${project.version},
                             org.granite.scan.*;version=${project.version},
-                            org.granite.util.*;version=${project.version},
+                            org.granite.util.*;version=${project.version};-split-package:=merge-first,
                             org.granite.logging.*;version=${project.version};-split-package:=merge-first,
-                            org.granite.osgi.config.*;version=${project.version},
-                            org.granite.osgi.service.*;version=${project.version}
+                            org.granite.osgi.*;version=${project.version};-split-package:=merge-first
                         </Export-Package>
                         <Import-Package>
                             org.apache.log4j;resolution:=optional,
@@ -112,7 +105,7 @@
                             org.granite.collections.*,
                             org.granite.config.api.internal,
                             org.granite.messaging.amf.io.convert.impl,
-                            org.granite.osgi.*;-split-package:=merge-first,
+                            org.granite.osgi.impl;-split-package:=merge-first,
                         </Private-Package>
                         <Bundle-Activator>org.granite.osgi.impl.Activator</Bundle-Activator>
                         <_nouses>true</_nouses>

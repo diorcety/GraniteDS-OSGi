@@ -20,13 +20,26 @@
 
 package org.granite.config.flex;
 
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
+
+import org.granite.logging.Logger;
 import org.granite.messaging.service.SimpleServiceFactory;
+import org.granite.osgi.util.Converter;
 import org.granite.util.XMap;
+
+import java.util.Dictionary;
 
 /**
  * @author Franck WOLFF
  */
-public class Factory {
+@Component
+public class Factory implements FactoryInterface {
+
+    private static final Logger LOG = Logger.getLogger(Factory.class);
 
     public static final Factory DEFAULT_FACTORY = new Factory(
             null,
@@ -74,7 +87,8 @@ public class Factory {
 
         Factory factory = (Factory) o;
 
-        if (id != null ? !id.equals(factory.id) : factory.id != null) return false;
+        if (id != null ? !id.equals(factory.id) : factory.id != null)
+            return false;
 
         return true;
     }
@@ -91,5 +105,55 @@ public class Factory {
                 ", id='" + id + '\'' +
                 ", properties=" + properties +
                 '}';
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // OSGi
+
+    @Requires
+    private ServicesConfigInterface servicesConfig;
+
+
+    public Factory() {
+        this.id = null;
+        this.className = null;
+        this.properties = new XMap();
+    }
+
+    @Property(name = "ID", mandatory = true)
+    private void setId(String id) {
+        this.id = id;
+    }
+
+    @Property(name = "CLASS", mandatory = true)
+    private void setClass(String className) {
+        this.className = className;
+    }
+
+    @Property(name = "PROPERTIES", mandatory = false)
+    private void setProperties(Dictionary<String, String> properties) {
+        this.properties = Converter.getXMap(properties);
+    }
+
+    @Validate
+    public void starting() {
+        start();
+    }
+
+    public void start() {
+        LOG.debug("Start Factory:" + this.id);
+        servicesConfig.addFactory(this);
+    }
+
+    @Invalidate
+    public void stopping() {
+        stop();
+    }
+
+    public void stop() {
+        LOG.debug("Stop Factory:" + this.id);
+        if (servicesConfig != null) {
+            servicesConfig.removeFactory(this.id);
+        }
     }
 }

@@ -20,12 +20,26 @@
 
 package org.granite.config.flex;
 
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Validate;
+
+import org.granite.logging.Logger;
+import org.granite.osgi.util.Converter;
 import org.granite.util.XMap;
+
+import java.util.Dictionary;
 
 /**
  * @author Franck WOLFF
  */
-public class Adapter {
+@Component
+@Provides
+public class Adapter implements AdapterInterface {
+
+    private static final Logger LOG = Logger.getLogger(Adapter.class);
 
     protected String id;
     protected String className;
@@ -67,7 +81,8 @@ public class Adapter {
 
         Adapter adapter = (Adapter) o;
 
-        if (id != null ? !id.equals(adapter.id) : adapter.id != null) return false;
+        if (id != null ? !id.equals(adapter.id) : adapter.id != null)
+            return false;
 
         return true;
     }
@@ -84,5 +99,47 @@ public class Adapter {
                 ", id='" + id + '\'' +
                 ", properties=" + properties +
                 '}';
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // OSGi
+
+    protected Adapter() {
+        this.id = null;
+        this.className = null;
+        this.properties = new XMap();
+    }
+
+    @Property(name = "ID", mandatory = true)
+    private void setId(String id) {
+        this.id = id;
+    }
+
+    @Property(name = "CLASS", mandatory = true)
+    private void setClass(String className) {
+        this.className = className;
+    }
+
+    @Property(name = "PROPERTIES", mandatory = false)
+    private void setProperties(Dictionary<String, String> properties) {
+        this.properties = Converter.getXMap(properties);
+    }
+
+    @Validate
+    public void starting() {
+        start();
+    }
+
+    public void start() {
+        LOG.debug("Start Adapter:" + this.id);
+    }
+
+    @Invalidate
+    public void stopping() {
+        stop();
+    }
+
+    public void stop() {
+        LOG.debug("Stop Adapter:" + this.id);
     }
 }

@@ -20,19 +20,29 @@
 
 package org.granite.config.flex;
 
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+
+import org.granite.logging.Logger;
 import org.granite.messaging.service.security.DestinationSecurizer;
+import org.granite.osgi.util.Converter;
 import org.granite.util.ClassUtil;
 import org.granite.util.XMap;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Franck WOLFF
  */
-public class Destination implements Serializable {
+@Component
+public class Destination implements Serializable, DestinationInterface {
+
+    private static final Logger LOG = Logger.getLogger(Destination.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -46,10 +56,9 @@ public class Destination implements Serializable {
     protected Class<?> scannedClass;
     protected DestinationSecurizer securizer;
 
-    private DestinationRemoveListener removeListener;
-
-
-    public Destination(String id, List<String> channelRefs, XMap properties, List<String> roles, Adapter adapter, Class<?> scannedClass) {
+    public Destination(String id, List<String> channelRefs, XMap properties,
+                       List<String> roles, Adapter adapter,
+                       Class<?> scannedClass) {
         this.id = id;
         this.channelRefs = new ArrayList<String>(channelRefs);
         this.properties = properties;
@@ -57,26 +66,20 @@ public class Destination implements Serializable {
         this.adapter = adapter;
         this.scannedClass = scannedClass;
 
-        final String securizerClassName = properties.get(SECURIZER_PROPERTY_KEY);
+        final String securizerClassName = properties.get(
+                SECURIZER_PROPERTY_KEY);
         if (securizerClassName != null) {
             try {
-                this.securizer = ClassUtil.newInstance(securizerClassName.trim(), DestinationSecurizer.class);
+                this.securizer = ClassUtil.newInstance(
+                        securizerClassName.trim(), DestinationSecurizer.class);
             } catch (Exception e) {
-                throw new RuntimeException("Could not instantiate securizer: " + securizerClassName, e);
+                throw new RuntimeException(
+                        "Could not instantiate securizer: " + securizerClassName,
+                        e);
             }
         } else
             this.securizer = null;
     }
-
-    public void addRemoveListener(DestinationRemoveListener listener) {
-        this.removeListener = listener;
-    }
-
-    public void remove() {
-        if (removeListener != null)
-            removeListener.destinationRemoved(this);
-    }
-
 
     public String getId() {
         return id;
@@ -113,7 +116,8 @@ public class Destination implements Serializable {
     ///////////////////////////////////////////////////////////////////////////
     // Static helper.
 
-    public static Destination forElement(XMap element, Adapter defaultAdapter, Map<String, Adapter> adaptersMap) {
+    public static Destination forElement(XMap element, Adapter defaultAdapter,
+                                         Map<String, Adapter> adaptersMap) {
         String id = element.get("@id");
 
         List<String> channelRefs = new ArrayList<String>();
@@ -125,7 +129,8 @@ public class Destination implements Serializable {
         List<String> rolesList = null;
         if (element.containsKey("security/security-constraint/roles/role")) {
             rolesList = new ArrayList<String>();
-            for (XMap role : element.getAll("security/security-constraint/roles/role"))
+            for (XMap role : element.getAll(
+                    "security/security-constraint/roles/role"))
                 rolesList.add(role.get("."));
         }
 
@@ -134,7 +139,8 @@ public class Destination implements Serializable {
                 ? adaptersMap.get(adapter.get("@ref"))
                 : defaultAdapter;
 
-        return new Destination(id, channelRefs, properties, rolesList, adapterRef, null);
+        return new Destination(id, channelRefs, properties, rolesList,
+                               adapterRef, null);
     }
 
     @Override
@@ -164,7 +170,139 @@ public class Destination implements Serializable {
                 ", roles=" + roles +
                 ", scannedClass=" + scannedClass +
                 ", securizer=" + securizer +
-                ", removeListener=" + removeListener +
                 '}';
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // OSGi
+
+
+    @Property(mandatory = true)
+    public String SERVICE;
+
+    @Property(mandatory = true)
+    public Collection<String> CHANNEL_LIST;
+
+    @Property(mandatory = false)
+    public String ADAPTER;
+
+    //
+    private boolean state = false;
+
+    private boolean started = false;
+
+    private ServiceInterface service;
+
+    protected Destination() {
+        this.id = null;
+        this.channelRefs = new ArrayList<String>();
+        this.properties = new XMap();
+        this.roles = new ArrayList<String>();
+        this.adapter = null;
+        this.scannedClass = null;
+        this.securizer = null;
+    }
+
+    @Property(name = "ID", mandatory = true)
+    private void setId(String id) {
+        this.id = id;
+    }
+
+    @Property(name = "PROPERTIES", mandatory = false)
+    private void setProperties(Dictionary<String, String> properties) {
+        this.properties = Converter.getXMap(properties);
+    }
+
+
+    @Bind(aggregate = true, optional = true)
+    private void bindService(ServiceInterface service) {
+        if (service.getId() == this.SERVICE) {
+            this.service = service;
+            checkState();
+        }
+    }
+
+    @Unbind
+    private void unbindService(ServiceInterface service) {
+        if (service.getId() == this.SERVICE) {
+            this.service = null;
+            checkState();
+        }
+    }
+
+    @Bind(aggregate = true, optional = true)
+    private void bindAdapter(AdapterInterface adapter) {
+        if (adapter.getId() == this.ADAPTER) {
+            this.adapter = (Adapter) adapter;  //HACK
+            checkState();
+        }
+    }
+
+    @Unbind
+    private void unbindAdapter(AdapterInterface adapter) {
+        if (adapter.getId() == this.ADAPTER) {
+            this.adapter = null;
+            checkState();
+        }
+    }
+
+    @Bind(aggregate = true, optional = true)
+    private void bindChannel(ChannelInterface channel) {
+        if (this.CHANNEL_LIST.contains(channel.getId())) {
+            this.channelRefs.add(channel.getId());
+            checkState();
+        }
+    }
+
+    @Unbind
+    private void unbindChannel(ChannelInterface channel) {
+        if (this.CHANNEL_LIST.contains(channel.getId())) {
+            this.channelRefs.remove(channel.getId());
+            checkState();
+        }
+    }
+
+    private void checkState() {
+        boolean new_state;
+        if (started && service != null && this.channelRefs.size() > 0) {
+            new_state = true;
+        } else {
+            new_state = false;
+        }
+        if (new_state != this.state) {
+            if (new_state)
+                start();
+            else
+                stop();
+
+            this.state = new_state;
+        }
+    }
+
+    @Validate
+    public void starting() {
+        started = true;
+        checkState();
+    }
+
+    public void start() {
+        LOG.debug("Start Destination:" + this.id);
+        service.addDestination(this);
+    }
+
+    @Invalidate
+    public void stopping() {
+        if (this.state) {
+            stop();
+            this.state = false;
+        }
+        started = false;
+    }
+
+    public void stop() {
+        LOG.debug("Stop Destination:" + this.id);
+        if (service != null) {
+            service.removeDestination(this.id);
+        }
     }
 }
