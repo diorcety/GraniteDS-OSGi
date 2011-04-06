@@ -5,7 +5,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
-    static BundleContext bundleContext;
+    static BundleContext bundleContext = null;
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
@@ -14,7 +14,11 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) throws Exception {
-        this.bundleContext = bundleContext;
+        this.bundleContext = null;
     }
 
+    public static BundleContext getBundleContext()
+    {
+        return bundleContext;
+    }
 }

@@ -53,28 +53,24 @@ public class Tracker {
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindDestination(
             final ServiceDestination destination) {
-        destinationMap.put(destination.getId(), destination);
         osgiBase.registerClass(destination.getClass());
     }
 
     @Unbind
     public final synchronized void unbindDestination(
             final ServiceDestination destination) {
-        destinationMap.remove(destination.getId());
         osgiBase.unregisterClass(destination.getClass());
     }
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindFactory(
             final ServiceFactory factory) {
-        factoryMap.put(factory.getId(), factory);
         osgiBase.registerClass(factory.getClass());
     }
 
     @Unbind
     public final synchronized void unbindFactory(
             final ServiceFactory factory) {
-        factoryMap.remove(factory.getId());
         osgiBase.unregisterClass(factory.getClass());
     }
 

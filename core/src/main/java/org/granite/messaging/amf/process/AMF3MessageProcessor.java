@@ -48,8 +48,6 @@ public abstract class AMF3MessageProcessor {
     private static final Logger log = Logger.getLogger(
             AMF3MessageProcessor.class);
 
-    private static FactoryFactory factoryFactory = new FactoryFactory();
-
     public static Message process(Message request) {
         GraniteContext context = GraniteContext.getCurrentInstance();
         AMF3MessageInterceptor interceptor = context.getGraniteConfig().getAmf3MessageInterceptor();
@@ -141,7 +139,7 @@ public abstract class AMF3MessageProcessor {
         Message response = null;
         try {
             // Execute method on service.
-            ServiceFactory factory = factoryFactory.getFactoryInstance(request);
+            ServiceFactory factory = FactoryFactory.getDefault().getFactoryInstance(request);
             ServiceInvoker<?> service = factory.getServiceInstance(request);
             Object result = service.invoke(request);
 

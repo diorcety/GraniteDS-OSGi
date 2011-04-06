@@ -22,15 +22,11 @@ package org.granite.messaging.service;
 
 import org.granite.config.flex.Destination;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.ServiceException;
-import org.granite.messaging.service.ServiceInvoker;
-import org.granite.messaging.service.SimpleServiceFactory;
-import org.granite.messaging.service.SimpleServiceInvoker;
 
 /**
  * @author Franck WOLFF
  */
-public class OSGiServiceInvoker extends ServiceInvoker<SimpleServiceFactory> {
+public class OSGiServiceInvoker extends ServiceInvoker<OSGiServiceFactory> {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,7 +34,7 @@ public class OSGiServiceInvoker extends ServiceInvoker<SimpleServiceFactory> {
             SimpleServiceInvoker.class);
 
     protected OSGiServiceInvoker(Destination destination,
-                                 SimpleServiceFactory factory, Object obj
+                                 OSGiServiceFactory factory, Object obj
                                 ) throws ServiceException {
         super(destination, factory);
         if(obj == null)
