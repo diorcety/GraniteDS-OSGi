@@ -42,7 +42,7 @@ import java.util.Map;
  */
 @Component
 @Provides
-public class Service implements ServiceInterface {
+public class Service implements ServiceComponent {
 
     private static final Logger LOG = Logger.getLogger(Service.class);
 
@@ -75,6 +75,11 @@ public class Service implements ServiceInterface {
 
     public String getMessageTypes() {
         return messageTypes;
+    }
+
+    @Override
+    public Service getService() {
+        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -182,7 +187,7 @@ public class Service implements ServiceInterface {
     // OSGi
 
     @Requires
-    private ServicesConfigInterface servicesConfig;
+    private ServicesConfigComponent servicesConfig;
 
     @Property
     public Collection<String> ADAPTER_LIST;
@@ -223,7 +228,7 @@ public class Service implements ServiceInterface {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindAdapter(AdapterInterface adapter) {
+    private void bindAdapter(AdapterComponent adapter) {
         if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
                 adapter.getId())) {
             this.adapters.put(adapter.getId(), (Adapter) adapter);   //HACK
@@ -237,7 +242,7 @@ public class Service implements ServiceInterface {
     }
 
     @Unbind
-    private void unbindAdapter(AdapterInterface adapter) {
+    private void unbindAdapter(AdapterComponent adapter) {
         if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
                 adapter.getId())) {
             this.adapters.remove(adapter.getId());

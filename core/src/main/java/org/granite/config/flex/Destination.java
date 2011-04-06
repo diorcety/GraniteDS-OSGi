@@ -40,7 +40,7 @@ import java.util.*;
  * @author Franck WOLFF
  */
 @Component
-public class Destination implements Serializable, DestinationInterface {
+public class Destination implements Serializable, DestinationComponent {
 
     private static final Logger LOG = Logger.getLogger(Destination.class);
 
@@ -99,6 +99,11 @@ public class Destination implements Serializable, DestinationInterface {
 
     public List<String> getRoles() {
         return roles;
+    }
+
+    @Override
+    public Destination getDestination() {
+        return this;
     }
 
     public Adapter getAdapter() {
@@ -191,7 +196,7 @@ public class Destination implements Serializable, DestinationInterface {
 
     private boolean started = false;
 
-    private ServiceInterface service;
+    private ServiceComponent service;
 
     protected Destination() {
         this.id = null;
@@ -215,7 +220,7 @@ public class Destination implements Serializable, DestinationInterface {
 
 
     @Bind(aggregate = true, optional = true)
-    private void bindService(ServiceInterface service) {
+    private void bindService(ServiceComponent service) {
         if (service.getId() == this.SERVICE) {
             this.service = service;
             checkState();
@@ -223,7 +228,7 @@ public class Destination implements Serializable, DestinationInterface {
     }
 
     @Unbind
-    private void unbindService(ServiceInterface service) {
+    private void unbindService(ServiceComponent service) {
         if (service.getId() == this.SERVICE) {
             this.service = null;
             checkState();
@@ -231,7 +236,7 @@ public class Destination implements Serializable, DestinationInterface {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindAdapter(AdapterInterface adapter) {
+    private void bindAdapter(AdapterComponent adapter) {
         if (adapter.getId() == this.ADAPTER) {
             this.adapter = (Adapter) adapter;  //HACK
             checkState();
@@ -239,7 +244,7 @@ public class Destination implements Serializable, DestinationInterface {
     }
 
     @Unbind
-    private void unbindAdapter(AdapterInterface adapter) {
+    private void unbindAdapter(AdapterComponent adapter) {
         if (adapter.getId() == this.ADAPTER) {
             this.adapter = null;
             checkState();
@@ -247,7 +252,7 @@ public class Destination implements Serializable, DestinationInterface {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindChannel(ChannelInterface channel) {
+    private void bindChannel(ChannelComponent channel) {
         if (this.CHANNEL_LIST.contains(channel.getId())) {
             this.channelRefs.add(channel.getId());
             checkState();
@@ -255,7 +260,7 @@ public class Destination implements Serializable, DestinationInterface {
     }
 
     @Unbind
-    private void unbindChannel(ChannelInterface channel) {
+    private void unbindChannel(ChannelComponent channel) {
         if (this.CHANNEL_LIST.contains(channel.getId())) {
             this.channelRefs.remove(channel.getId());
             checkState();

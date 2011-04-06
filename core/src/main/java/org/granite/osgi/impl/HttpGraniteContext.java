@@ -1,7 +1,7 @@
 package org.granite.osgi.impl;
 
 
-import org.granite.osgi.OSGiGraniteContext;
+import org.granite.context.GraniteContext;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -10,7 +10,7 @@ import javax.servlet.http.HttpSession;
 
 import java.util.*;
 
-public class HttpGraniteContext extends OSGiGraniteContextImpl {
+public class HttpGraniteContext extends OSGiGraniteContext {
 
     private static final String SESSION_LOCK_KEY = HttpGraniteContext.class.getName() + ".LOCK";
 
@@ -23,7 +23,7 @@ public class HttpGraniteContext extends OSGiGraniteContextImpl {
 
 
     public static HttpGraniteContext createThreadIntance(
-            OSGiGraniteContext context,
+            GraniteContext context,
             HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -34,7 +34,7 @@ public class HttpGraniteContext extends OSGiGraniteContextImpl {
     }
 
     private HttpGraniteContext(
-            OSGiGraniteContext context,
+            GraniteContext context,
             HttpServletRequest request,
             HttpServletResponse response) {
 

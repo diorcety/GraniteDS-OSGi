@@ -4,7 +4,7 @@ import org.granite.util.XMap;
 
 import java.util.List;
 
-public interface DestinationInterface {
+public interface DestinationComponent {
     public Adapter getAdapter();
 
     public List<String> getChannelRefs();
@@ -14,4 +14,6 @@ public interface DestinationInterface {
     public XMap getProperties();
 
     public List<String> getRoles();
+
+    public Destination getDestination();
 }

@@ -1,6 +1,6 @@
 package org.granite.config.flex;
 
-public interface ServicesConfigInterface {
+public interface ServicesConfigComponent {
     public void addFactory(Factory factory);
 
     public void addService(Service service);
@@ -12,4 +12,6 @@ public interface ServicesConfigInterface {
     public Service removeService(String serviceId);
 
     public Channel removeChannel(String channelId);
+
+    public ServicesConfig getServicesConfig();
 }

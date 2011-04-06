@@ -9,30 +9,26 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;
-import org.granite.config.flex.ServicesConfigInterface;
+import org.granite.config.flex.ServicesConfigComponent;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteContextComponent;
 import org.granite.logging.Logger;
-import org.granite.osgi.OSGiGraniteContext;
-import org.xml.sax.SAXException;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component(immediate = true)
-@Instantiate
+@Component
 @Provides
-public class OSGiGraniteContextImpl
-        extends GraniteContext
-        implements OSGiGraniteContext {
+@Instantiate
+public class OSGiGraniteContext extends GraniteContext {
 
     private static final Logger LOG = Logger.getLogger(
-            OSGiGraniteContextImpl.class);
+            OSGiGraniteContext.class);
 
     protected Map<String, Object> applicationMap = null;
 
-    @Requires(proxy = false)        //HACK
-    private ServicesConfigInterface servicesConfig;
+    @Requires
+    private ServicesConfigComponent servicesConfig;
     private GraniteConfig graniteConfig;
 
     public static GraniteContext getThreadIntance(
@@ -42,15 +38,15 @@ public class OSGiGraniteContextImpl
 
     }
 
-    public OSGiGraniteContextImpl(GraniteConfig graniteConfig,
-                                  ServicesConfig servicesConfig) {
+    public OSGiGraniteContext(GraniteConfig graniteConfig,
+                              ServicesConfig servicesConfig) {
         super(null, null);
         this.servicesConfig = servicesConfig;
         this.graniteConfig = graniteConfig;
     }
 
     // OSGi Contructor
-    private OSGiGraniteContextImpl() {
+    private OSGiGraniteContext() {
         super(null, null);
         try {
             graniteConfig = new GraniteConfig(null, null, null, null);
@@ -61,7 +57,7 @@ public class OSGiGraniteContextImpl
 
     @Override
     public ServicesConfig getServicesConfig() {
-        return (ServicesConfig) servicesConfig;         //HACK
+        return servicesConfig.getServicesConfig();
     }
 
     @Override

@@ -37,7 +37,7 @@ import java.util.Dictionary;
  * @author Franck WOLFF
  */
 @Component
-public class Factory implements FactoryInterface {
+public class Factory implements FactoryComponent {
 
     private static final Logger LOG = Logger.getLogger(Factory.class);
 
@@ -67,6 +67,11 @@ public class Factory implements FactoryInterface {
 
     public XMap getProperties() {
         return properties;
+    }
+
+    @Override
+    public Factory getFactory() {
+        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -111,7 +116,7 @@ public class Factory implements FactoryInterface {
     // OSGi
 
     @Requires
-    private ServicesConfigInterface servicesConfig;
+    private ServicesConfigComponent servicesConfig;
 
 
     public Factory() {

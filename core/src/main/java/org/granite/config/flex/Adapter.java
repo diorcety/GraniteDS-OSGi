@@ -37,7 +37,7 @@ import java.util.Dictionary;
  */
 @Component
 @Provides
-public class Adapter implements AdapterInterface {
+public class Adapter implements AdapterComponent {
 
     private static final Logger LOG = Logger.getLogger(Adapter.class);
 
@@ -61,6 +61,11 @@ public class Adapter implements AdapterInterface {
 
     public XMap getProperties() {
         return properties;
+    }
+
+    @Override
+    public Adapter getAdapter() {
+        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////

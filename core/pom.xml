@@ -79,7 +79,7 @@
                         </Bundle-SymbolicName>
                         <Export-Package>
                             flex.messaging.*,
-                            org.granite.context.*;version=${project.version},
+                            org.granite.context.*;version=${project.version};-split-package:=merge-first,
                             org.granite.config.*;version=${project.version};-split-package:=merge-first,
                             org.granite.messaging.*;version=${project.version};-split-package:=merge-first,
                             org.granite.jmx.*;version=${project.version},

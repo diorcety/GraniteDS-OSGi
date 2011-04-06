@@ -38,7 +38,7 @@ import java.util.Dictionary;
  */
 @Component
 @Provides
-public class Channel implements ChannelInterface {
+public class Channel implements ChannelComponent {
 
     private static final Logger LOG = Logger.getLogger(Channel.class);
 
@@ -79,6 +79,11 @@ public class Channel implements ChannelInterface {
 
     public XMap getProperties() {
         return properties;
+    }
+
+    @Override
+    public Channel getChannel() {
+        return this;
     }
 
     public boolean isLegacyXmlSerialization() {
@@ -141,7 +146,7 @@ public class Channel implements ChannelInterface {
     // OSGi
 
     @Requires
-    private ServicesConfigInterface servicesConfig;
+    private ServicesConfigComponent servicesConfig;
 
     public String ENDPOINT_URI;
 

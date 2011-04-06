@@ -57,9 +57,9 @@ import java.util.Map;
  */
 @Component
 @Instantiate
-@Provides(specifications = ServicesConfigInterface.class)
+@Provides(specifications = ServicesConfigComponent.class)
 public class ServicesConfig implements
-        ScannedItemHandler, ServicesConfigInterface {
+        ScannedItemHandler, ServicesConfigComponent {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields.
@@ -279,6 +279,11 @@ public class ServicesConfig implements
 
     public Channel removeChannel(String channelId) {
         return channels.remove(channelId);
+    }
+
+    @Override
+    public ServicesConfig getServicesConfig() {
+        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////

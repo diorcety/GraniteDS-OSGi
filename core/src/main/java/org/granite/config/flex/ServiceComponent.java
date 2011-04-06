@@ -2,7 +2,7 @@ package org.granite.config.flex;
 
 import java.util.Map;
 
-public interface ServiceInterface {
+public interface ServiceComponent {
     public void addAdapter(Adapter adapter);
 
 
@@ -28,4 +28,6 @@ public interface ServiceInterface {
     public Adapter removeAdapter(String adapterId);
 
     public String getMessageTypes();
+
+    public Service getService();
 }
