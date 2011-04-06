@@ -21,12 +21,7 @@
 package org.granite.messaging.service;
 
 import java.io.Serializable;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 
-import org.granite.config.flex.Destination;
-import org.granite.config.flex.Factory;
-import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.util.ClassUtil;
 import org.granite.util.XMap;
@@ -38,10 +33,11 @@ import flex.messaging.messages.RemotingMessage;
  */
 public abstract class ServiceFactory implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final Logger log = Logger.getLogger(ServiceFactory.class);
+    private static final Logger log = Logger.getLogger(ServiceFactory.class);
 
+    protected static ServiceFactory DEFAULT = new SimpleServiceFactory();
 
     private ServiceExceptionHandler serviceExceptionHandler;
 
@@ -50,33 +46,41 @@ public abstract class ServiceFactory implements Serializable {
         log.debug(">> Configuring factory with: %s", properties);
 
         // service exception handler
-        String sServiceExceptionHandler = properties.get("service-exception-handler");
-    	String enableLogging = properties.get("enable-exception-logging");
+        String sServiceExceptionHandler = properties.get(
+                "service-exception-handler");
+        String enableLogging = properties.get("enable-exception-logging");
         if (sServiceExceptionHandler != null) {
             try {
-            	if (Boolean.TRUE.toString().equals(enableLogging) || Boolean.FALSE.toString().equals(enableLogging))
+                if (Boolean.TRUE.toString().equals(
+                        enableLogging) || Boolean.FALSE.toString().equals(
+                        enableLogging))
                     this.serviceExceptionHandler = (ServiceExceptionHandler) ClassUtil.newInstance(
                             sServiceExceptionHandler.trim(),
                             new Class<?>[]{boolean.class},
                             new Object[]{Boolean.valueOf(enableLogging)});
-            	else
-            		this.serviceExceptionHandler = (ServiceExceptionHandler) ClassUtil.newInstance(
+                else
+                    this.serviceExceptionHandler = (ServiceExceptionHandler) ClassUtil.newInstance(
                             sServiceExceptionHandler.trim());
             } catch (Exception e) {
-                throw new ServiceException("Could not instantiate service exception handler: " + sServiceExceptionHandler, e);
+                throw new ServiceException(
+                        "Could not instantiate service exception handler: " + sServiceExceptionHandler,
+                        e);
             }
-        }
-        else {
-        	if (Boolean.TRUE.toString().equals(enableLogging) || Boolean.FALSE.toString().equals(enableLogging))
-        		this.serviceExceptionHandler = new DefaultServiceExceptionHandler(Boolean.valueOf(enableLogging));
-        	else
-        		this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
+        } else {
+            if (Boolean.TRUE.toString().equals(
+                    enableLogging) || Boolean.FALSE.toString().equals(
+                    enableLogging))
+                this.serviceExceptionHandler = new DefaultServiceExceptionHandler(
+                        Boolean.valueOf(enableLogging));
+            else
+                this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
         }
 
         log.debug("<< Configuring factory done: %s", this);
     }
 
-    public abstract ServiceInvoker<?> getServiceInstance(RemotingMessage request) throws ServiceException;
+    public abstract ServiceInvoker<?> getServiceInstance(
+            RemotingMessage request) throws ServiceException;
 
     public ServiceExceptionHandler getServiceExceptionHandler() {
         return serviceExceptionHandler;
@@ -89,8 +93,12 @@ public abstract class ServiceFactory implements Serializable {
 
     public String toString(String append) {
         return super.toString() + " {" +
-            (append != null ? append : "") +
-            "\n  serviceExceptionHandler: " + serviceExceptionHandler +
-        "\n}";
+                (append != null ? append : "") +
+                "\n  serviceExceptionHandler: " + serviceExceptionHandler +
+                "\n}";
+    }
+
+    public static ServiceFactory getDefault() {
+        return DEFAULT;
     }
 }

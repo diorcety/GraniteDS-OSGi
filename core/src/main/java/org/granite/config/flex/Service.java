@@ -135,7 +135,8 @@ public class Service implements ServiceComponent {
         Adapter defaultAdapter = null;
         Map<String, Adapter> adaptersMap = new HashMap<String, Adapter>();
         for (XMap adapter : element.getAll("adapters/adapter-definition")) {
-            Adapter ad = Adapter.forElement(adapter);
+            Adapter ad = Adapter.forElement(
+                    adapter);
             if (Boolean.TRUE.toString().equals(adapter.get("@default")))
                 defaultAdapter = ad;
             adaptersMap.put(ad.getId(), ad);

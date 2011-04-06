@@ -1,13 +1,16 @@
 package org.granite.context;
 
+import org.granite.config.GraniteConfig;
+import org.granite.config.flex.ServicesConfig;
+
 import java.util.Map;
 
 public interface GraniteContextComponent {
-    public org.granite.config.flex.ServicesConfig getServicesConfig();
+    public ServicesConfig getServicesConfig();
 
-    public org.granite.config.GraniteConfig getGraniteConfig();
+    public GraniteConfig getGraniteConfig();
 
-    public org.granite.context.AMFContext getAMFContext();
+    public AMFContext getAMFContext();
 
     public Object getSessionLock();
 
@@ -20,5 +23,6 @@ public interface GraniteContextComponent {
     public Map<String, Object> getSessionMap(boolean b);
 
     public Map<String, Object> getRequestMap();
+
     public GraniteContext getGraniteContext();
 }

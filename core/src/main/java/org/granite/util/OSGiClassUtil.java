@@ -1,6 +1,10 @@
 package org.granite.util;
 
-import org.apache.felix.ipojo.annotations.*;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.logging.Logger;
 import org.granite.osgi.GraniteClassRegistry;
@@ -36,12 +40,12 @@ public class OSGiClassUtil implements GraniteClassRegistry {
         return osgiClassUtil.classMap.get(type);
     }
 
-    public void registerClass(Class<?> clazz) {
+    public final synchronized void registerClass(Class<?> clazz) {
         log.info("Register class \"" + clazz.getName() + "\"");
         classMap.put(clazz.getName(), clazz);
     }
 
-    public void unregisterClass(Class<?> clazz) {
+    public final synchronized void unregisterClass(Class<?> clazz) {
         log.info("Unregister class \"" + clazz.getName() + "\"");
         classMap.remove(clazz.getName());
     }

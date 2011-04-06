@@ -21,20 +21,53 @@
 package org.granite.messaging.service;
 
 import flex.messaging.messages.RemotingMessage;
+import org.apache.felix.ipojo.annotations.*;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
+import org.granite.logging.Logger;
+import org.granite.osgi.service.GraniteDestination;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Franck WOLFF
  */
+@Component
+@Instantiate
 public class SimpleServiceFactory extends ServiceFactory {
 
     private static final long serialVersionUID = 1L;
+
+
+    private static final Logger LOG = Logger.getLogger(
+            SimpleServiceFactory.class);
+
+    private Map<String, GraniteDestination> osgiServices =
+            new Hashtable<String, GraniteDestination>();
+
+
+    @Bind(aggregate = true, optional = true)
+    public final synchronized void bindDestination(
+            final GraniteDestination destination) {
+        osgiServices.put(destination.getId(), destination);
+    }
+
+    @Unbind
+    public final synchronized void unbindDestination(
+            final GraniteDestination destination) {
+        osgiServices.remove(destination.getId());
+    }
+
+    @Validate
+    private void starting() {
+        ServiceFactory.DEFAULT = this;
+        LOG.debug("Start OSGiServiceFactory");
+    }
+
+    @Invalidate
+    private void stopping() {
+        LOG.debug("Stop OSGiServiceFactory");
+    }
 
     @Override
     public ServiceInvoker<?> getServiceInstance(
@@ -53,9 +86,14 @@ public class SimpleServiceFactory extends ServiceFactory {
 
         String key = SimpleServiceInvoker.class.getName() + '.' + destination.getId();
 
-        SimpleServiceInvoker service = (SimpleServiceInvoker) cache.get(key);
+        ServiceInvoker service = (SimpleServiceInvoker) cache.get(key);
         if (service == null) {
-            service = new SimpleServiceInvoker(destination, this);
+            if (destination.getProperties().get("OSGi") == null) {
+                service = new SimpleServiceInvoker(destination, this);
+            } else {
+                GraniteDestination gd = osgiServices.get(destination.getId());
+                service = new OSGiServiceInvoker(destination, this, gd);
+            }
             cache.put(key, service);
         }
         return service;

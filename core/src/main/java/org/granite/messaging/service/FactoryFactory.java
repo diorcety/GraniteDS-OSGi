@@ -30,9 +30,6 @@ public class FactoryFactory {
     private Map<String, GraniteFactory> osgiServices =
             new Hashtable<String, GraniteFactory>();
 
-
-    ///////////////////////////////////////////////////////////////////////////
-
     @Validate
     private void starting() {
         log.debug("Start FactoryFactory");
@@ -45,17 +42,16 @@ public class FactoryFactory {
     }
 
     @Bind(aggregate = true, optional = true)
-    public final synchronized void bindFactory(
-            final GraniteFactory factory) {
+    public final synchronized void bindFactory(final GraniteFactory factory) {
         osgiServices.put(factory.getClass().getName(), factory);
     }
 
     @Unbind
-    public final synchronized void unbindFactory(
-            final GraniteFactory factory) {
+    public final synchronized void unbindFactory(final GraniteFactory factory) {
         osgiServices.remove(factory.getClass().getName());
     }
 
+    ///////////////////////////////////////////////////////////////////////////
     public ServiceFactory getFactoryInstance(
             RemotingMessage request) throws ServiceException {
 
@@ -97,12 +93,15 @@ public class FactoryFactory {
                 Factory config = context.getServicesConfig().findFactoryById(
                         factoryId);
 
-                if (config == null)
-                    config = Factory.DEFAULT_FACTORY;
+                if (config == null) {
+                    factory = ServiceFactory.getDefault();
+                }
 
                 ///////////////////////////////////////////////////////////////
                 /// OSGi
-                factory = osgiServices.get(config.getClassName());
+                if (factory == null) {
+                    factory = osgiServices.get(config.getClassName());
+                }
                 ///////////////////////////////////////////////////////////////
 
                 if (factory == null) {

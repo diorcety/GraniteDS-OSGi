@@ -336,7 +336,8 @@ public class ServicesConfig implements
         XMap services = element.getOne("services");
         if (services != null) {
             for (XMap service : services.getAll("service")) {
-                Service serv = Service.forElement(service);
+                Service serv = Service.forElement(
+                        service);
                 this.services.put(serv.getId(), serv);
             }
 
@@ -350,7 +351,8 @@ public class ServicesConfig implements
         XMap channels = element.getOne("channels");
         if (channels != null) {
             for (XMap channel : channels.getAll("channel-definition")) {
-                Channel chan = Channel.forElement(channel);
+                Channel chan = Channel.forElement(
+                        channel);
                 this.channels.put(chan.getId(), chan);
             }
         } else {
@@ -368,7 +370,8 @@ public class ServicesConfig implements
         XMap factories = element.getOne("factories");
         if (factories != null) {
             for (XMap factory : factories.getAll("factory")) {
-                Factory fact = Factory.forElement(factory);
+                Factory fact = Factory.forElement(
+                        factory);
                 this.factories.put(fact.getId(), fact);
             }
         }

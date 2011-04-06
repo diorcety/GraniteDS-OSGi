@@ -27,7 +27,6 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.logging.Logger;
-import org.granite.messaging.service.SimpleServiceFactory;
 import org.granite.util.XMap;
 
 import java.util.Dictionary;
@@ -39,12 +38,6 @@ import java.util.Dictionary;
 public class Factory implements FactoryComponent {
 
     private static final Logger LOG = Logger.getLogger(Factory.class);
-
-    public static final Factory DEFAULT_FACTORY = new Factory(
-            null,
-            SimpleServiceFactory.class.getName(),
-            XMap.EMPTY_XMAP
-    );
 
     protected String id;
     protected String className;

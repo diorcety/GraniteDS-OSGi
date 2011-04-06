@@ -33,7 +33,12 @@ import org.granite.util.ClassUtil;
 import org.granite.util.XMap;
 
 import java.io.Serializable;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Franck WOLFF

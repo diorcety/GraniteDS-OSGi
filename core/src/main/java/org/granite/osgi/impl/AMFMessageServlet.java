@@ -122,6 +122,11 @@ public class AMFMessageServlet extends HttpServlet {
                                 final HttpServletResponse response) throws
             ServletException, IOException {
 
+        if (graniteContext == null) {
+            LOG.error("Could not handle AMF request: GraniteContext " +
+                              "uninitialized");
+            return;
+        }
         try {
             GraniteContext context = HttpGraniteContext.createThreadIntance(
                     graniteContext.getGraniteContext(), request, response);

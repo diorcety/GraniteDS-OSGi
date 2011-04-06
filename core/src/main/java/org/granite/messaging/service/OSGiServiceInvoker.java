@@ -26,15 +26,16 @@ import org.granite.logging.Logger;
 /**
  * @author Franck WOLFF
  */
-public class OSGiServiceInvoker extends ServiceInvoker<OSGiServiceFactory> {
+public class OSGiServiceInvoker extends ServiceInvoker<SimpleServiceFactory> {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(
             SimpleServiceInvoker.class);
 
-    protected OSGiServiceInvoker(Destination destination,
-                                 OSGiServiceFactory factory, Object obj
+    protected OSGiServiceInvoker(
+            Destination destination,
+                                 SimpleServiceFactory factory, Object obj
                                 ) throws ServiceException {
         super(destination, factory);
         if(obj == null)

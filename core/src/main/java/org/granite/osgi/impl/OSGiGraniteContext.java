@@ -11,7 +11,6 @@ import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.ServicesConfigComponent;
 import org.granite.context.GraniteContext;
-import org.granite.context.GraniteContextComponent;
 import org.granite.logging.Logger;
 
 import java.util.HashMap;
