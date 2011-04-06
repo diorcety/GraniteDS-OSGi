@@ -1,6 +1,5 @@
 package org.granite.osgi.impl;
 
-import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
@@ -12,9 +11,8 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.logging.Logger;
 import org.granite.osgi.OSGiBase;
-import org.granite.osgi.service.ServiceAdapter;
-import org.granite.osgi.service.ServiceDestination;
-import org.granite.osgi.service.ServiceFactory;
+import org.granite.osgi.service.GraniteDestination;
+import org.granite.osgi.service.GraniteFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,10 +32,10 @@ public class Tracker {
     @Requires
     OSGiBase osgiBase;
 
-    private static Map<String, ServiceDestination> destinationMap =
-            new HashMap<String, ServiceDestination>();
-    private static Map<String, ServiceFactory> factoryMap =
-            new HashMap<String, ServiceFactory>();
+    private static Map<String, GraniteDestination> destinationMap =
+            new HashMap<String, GraniteDestination>();
+    private static Map<String, GraniteFactory> factoryMap =
+            new HashMap<String, GraniteFactory>();
 
     @Validate
     private void starting() {
@@ -52,33 +50,33 @@ public class Tracker {
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindDestination(
-            final ServiceDestination destination) {
+            final GraniteDestination destination) {
         osgiBase.registerClass(destination.getClass());
     }
 
     @Unbind
     public final synchronized void unbindDestination(
-            final ServiceDestination destination) {
+            final GraniteDestination destination) {
         osgiBase.unregisterClass(destination.getClass());
     }
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindFactory(
-            final ServiceFactory factory) {
+            final GraniteFactory factory) {
         osgiBase.registerClass(factory.getClass());
     }
 
     @Unbind
     public final synchronized void unbindFactory(
-            final ServiceFactory factory) {
+            final GraniteFactory factory) {
         osgiBase.unregisterClass(factory.getClass());
     }
 
-    public static synchronized ServiceFactory getFactory(String id) {
+    public static synchronized GraniteFactory getFactory(String id) {
         return factoryMap.get(id);
     }
 
-    public static synchronized ServiceDestination getDestination(String id) {
+    public static synchronized GraniteDestination getDestination(String id) {
         return destinationMap.get(id);
     }
 

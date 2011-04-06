@@ -1,6 +1,5 @@
 package org.granite.osgi.service;
 
-public interface ServiceDestination {
-
+public interface GraniteDestination {
     public String getId();
 }

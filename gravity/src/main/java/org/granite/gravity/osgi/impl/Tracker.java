@@ -11,9 +11,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.logging.Logger;
 import org.granite.osgi.OSGiBase;
-import org.granite.osgi.service.ServiceAdapter;
-import org.granite.osgi.service.ServiceDestination;
-import org.granite.osgi.service.ServiceFactory;
+import org.granite.osgi.service.GraniteAdapter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,8 +28,8 @@ public class Tracker {
     @Requires
     OSGiBase osgiBase;
 
-    private static Map<String, ServiceAdapter> adapterMap =
-            new HashMap<String, ServiceAdapter>();
+    private static Map<String, GraniteAdapter> adapterMap =
+            new HashMap<String, GraniteAdapter>();
 
     @Validate
     private void starting() {
@@ -46,19 +44,19 @@ public class Tracker {
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindAdapter(
-            final ServiceAdapter adapter) {
+            final GraniteAdapter adapter) {
         adapterMap.put(adapter.getId(), adapter);
         osgiBase.registerClass(adapter.getClass());
     }
 
     @Unbind
     public final synchronized void unbindAdapter(
-            final ServiceAdapter adapter) {
+            final GraniteAdapter adapter) {
         adapterMap.remove(adapter.getId());
         osgiBase.unregisterClass(adapter.getClass());
     }
 
-    public static synchronized ServiceAdapter getAdapter(String id) {
+    public static synchronized GraniteAdapter getAdapter(String id) {
         return adapterMap.get(id);
     }
 }

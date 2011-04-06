@@ -29,7 +29,8 @@ import org.apache.felix.ipojo.annotations.*;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
-import org.granite.osgi.service.ServiceDestination;
+import org.granite.osgi.service.GraniteDestination;
+import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -37,18 +38,17 @@ import java.util.Hashtable;
 import java.util.Map;
 
 @Component
-@Provides(specifications = org.granite.osgi.service.ServiceFactory.class)
+@Provides(specifications = GraniteFactory.class)
 @Instantiate
-public class OSGiServiceFactory extends
-        org.granite.osgi.service.ServiceFactory {
+public class OSGiServiceFactory extends GraniteFactory {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = Logger.getLogger(
             OSGiServiceFactory.class);
 
-    private Map<String, ServiceDestination> osgiServices =
-            new Hashtable<String, ServiceDestination>();
+    private Map<String, GraniteDestination> osgiServices =
+            new Hashtable<String, GraniteDestination>();
 
     private ComponentInstance configuration;
 
@@ -57,13 +57,13 @@ public class OSGiServiceFactory extends
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindDestination(
-            final ServiceDestination destination) {
+            final GraniteDestination destination) {
         osgiServices.put(destination.getId(), destination);
     }
 
     @Unbind
     public final synchronized void unbindDestination(
-            final ServiceDestination destination) {
+            final GraniteDestination destination) {
         osgiServices.remove(destination.getId());
     }
 
@@ -86,7 +86,7 @@ public class OSGiServiceFactory extends
 
         ServiceInvoker service = (ServiceInvoker) cache.get(key);
         if (service == null) {
-            ServiceDestination sd = osgiServices.get(destination.getId());
+            GraniteDestination sd = osgiServices.get(destination.getId());
             if (sd != null) {
                 service = new OSGiServiceInvoker(destination, this, sd);
                 cache.put(key, service);

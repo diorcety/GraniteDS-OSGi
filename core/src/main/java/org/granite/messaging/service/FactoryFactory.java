@@ -8,9 +8,9 @@ import org.granite.config.flex.Destination;
 import org.granite.config.flex.Factory;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
+import org.granite.osgi.service.GraniteFactory;
 import org.granite.util.ClassUtil;
 
-import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,8 +27,8 @@ public class FactoryFactory {
 
     ///////////////////////////////////////////////////////////////////////////
     /// OSGi
-    private Map<String, org.granite.osgi.service.ServiceFactory> osgiServices =
-            new Hashtable<String, org.granite.osgi.service.ServiceFactory>();
+    private Map<String, GraniteFactory> osgiServices =
+            new Hashtable<String, GraniteFactory>();
 
     FactoryFactory() {
         DEFAULT = this;
@@ -46,13 +46,13 @@ public class FactoryFactory {
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindFactory(
-            final org.granite.osgi.service.ServiceFactory factory) {
+            final GraniteFactory factory) {
         osgiServices.put(factory.getClass().getName(), factory);
     }
 
     @Unbind
     public final synchronized void unbindFactory(
-            final org.granite.osgi.service.ServiceFactory factory) {
+            final GraniteFactory factory) {
         osgiServices.remove(factory.getClass().getName());
     }
 
