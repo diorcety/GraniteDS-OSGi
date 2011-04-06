@@ -29,7 +29,6 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.logging.Logger;
 import org.granite.messaging.service.security.DestinationSecurizer;
-import org.granite.osgi.util.Converter;
 import org.granite.util.ClassUtil;
 import org.granite.util.XMap;
 
@@ -215,7 +214,7 @@ public class Destination implements Serializable, DestinationComponent {
 
     @Property(name = "PROPERTIES", mandatory = false)
     private void setProperties(Dictionary<String, String> properties) {
-        this.properties = Converter.getXMap(properties);
+        this.properties = new XMap(properties);
     }
 
 

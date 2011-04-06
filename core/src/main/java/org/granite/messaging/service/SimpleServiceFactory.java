@@ -22,7 +22,6 @@ package org.granite.messaging.service;
 
 import flex.messaging.messages.RemotingMessage;
 import org.granite.config.flex.Destination;
-import org.granite.config.flex.DestinationRemoveListener;
 import org.granite.context.GraniteContext;
 
 import java.util.Collections;
@@ -36,37 +35,34 @@ import java.util.Set;
 public class SimpleServiceFactory extends ServiceFactory {
 
     private static final long serialVersionUID = 1L;
-    
-    private Set<String> invalidKeys = new HashSet<String>();
-    
 
     @Override
-    public ServiceInvoker<?> getServiceInstance(RemotingMessage request) throws ServiceException {
+    public ServiceInvoker<?> getServiceInstance(
+            RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
         GraniteContext context = GraniteContext.getCurrentInstance();
-        Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
+        Destination destination = context.getServicesConfig().findDestinationById(
+                messageType, destinationId);
         if (destination == null)
-            throw new ServiceException("No matching destination: " + destinationId);
+            throw new ServiceException(
+                    "No matching destination: " + destinationId);
 
         Map<String, Object> cache = getCache(destination);
-        
+
         String key = SimpleServiceInvoker.class.getName() + '.' + destination.getId();
-        if (invalidKeys.contains(key)) {
-        	cache.remove(key);
-        	invalidKeys.remove(key);
-        }
-        
-        SimpleServiceInvoker service = (SimpleServiceInvoker)cache.get(key);
+
+        SimpleServiceInvoker service = (SimpleServiceInvoker) cache.get(key);
         if (service == null) {
             service = new SimpleServiceInvoker(destination, this);
             cache.put(key, service);
         }
         return service;
     }
-    
-    private Map<String, Object> getCache(Destination destination) throws ServiceException {
+
+    private Map<String, Object> getCache(
+            Destination destination) throws ServiceException {
         GraniteContext context = GraniteContext.getCurrentInstance();
         String scope = destination.getProperties().get("scope");
 
@@ -78,8 +74,9 @@ public class SimpleServiceFactory extends ServiceFactory {
         else if ("application".equals(scope))
             cache = Collections.synchronizedMap(context.getApplicationMap());
         else
-            throw new ServiceException("Illegal scope in destination: " + destination);
-        
+            throw new ServiceException(
+                    "Illegal scope in destination: " + destination);
+
         return cache;
     }
 }

@@ -18,20 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity;
-
-import flex.messaging.messages.AsyncMessage;
-import flex.messaging.messages.CommandMessage;
-import flex.messaging.messages.Message;
-import org.granite.config.flex.Adapter;
-import org.granite.config.flex.Destination;
-import org.granite.context.GraniteContext;
-import org.granite.gravity.adapters.ServiceAdapter;
-import org.granite.gravity.adapters.SimpleServiceAdapter;
-import org.granite.gravity.osgi.impl.Tracker;
-import org.granite.logging.Logger;
-import org.granite.messaging.service.ServiceException;
-import org.granite.util.ClassUtil;
+package org.granite.gravity.adapters;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -39,6 +26,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Destination;
+import org.granite.context.GraniteContext;
+import org.granite.gravity.Gravity;
+import org.granite.logging.Logger;
+import org.granite.messaging.service.ServiceException;
+import org.granite.util.ClassUtil;
+
+import flex.messaging.messages.AsyncMessage;
+import flex.messaging.messages.CommandMessage;
+import flex.messaging.messages.Message;
 
 /**
  * @author William DRAI
@@ -48,8 +47,7 @@ public class AdapterFactory implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    private static final Logger log = Logger.getLogger(
-            org.granite.gravity.adapters.AdapterFactory.class);
+    private static final Logger log = Logger.getLogger(AdapterFactory.class);
     private static final ReentrantLock lock = new ReentrantLock();
 
     private Gravity gravity;
@@ -86,23 +84,17 @@ public class AdapterFactory implements Serializable {
             return null;
         }
         Adapter adapter = destination.getAdapter();
-        ServiceAdapter service;
-        if (adapter.getProperties().get("OSGi") == null) {
-            String key = null;
 
-            if (adapter != null) {
-                log.debug(">> Found adapterRef: %s", adapter.getId());
-                key = org.granite.gravity.adapters.AdapterFactory.class.getName() + '@' + destination.getId() + '.' + adapter.getId();
-            }
-            else
-                key = defaultAdapterClass.getName() + '@' + destination.getId();
+        String key = null;
 
-            service =  getServiceAdapter(adaptersCache, context, destination, key,
-                                         adapter != null ? adapter.getId() : null);
-        } else {
-            service = Tracker.getAdapter(adapter.getId());
+        if (adapter != null) {
+            log.debug(">> Found adapterRef: %s", adapter.getId());
+            key = AdapterFactory.class.getName() + '@' + destination.getId() + '.' + adapter.getId();
         }
-        return service;
+        else
+            key = defaultAdapterClass.getName() + '@' + destination.getId();
+
+        return getServiceAdapter(adaptersCache, context, destination, key, adapter != null ? adapter.getId() : null);
     }
 
     private ServiceAdapter getServiceAdapter(Map<String, ServiceAdapter> cache, GraniteContext context, Destination destination, String key, String adapterId) {
@@ -115,8 +107,7 @@ public class AdapterFactory implements Serializable {
                 Adapter config = destination.getAdapter();
                 try {
                     Class<? extends ServiceAdapter> clazz = (adapterId != null)
-                        ? ClassUtil.forName(config.getClassName(),
-                                            ServiceAdapter.class)
+                        ? ClassUtil.forName(config.getClassName(), ServiceAdapter.class)
                         : defaultAdapterClass;
                     serviceAdapter = clazz.newInstance();
                     serviceAdapter.setId(adapterId);

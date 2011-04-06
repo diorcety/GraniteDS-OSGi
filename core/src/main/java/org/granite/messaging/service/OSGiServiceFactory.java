@@ -32,10 +32,7 @@ import org.granite.logging.Logger;
 import org.granite.osgi.service.GraniteDestination;
 import org.granite.osgi.service.GraniteFactory;
 
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @Provides(specifications = GraniteFactory.class)

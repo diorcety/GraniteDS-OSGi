@@ -30,13 +30,13 @@ public class FactoryFactory {
     private Map<String, GraniteFactory> osgiServices =
             new Hashtable<String, GraniteFactory>();
 
-    FactoryFactory() {
-        DEFAULT = this;
-    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     @Validate
     private void starting() {
         log.debug("Start FactoryFactory");
+        DEFAULT = this;
     }
 
     @Invalidate
@@ -100,11 +100,10 @@ public class FactoryFactory {
                 if (config == null)
                     config = Factory.DEFAULT_FACTORY;
 
-
+                ///////////////////////////////////////////////////////////////
                 /// OSGi
-                if (osgiServices != null) {
-                    factory = osgiServices.get(config.getClassName());
-                }
+                factory = osgiServices.get(config.getClassName());
+                ///////////////////////////////////////////////////////////////
 
                 if (factory == null) {
                     try {

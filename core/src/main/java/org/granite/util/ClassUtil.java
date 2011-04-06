@@ -20,48 +20,62 @@
 
 package org.granite.util;
 
-import org.granite.osgi.OSGiBase;
-import org.granite.osgi.impl.OSGiBaseImpl;
-import org.granite.osgi.impl.Tracker;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Validate;
+
+import org.granite.logging.Logger;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.*;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
+
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Franck WOLFF
  */
-public abstract class ClassUtil {
+public class ClassUtil {
 
     public static Object newInstance(String type)
-        throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         return forName(type).newInstance();
     }
 
     public static <T> T newInstance(String type, Class<T> cast)
-        throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         return forName(type, cast).newInstance();
     }
 
-    public static Object newInstance(String type, Class<?>[] argsClass, Object[] argsValues)
-        throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public static Object newInstance(String type, Class<?>[] argsClass,
+                                     Object[] argsValues)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         return newInstance(forName(type), argsClass, argsValues);
     }
 
     @SuppressWarnings("unchecked")
     public static <T> T newInstance(Class<?> type, Class<T> cast)
-        throws InstantiationException, IllegalAccessException {
-        return (T)type.newInstance();
+            throws InstantiationException, IllegalAccessException {
+        return (T) type.newInstance();
     }
 
-    public static <T> T newInstance(Class<T> type, Class<?>[] argsClass, Object[] argsValues)
-        throws InstantiationException, IllegalAccessException {
+    public static <T> T newInstance(Class<T> type, Class<?>[] argsClass,
+                                    Object[] argsValues)
+            throws InstantiationException, IllegalAccessException {
         T instance = null;
         try {
             Constructor<T> constructorDef = type.getConstructor(argsClass);
@@ -79,43 +93,33 @@ public abstract class ClassUtil {
     }
 
     public static Class<?> forName(String type) throws ClassNotFoundException {
-    	try {
-    		return ClassUtil.class.getClassLoader().loadClass(type);
-    	}
-    	catch (ClassNotFoundException e) {
+        try {
+            return ClassUtil.class.getClassLoader().loadClass(type);
+        } catch (ClassNotFoundException e) {
             try {
-    		     return Thread.currentThread().getContextClassLoader()
-                              .loadClass(type);
+                return Thread.currentThread().getContextClassLoader().loadClass(
+                        type);
+            } catch (ClassNotFoundException e2) {
+                return OSGiClassUtil.forName(type);
             }
-            catch (ClassNotFoundException e2) {
-                 return OSGiBaseImpl.forName(type);
-            }
-    	}
+        }
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Class<T> forName(String type, Class<T> cast) throws ClassNotFoundException {
-    	try {
-    		return (Class<T>)ClassUtil.class.getClassLoader().loadClass(type);
-    	}
-    	catch (ClassNotFoundException e) {
-            try {
-    		    return (Class<T>)Thread.currentThread().getContextClassLoader()
-                                    .loadClass(type);
-            }
-            catch (ClassNotFoundException e2) {
-                 return OSGiBaseImpl.forName(type, cast);
-            }
-    	}
+    public static <T> Class<T> forName(String type,
+                                       Class<T> cast) throws ClassNotFoundException {
+        return (Class<T>) ClassUtil.forName(type);
     }
 
-    public static Constructor<?> getConstructor(String type, Class<?>[] paramTypes)
-        throws ClassNotFoundException, NoSuchMethodException {
+    public static Constructor<?> getConstructor(String type,
+                                                Class<?>[] paramTypes)
+            throws ClassNotFoundException, NoSuchMethodException {
         return getConstructor(forName(type), paramTypes);
     }
 
-    public static <T> Constructor<T> getConstructor(Class<T> type, Class<?>[] paramTypes)
-        throws NoSuchMethodException {
+    public static <T> Constructor<T> getConstructor(Class<T> type,
+                                                    Class<?>[] paramTypes)
+            throws NoSuchMethodException {
         return type.getConstructor(paramTypes);
     }
 
@@ -127,32 +131,35 @@ public abstract class ClassUtil {
         return Collections.emptySet();
     }
 
-    public static <T, U> Map<T, U> emptyMap(Class<T> keyType, Class<U> valueType) {
+    public static <T, U> Map<T, U> emptyMap(Class<T> keyType,
+                                            Class<U> valueType) {
         return Collections.emptyMap();
     }
 
     public static boolean isPrimitive(Type type) {
-        return type instanceof Class<?> && ((Class<?>)type).isPrimitive();
+        return type instanceof Class<?> && ((Class<?>) type).isPrimitive();
     }
 
     public static Class<?> classOfType(Type type) {
         if (type instanceof Class<?>)
-            return (Class<?>)type;
+            return (Class<?>) type;
         if (type instanceof ParameterizedType)
-            return (Class<?>)((ParameterizedType)type).getRawType();
+            return (Class<?>) ((ParameterizedType) type).getRawType();
         if (type instanceof WildcardType) {
             // Forget lower bounds and only deal with first upper bound...
-            Type[] ubs = ((WildcardType)type).getUpperBounds();
+            Type[] ubs = ((WildcardType) type).getUpperBounds();
             if (ubs.length > 0)
                 return classOfType(ubs[0]);
         }
         if (type instanceof GenericArrayType) {
-            Class<?> ct = classOfType(((GenericArrayType)type).getGenericComponentType());
-            return (ct != null ? Array.newInstance(ct, 0).getClass() : Object[].class);
+            Class<?> ct = classOfType(
+                    ((GenericArrayType) type).getGenericComponentType());
+            return (ct != null ? Array.newInstance(ct,
+                                                   0).getClass() : Object[].class);
         }
         if (type instanceof TypeVariable<?>) {
             // Only deal with first (upper) bound...
-            Type[] ubs = ((TypeVariable<?>)type).getBounds();
+            Type[] ubs = ((TypeVariable<?>) type).getBounds();
             if (ubs.length > 0)
                 return classOfType(ubs[0]);
         }
@@ -161,14 +168,14 @@ public abstract class ClassUtil {
     }
 
     public static Type getBoundType(TypeVariable<?> typeVariable) {
-    	Type[] ubs = typeVariable.getBounds();
-    	if (ubs.length > 0)
-    		return ubs[0];
+        Type[] ubs = typeVariable.getBounds();
+        if (ubs.length > 0)
+            return ubs[0];
 
-    	// should never happen...
-    	if (typeVariable.getGenericDeclaration() instanceof Type)
-    		return (Type)typeVariable.getGenericDeclaration();
-    	return typeVariable;
+        // should never happen...
+        if (typeVariable.getGenericDeclaration() instanceof Type)
+            return (Type) typeVariable.getGenericDeclaration();
+        return typeVariable;
     }
 
     public static String getPackageName(Class<?> clazz) {
@@ -177,49 +184,57 @@ public abstract class ClassUtil {
 
     public static PropertyDescriptor[] getProperties(Class<?> clazz) {
         try {
-        	PropertyDescriptor[] properties = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
-        	Field[] fields = clazz.getDeclaredFields();
-        	for (Field field : fields) {
-        		if (Boolean.class.equals(field.getType())) {
-        			boolean found = false;
-        			for (PropertyDescriptor property : properties) {
-        				if (property.getName().equals(field.getName())) {
-        					found = true;
-        					if (property.getReadMethod() == null) {
-        						try {
-        							Method readMethod = clazz.getDeclaredMethod(getIsMethodName(field.getName()));
-        							if (Modifier.isPublic(readMethod.getModifiers()) && !Modifier.isStatic(readMethod.getModifiers()))
-        								property.setReadMethod(readMethod);
-        						}
-        						catch (NoSuchMethodException e) {
-        						}
-        					}
-        					break;
-        				}
-        			}
-        			if (!found) {
-						try {
-							Method readMethod = clazz.getDeclaredMethod(getIsMethodName(field.getName()));
-							if (Modifier.isPublic(readMethod.getModifiers()) && !Modifier.isStatic(readMethod.getModifiers())) {
-								PropertyDescriptor[] propertiesTmp = new PropertyDescriptor[properties.length + 1];
-								System.arraycopy(properties, 0, propertiesTmp, 0, properties.length);
-								propertiesTmp[properties.length] = new PropertyDescriptor(field.getName(), readMethod, null);
-								properties = propertiesTmp;
-							}
-						}
-						catch (NoSuchMethodException e) {
-						}
-        			}
-        		}
-        	}
+            PropertyDescriptor[] properties = Introspector.getBeanInfo(
+                    clazz).getPropertyDescriptors();
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                if (Boolean.class.equals(field.getType())) {
+                    boolean found = false;
+                    for (PropertyDescriptor property : properties) {
+                        if (property.getName().equals(field.getName())) {
+                            found = true;
+                            if (property.getReadMethod() == null) {
+                                try {
+                                    Method readMethod = clazz.getDeclaredMethod(
+                                            getIsMethodName(field.getName()));
+                                    if (Modifier.isPublic(
+                                            readMethod.getModifiers()) && !Modifier.isStatic(
+                                            readMethod.getModifiers()))
+                                        property.setReadMethod(readMethod);
+                                } catch (NoSuchMethodException e) {
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        try {
+                            Method readMethod = clazz.getDeclaredMethod(
+                                    getIsMethodName(field.getName()));
+                            if (Modifier.isPublic(
+                                    readMethod.getModifiers()) && !Modifier.isStatic(
+                                    readMethod.getModifiers())) {
+                                PropertyDescriptor[] propertiesTmp = new PropertyDescriptor[properties.length + 1];
+                                System.arraycopy(properties, 0, propertiesTmp,
+                                                 0, properties.length);
+                                propertiesTmp[properties.length] = new PropertyDescriptor(
+                                        field.getName(), readMethod, null);
+                                properties = propertiesTmp;
+                            }
+                        } catch (NoSuchMethodException e) {
+                        }
+                    }
+                }
+            }
             return properties;
         } catch (Exception e) {
-            throw new RuntimeException("Could not introspect properties of class: " + clazz, e);
+            throw new RuntimeException(
+                    "Could not introspect properties of class: " + clazz, e);
         }
     }
 
     private static String getIsMethodName(String name) {
-    	return "is" + name.substring(0, 1).toUpperCase() + name.substring(1);
+        return "is" + name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     public static ClassLoader getClassLoader(Class<?> clazz) {
@@ -234,11 +249,11 @@ public abstract class ClassUtil {
         URL url = getClassLoader(clazz).getResource(toResourceName(clazz));
         String path = url.toString();
         if (path.indexOf(' ') != -1) {
-        	try {
-				url = new URL(path.replace(" ", "%20"));
-			} catch (MalformedURLException e) {
-				// should never happen...
-			}
+            try {
+                url = new URL(path.replace(" ", "%20"));
+            } catch (MalformedURLException e) {
+                // should never happen...
+            }
         }
         return url;
     }
@@ -248,50 +263,52 @@ public abstract class ClassUtil {
     }
 
     public static String getMethodSignature(Method method) {
-    	StringBuilder sb = new StringBuilder();
-    	sb.append(method.getName()).append('(');
-    	Class<?>[] params = method.getParameterTypes();
-    	for (int i = 0; i < params.length; i++) {
-    		if (i > 0)
-    			sb.append(',');
-    		sb.append(getTypeSignature(params[i]));
-    	}
-    	sb.append(')');
-    	return sb.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append(method.getName()).append('(');
+        Class<?>[] params = method.getParameterTypes();
+        for (int i = 0; i < params.length; i++) {
+            if (i > 0)
+                sb.append(',');
+            sb.append(getTypeSignature(params[i]));
+        }
+        sb.append(')');
+        return sb.toString();
     }
 
     public static String getTypeSignature(Class<?> type) {
-		if (type.isArray()) {
-		    try {
-				int dimensions = 1;
-				Class<?> clazz = type.getComponentType();
-				while (clazz.isArray()) {
-					dimensions++;
-					clazz = clazz.getComponentType();
-				}
+        if (type.isArray()) {
+            try {
+                int dimensions = 1;
+                Class<?> clazz = type.getComponentType();
+                while (clazz.isArray()) {
+                    dimensions++;
+                    clazz = clazz.getComponentType();
+                }
 
-				StringBuffer sb = new StringBuffer(clazz.getName());
-				while (dimensions-- > 0)
-				    sb.append("[]");
-				return sb.toString();
-		    } catch (Throwable e) {
-		    	// fallback...
-		    }
-		}
-		return type.getName();
-	}
+                StringBuffer sb = new StringBuffer(clazz.getName());
+                while (dimensions-- > 0)
+                    sb.append("[]");
+                return sb.toString();
+            } catch (Throwable e) {
+                // fallback...
+            }
+        }
+        return type.getName();
+    }
 
-    public static Method getMethod(Class<?> clazz, String signature) throws NoSuchMethodException {
-    	signature = StringUtil.removeSpaces(signature);
+    public static Method getMethod(Class<?> clazz,
+                                   String signature) throws NoSuchMethodException {
+        signature = StringUtil.removeSpaces(signature);
 
-    	if (!signature.endsWith(")"))
-			signature += "()";
+        if (!signature.endsWith(")"))
+            signature += "()";
 
-		for (Method method : clazz.getMethods()) {
-			if (signature.equals(getMethodSignature(method)))
-				return method;
-		}
+        for (Method method : clazz.getMethods()) {
+            if (signature.equals(getMethodSignature(method)))
+                return method;
+        }
 
-		throw new NoSuchMethodException("Could not find method: " + signature + " in class: " + clazz);
+        throw new NoSuchMethodException(
+                "Could not find method: " + signature + " in class: " + clazz);
     }
 }

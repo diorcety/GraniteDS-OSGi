@@ -28,7 +28,6 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.logging.Logger;
-import org.granite.osgi.util.Converter;
 import org.granite.util.XMap;
 
 import java.util.Dictionary;
@@ -188,7 +187,7 @@ public class Channel implements ChannelComponent {
 
     @Property(name = "PROPERTIES", mandatory = false)
     private void setProperties(Dictionary<String, String> properties) {
-        this.properties = Converter.getXMap(properties);
+        this.properties = new XMap(properties);
     }
 
     @Validate
