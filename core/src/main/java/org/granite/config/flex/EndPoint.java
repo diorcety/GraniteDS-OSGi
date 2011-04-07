@@ -20,8 +20,6 @@
 
 package org.granite.config.flex;
 
-import org.granite.util.XMap;
-
 /**
  * @author Franck WOLFF
  */
@@ -41,16 +39,6 @@ public class EndPoint {
 
     public String getClassName() {
         return className;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Static helper.
-
-    public static EndPoint forElement(XMap element) {
-        String uri = element.get("@uri");
-        String className = element.get("@class");
-
-        return new EndPoint(uri, className);
     }
 
     @Override

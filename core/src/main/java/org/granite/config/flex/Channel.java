@@ -20,13 +20,6 @@
 
 package org.granite.config.flex;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -35,8 +28,6 @@ import java.util.Dictionary;
 /**
  * @author Franck WOLFF
  */
-@Component
-@Provides
 public class Channel implements ChannelComponent {
 
     private static final Logger LOG = Logger.getLogger(Channel.class);
@@ -93,24 +84,6 @@ public class Channel implements ChannelComponent {
         return legacyCollection;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Static helper.
-
-    public static Channel forElement(XMap element) {
-        String id = element.get("@id");
-        String className = element.get("@class");
-
-        XMap endPointElt = element.getOne("endpoint");
-        if (endPointElt == null)
-            throw new RuntimeException(
-                    "Excepting a 'endpoint' element in 'channel-definition': " + id);
-        EndPoint endPoint = EndPoint.forElement(endPointElt);
-
-        XMap properties = new XMap(element.getOne("properties"));
-
-        return new Channel(id, className, endPoint, properties);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -139,76 +112,5 @@ public class Channel implements ChannelComponent {
                 ", legacyXml=" + legacyXml +
                 ", legacyCollection=" + legacyCollection +
                 '}';
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // OSGi
-
-    @Requires
-    private ServicesConfigComponent servicesConfig;
-
-    public String ENDPOINT_URI;
-
-    public String ENDPOINT_CLASS;
-
-    public Channel() {
-        this.id = null;
-        this.className = null;
-        this.endPoint = null;
-        this.properties = new XMap();
-        this.legacyCollection = false;
-        this.legacyXml = false;
-    }
-
-    @Property(name = "ID", mandatory = true)
-    private void setId(String id) {
-        this.id = id;
-    }
-
-    @Property(name = "CLASS", mandatory = false,
-              value = "mx.messaging.channels.AMFChannel")
-    private void setClass(String className) {
-        this.className = className;
-    }
-
-    @Property(name = "ENDPOINT_URI", mandatory = true)
-    private void setEndPointURI(String epURI) {
-        this.ENDPOINT_URI = epURI;
-        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
-    @Property(name = "ENDPOINT_CLASS", mandatory = false,
-              value = "flex.messaging.endpoints.AMFEndpoint")
-    private void setEndPointClass(String epClass) {
-        this.ENDPOINT_CLASS = epClass;
-        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
-
-    @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Dictionary<String, String> properties) {
-        this.properties = new XMap(properties);
-    }
-
-    @Validate
-    public void starting() {
-        start();
-    }
-
-    public void start() {
-        LOG.debug("Start Channel:" + this.id);
-        servicesConfig.addChannel(this);
-    }
-
-    @Invalidate
-    public void stopping() {
-        stop();
-    }
-
-    public void stop() {
-        LOG.debug("Stop Channel:" + this.id);
-        if (servicesConfig != null) {
-            servicesConfig.removeChannel(this.id);
-        }
     }
 }

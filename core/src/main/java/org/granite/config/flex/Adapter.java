@@ -20,22 +20,12 @@
 
 package org.granite.config.flex;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
-
-import java.util.Dictionary;
 
 /**
  * @author Franck WOLFF
  */
-@Component
-@Provides
 public class Adapter implements AdapterComponent {
 
     private static final Logger LOG = Logger.getLogger(Adapter.class);
@@ -67,17 +57,6 @@ public class Adapter implements AdapterComponent {
         return this;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Static helper.
-
-    public static Adapter forElement(XMap element) {
-        String id = element.get("@id");
-        String className = element.get("@class");
-        XMap properties = new XMap(element.getOne("properties"));
-
-        return new Adapter(id, className, properties);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -103,47 +82,5 @@ public class Adapter implements AdapterComponent {
                 ", id='" + id + '\'' +
                 ", properties=" + properties +
                 '}';
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // OSGi
-
-    protected Adapter() {
-        this.id = null;
-        this.className = null;
-        this.properties = new XMap();
-    }
-
-    @Property(name = "ID", mandatory = true)
-    private void setId(String id) {
-        this.id = id;
-    }
-
-    @Property(name = "CLASS", mandatory = true)
-    private void setClass(String className) {
-        this.className = className;
-    }
-
-    @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Dictionary<String, String> properties) {
-        this.properties = new XMap(properties);
-    }
-
-    @Validate
-    public void starting() {
-        start();
-    }
-
-    public void start() {
-        LOG.debug("Start Adapter:" + this.id);
-    }
-
-    @Invalidate
-    public void stopping() {
-        stop();
-    }
-
-    public void stop() {
-        LOG.debug("Stop Adapter:" + this.id);
     }
 }

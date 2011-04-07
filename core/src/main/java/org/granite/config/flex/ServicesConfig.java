@@ -22,12 +22,6 @@ package org.granite.config.flex;
 
 import flex.messaging.messages.RemotingMessage;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.config.api.Configuration;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.annotations.RemoteDestination;
@@ -55,9 +49,6 @@ import java.util.Map;
 /**
  * @author Franck WOLFF
  */
-@Component
-@Instantiate
-@Provides(specifications = ServicesConfigComponent.class)
 public class ServicesConfig implements
         ScannedItemHandler, ServicesConfigComponent {
 
@@ -198,6 +189,18 @@ public class ServicesConfig implements
             scan(configuration);
     }
 
+    public ServicesConfig(Map<String, Service> services, Map<String,
+            Channel> channels, Map<String, Factory> factories) {
+        this.services = services;
+        this.channels = channels;
+        this.factories = factories;
+    }
+
+    public ServicesConfig()
+    {
+
+    }
+
     public void scan(Configuration configuration) {
         List<ScannedItemHandler> handlers = new ArrayList<ScannedItemHandler>();
         for (Factory factory : factories.values()) {
@@ -231,7 +234,7 @@ public class ServicesConfig implements
     private void loadConfig(
             InputStream configIs) throws IOException, SAXException {
         XMap doc = new XMap(configIs);
-        forElement(doc);
+        StaticHelper.getServicesConfig(doc);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -329,54 +332,6 @@ public class ServicesConfig implements
         return destinations;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Static helper.
-
-    private void forElement(XMap element) {
-        XMap services = element.getOne("services");
-        if (services != null) {
-            for (XMap service : services.getAll("service")) {
-                Service serv = Service.forElement(
-                        service);
-                this.services.put(serv.getId(), serv);
-            }
-
-            /* TODO: service-include...
-            for (Element service : (List<Element>)services.getChildren("service-include")) {
-                config.services.add(Service.forElement(service));
-            }
-            */
-        }
-
-        XMap channels = element.getOne("channels");
-        if (channels != null) {
-            for (XMap channel : channels.getAll("channel-definition")) {
-                Channel chan = Channel.forElement(
-                        channel);
-                this.channels.put(chan.getId(), chan);
-            }
-        } else {
-            LOG.info("No channel definition found, using defaults");
-            EndPoint defaultEndpoint = new EndPoint(
-                    "http://{server.name}:{server.port}/{context.root}/graniteamf/amf",
-                    "flex.messaging.endpoints.AMFEndpoint");
-            Channel defaultChannel = new Channel("my-graniteamf",
-                                                 "mx.messaging.channels.AMFChannel",
-                                                 defaultEndpoint,
-                                                 XMap.EMPTY_XMAP);
-            this.channels.put(defaultChannel.getId(), defaultChannel);
-        }
-
-        XMap factories = element.getOne("factories");
-        if (factories != null) {
-            for (XMap factory : factories.getAll("factory")) {
-                Factory fact = Factory.forElement(
-                        factory);
-                this.factories.put(fact.getId(), fact);
-            }
-        }
-    }
-
     @Override
     public String toString() {
         return "ServicesConfig{" +
@@ -384,21 +339,5 @@ public class ServicesConfig implements
                 ", services=" + services +
                 ", factories=" + factories +
                 '}';
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // OSGi
-
-    public ServicesConfig() {
-    }
-
-    @Validate
-    public void starting() {
-        LOG.debug("Start ServicesConfig");
-    }
-
-    @Invalidate
-    public void stopping() {
-        LOG.debug("Stop ServicesConfig");
     }
 }

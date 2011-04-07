@@ -20,28 +20,13 @@
 
 package org.granite.config.flex;
 
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.logging.Logger;
-import org.granite.util.XMap;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author Franck WOLFF
  */
-@Component
-@Provides
 public class Service implements ServiceComponent {
 
     private static final Logger LOG = Logger.getLogger(Service.class);
@@ -124,36 +109,6 @@ public class Service implements ServiceComponent {
         return adapters.remove(adapterId);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Static helper.
-
-    public static Service forElement(XMap element) {
-        String id = element.get("@id");
-        String className = element.get("@class");
-        String messageTypes = element.get("@messageTypes");
-
-        Adapter defaultAdapter = null;
-        Map<String, Adapter> adaptersMap = new HashMap<String, Adapter>();
-        for (XMap adapter : element.getAll("adapters/adapter-definition")) {
-            Adapter ad = Adapter.forElement(
-                    adapter);
-            if (Boolean.TRUE.toString().equals(adapter.get("@default")))
-                defaultAdapter = ad;
-            adaptersMap.put(ad.getId(), ad);
-        }
-
-        Map<String, Destination> destinations = new HashMap<String, Destination>();
-        for (XMap destinationElt : element.getAll("destination")) {
-            Destination destination = Destination.forElement(destinationElt,
-                                                             defaultAdapter,
-                                                             adaptersMap);
-            destinations.put(destination.getId(), destination);
-        }
-
-        return new Service(id, className, messageTypes, defaultAdapter,
-                           adaptersMap, destinations);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -182,123 +137,5 @@ public class Service implements ServiceComponent {
                 ", defaultAdapter=" + defaultAdapter +
                 ", destinations=" + destinations +
                 '}';
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // OSGi
-
-    @Requires
-    private ServicesConfigComponent servicesConfig;
-
-    @Property
-    public Collection<String> ADAPTER_LIST;
-
-    @Property
-    public String DEFAULT_ADAPTER;
-
-    //
-    @ServiceController
-    private boolean state = false;
-
-    private boolean started = false;
-
-    public Service() {
-        this.id = null;
-        this.className = null;
-        this.messageTypes = null;
-        this.defaultAdapter = null;
-        this.adapters = new HashMap<String, Adapter>();
-        this.destinations = new HashMap<String, Destination>();
-    }
-
-    @Property(name = "ID", mandatory = true)
-    private void setId(String id) {
-        this.id = id;
-    }
-
-    @Property(name = "MESSAGETYPES", mandatory = false,
-              value = "flex.messaging.messages.RemotingMessage")
-    private void setMessageTypes(String messageTypes) {
-        this.messageTypes = messageTypes;
-    }
-
-    @Property(name = "CLASS", mandatory = false,
-              value = "flex.messaging.services.RemotingService")
-    private void setClass(String className) {
-        this.className = className;
-    }
-
-    @Bind(aggregate = true, optional = true)
-    private void bindAdapter(AdapterComponent adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
-                adapter.getId())) {
-            this.adapters.put(adapter.getId(), (Adapter) adapter);   //HACK
-
-            if (this.DEFAULT_ADAPTER != null &&
-                    this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-                this.defaultAdapter = (Adapter) adapter;    //HACK
-            }
-            checkState();
-        }
-    }
-
-    @Unbind
-    private void unbindAdapter(AdapterComponent adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
-                adapter.getId())) {
-            this.adapters.remove(adapter.getId());
-
-            if (this.DEFAULT_ADAPTER != null &&
-                    this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-                this.defaultAdapter = null;
-            }
-            checkState();
-        }
-    }
-
-    private void checkState() {
-        boolean new_state;
-        if (started && (adapters == null || ADAPTER_LIST == null
-                || adapters.size() == ADAPTER_LIST.size())) {
-            new_state = true;
-        } else {
-            new_state = false;
-        }
-        if (new_state != this.state) {
-            if (new_state)
-                start();
-            else
-                stop();
-
-            this.state = new_state;
-        }
-    }
-
-    @Validate
-    public void starting() {
-        started = true;
-        checkState();
-    }
-
-    public void start() {
-        LOG.debug("Start Service:" + this.id);
-        getDestinations().clear();
-        servicesConfig.addService(this);
-    }
-
-    @Invalidate
-    public void stopping() {
-        if (this.state) {
-            stop();
-            this.state = false;
-        }
-        started = false;
-    }
-
-    public void stop() {
-        LOG.debug("Stop Service:" + this.id);
-        if (servicesConfig != null) {
-            servicesConfig.removeService(this.id);
-        }
     }
 }
