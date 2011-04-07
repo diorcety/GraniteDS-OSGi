@@ -1,4 +1,4 @@
-package org.granite.config.flex;
+package org.granite.osgi.impl;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -7,6 +7,9 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.Channel;
+import org.granite.config.flex.EndPoint;
+import org.granite.config.flex.IServicesConfig;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -19,7 +22,7 @@ public class OSGiChannel extends Channel {
     private static final Logger LOG = Logger.getLogger(OSGiChannel.class);
 
     @Requires
-    private ServicesConfigComponent servicesConfig;
+    private IServicesConfig servicesConfig;
 
     public String ENDPOINT_URI;
 

@@ -8,9 +8,9 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.ChannelComponent;
+import org.granite.config.flex.IChannel;
 import org.granite.context.GraniteContext;
-import org.granite.context.GraniteContextComponent;
+import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
 import org.granite.messaging.amf.io.AMF0Deserializer;
@@ -41,7 +41,7 @@ public class AMFMessageServlet extends HttpServlet {
     private HttpService httpService;
 
     @Requires
-    private GraniteContextComponent graniteContext;
+    private IGraniteContext graniteContext;
 
     private HttpContext httpContext;
 
@@ -68,7 +68,7 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Bind(aggregate = true, optional = true)
-    private synchronized void bindChannel(final ChannelComponent channel) {
+    private synchronized void bindChannel(final IChannel channel) {
         try {
             if (channel.getClassName().equals(
                     "mx.messaging.channels.AMFChannel")) {
@@ -96,7 +96,7 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Unbind
-    private synchronized void unbindChannel(final ChannelComponent channel) {
+    private synchronized void unbindChannel(final IChannel channel) {
         try {
             if (channel.getClassName().equals(
                     "mx.messaging.channels.AMFChannel")) {
@@ -128,8 +128,8 @@ public class AMFMessageServlet extends HttpServlet {
             return;
         }
         try {
-            GraniteContext context = HttpGraniteContext.createThreadIntance(
-                    graniteContext.getGraniteContext(), request, response);
+            IGraniteContext context = new HttpGraniteContext(graniteContext, request, response);
+            GraniteContext.setCurrentInstance(context);
 
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");

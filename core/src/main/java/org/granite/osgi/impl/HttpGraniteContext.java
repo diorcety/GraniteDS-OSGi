@@ -1,45 +1,41 @@
 package org.granite.osgi.impl;
 
 
+import org.granite.config.GraniteConfig;
+import org.granite.config.flex.IServicesConfig;
+import org.granite.context.AMFContext;
 import org.granite.context.GraniteContext;
+import org.granite.context.IGraniteClassLoader;
+import org.granite.context.IGraniteContext;
+import org.granite.messaging.service.IMainFactory;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class HttpGraniteContext extends OSGiGraniteContext {
+public class HttpGraniteContext implements IGraniteContext {
 
     private static final String SESSION_LOCK_KEY = HttpGraniteContext.class.getName() + ".LOCK";
 
     private final HttpServletRequest request;
     private final HttpServletResponse response;
 
-    private Map<String, String> initialisationMap = null;
     private SessionMap sessionMap = null;
     private RequestMap requestMap = null;
+    private IGraniteContext graniteContext;
 
-
-    public static HttpGraniteContext createThreadIntance(
-            GraniteContext context,
+    public HttpGraniteContext(
+            IGraniteContext context,
             HttpServletRequest request,
             HttpServletResponse response) {
-
-        HttpGraniteContext graniteContext = new HttpGraniteContext
-                (context, request, response);
-        setCurrentInstance(graniteContext);
-        return graniteContext;
-    }
-
-    private HttpGraniteContext(
-            GraniteContext context,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        super(context.getGraniteConfig(), context.getServicesConfig());
-        this.applicationMap = context.getApplicationMap();
+        this.graniteContext = context;
         this.request = request;
         this.response = response;
     }
@@ -60,7 +56,18 @@ public class HttpGraniteContext extends OSGiGraniteContext {
         return request.getSession(true);
     }
 
-    @Override
+    public IServicesConfig getServicesConfig() {
+        return graniteContext.getServicesConfig();
+    }
+
+    public GraniteConfig getGraniteConfig() {
+        return graniteContext.getGraniteConfig();
+    }
+
+    public AMFContext getAMFContext() {
+        return graniteContext.getAMFContext();
+    }
+
     public synchronized Object getSessionLock() {
         Object lock = request.getSession(true).getAttribute(SESSION_LOCK_KEY);
         if (lock == null) {
@@ -70,30 +77,36 @@ public class HttpGraniteContext extends OSGiGraniteContext {
         return lock;
     }
 
-    @Override
     public Map<String, String> getInitialisationMap() {
-        if (initialisationMap == null)
-            initialisationMap = new HashMap<String, String>();
-        return initialisationMap;
+        return graniteContext.getInitialisationMap();
     }
 
-    @Override
+    public Map<String, Object> getApplicationMap() {
+        return graniteContext.getApplicationMap();
+    }
+
     public Map<String, Object> getSessionMap() {
         return getSessionMap(true);
     }
 
-    @Override
     public Map<String, Object> getSessionMap(boolean create) {
         if (sessionMap == null && (create || request.getSession(false) != null))
             sessionMap = new SessionMap(request);
         return sessionMap;
     }
 
-    @Override
     public Map<String, Object> getRequestMap() {
         if (requestMap == null)
             requestMap = new RequestMap(request);
         return requestMap;
+    }
+
+    public IGraniteClassLoader getClassLoader() {
+        return graniteContext.getClassLoader();
+    }
+
+    public IMainFactory getMainFactory() {
+        return graniteContext.getMainFactory();
     }
 }
 

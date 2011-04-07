@@ -1,4 +1,4 @@
-package org.granite.config.flex;
+package org.granite.osgi.impl;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -6,6 +6,7 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.Adapter;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 

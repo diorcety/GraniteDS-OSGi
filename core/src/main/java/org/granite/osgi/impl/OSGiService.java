@@ -1,4 +1,4 @@
-package org.granite.config.flex;
+package org.granite.osgi.impl;
 
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
@@ -10,6 +10,7 @@ import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.*;
 import org.granite.logging.Logger;
 
 import java.util.Collection;
@@ -22,7 +23,7 @@ public class OSGiService extends Service {
     private static final Logger LOG = Logger.getLogger(OSGiService.class);
 
     @Requires
-    private ServicesConfigComponent servicesConfig;
+    private IServicesConfig servicesConfig;
 
     @Property
     public Collection<String> ADAPTER_LIST;
@@ -37,8 +38,8 @@ public class OSGiService extends Service {
     private boolean started = false;
 
     public OSGiService() {
-        super(null, null, null, null, new HashMap<String, Adapter>(),
-              new HashMap<String, Destination>());
+        super(null, null, null, null, new HashMap<String, IAdapter>(),
+              new HashMap<String, IDestination>());
     }
 
     @Property(name = "ID", mandatory = true)
@@ -59,21 +60,20 @@ public class OSGiService extends Service {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindAdapter(AdapterComponent adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
-                adapter.getId())) {
-            this.adapters.put(adapter.getId(), (Adapter) adapter);   //HACK
+    private void bindAdapter(IAdapter adapter) {
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
+            this.adapters.put(adapter.getId(), adapter);
 
             if (this.DEFAULT_ADAPTER != null &&
                     this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-                this.defaultAdapter = (Adapter) adapter;    //HACK
+                this.defaultAdapter = adapter;
             }
             checkState();
         }
     }
 
     @Unbind
-    private void unbindAdapter(AdapterComponent adapter) {
+    private void unbindAdapter(IAdapter adapter) {
         if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
                 adapter.getId())) {
             this.adapters.remove(adapter.getId());

@@ -9,9 +9,11 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;
-import org.granite.config.flex.ServicesConfigComponent;
+import org.granite.config.flex.IServicesConfig;
 import org.granite.context.GraniteContext;
+import org.granite.context.IGraniteClassLoader;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.IMainFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,15 +29,15 @@ public class OSGiGraniteContext extends GraniteContext {
     protected Map<String, Object> applicationMap = null;
 
     @Requires
-    private ServicesConfigComponent servicesConfig;
+    private IGraniteClassLoader graniteClassLoader;
+
+    @Requires
+    private IMainFactory mainFactory;
+
+    @Requires
+    private IServicesConfig servicesConfig;
+
     private GraniteConfig graniteConfig;
-
-    public static GraniteContext getThreadIntance(
-            GraniteContext graniteContext) {
-        setCurrentInstance(graniteContext);
-        return graniteContext;
-
-    }
 
     public OSGiGraniteContext(GraniteConfig graniteConfig,
                               ServicesConfig servicesConfig) {
@@ -44,7 +46,6 @@ public class OSGiGraniteContext extends GraniteContext {
         this.graniteConfig = graniteConfig;
     }
 
-    // OSGi Contructor
     private OSGiGraniteContext() {
         super(null, null);
         try {
@@ -55,8 +56,8 @@ public class OSGiGraniteContext extends GraniteContext {
     }
 
     @Override
-    public ServicesConfig getServicesConfig() {
-        return servicesConfig.getServicesConfig();
+    public IServicesConfig getServicesConfig() {
+        return servicesConfig;
     }
 
     @Override
@@ -94,6 +95,17 @@ public class OSGiGraniteContext extends GraniteContext {
     @Override
     public Map<String, Object> getRequestMap() {
         return null;
+    }
+
+    @Override
+    public IGraniteClassLoader getClassLoader() {
+        return graniteClassLoader;
+    }
+
+    @Override
+    public IMainFactory getMainFactory()
+    {
+        return mainFactory;
     }
 
     @Validate

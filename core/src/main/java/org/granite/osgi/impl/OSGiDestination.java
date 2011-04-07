@@ -1,4 +1,4 @@
-package org.granite.config.flex;
+package org.granite.osgi.impl;
 
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
@@ -7,6 +7,7 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.*;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -33,7 +34,7 @@ public class OSGiDestination extends Destination {
 
     private boolean started = false;
 
-    private ServiceComponent service;
+    private IService service;
 
     protected OSGiDestination() {
         super(null, new ArrayList<String>(), XMap.EMPTY_XMAP,
@@ -52,7 +53,7 @@ public class OSGiDestination extends Destination {
 
 
     @Bind(aggregate = true, optional = true)
-    private void bindService(ServiceComponent service) {
+    private void bindService(IService service) {
         if (service.getId() == this.SERVICE) {
             this.service = service;
             checkState();
@@ -60,7 +61,7 @@ public class OSGiDestination extends Destination {
     }
 
     @Unbind
-    private void unbindService(ServiceComponent service) {
+    private void unbindService(IService service) {
         if (service.getId() == this.SERVICE) {
             this.service = null;
             checkState();
@@ -68,15 +69,15 @@ public class OSGiDestination extends Destination {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindAdapter(AdapterComponent adapter) {
+    private void bindAdapter(IAdapter adapter) {
         if (adapter.getId() == this.ADAPTER) {
-            this.adapter = (Adapter) adapter;  //HACK
+            this.adapter = adapter;
             checkState();
         }
     }
 
     @Unbind
-    private void unbindAdapter(AdapterComponent adapter) {
+    private void unbindAdapter(IAdapter adapter) {
         if (adapter.getId() == this.ADAPTER) {
             this.adapter = null;
             checkState();
@@ -84,7 +85,7 @@ public class OSGiDestination extends Destination {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindChannel(ChannelComponent channel) {
+    private void bindChannel(IChannel channel) {
         if (this.CHANNEL_LIST.contains(channel.getId())) {
             this.channelRefs.add(channel.getId());
             checkState();
@@ -92,7 +93,7 @@ public class OSGiDestination extends Destination {
     }
 
     @Unbind
-    private void unbindChannel(ChannelComponent channel) {
+    private void unbindChannel(IChannel channel) {
         if (this.CHANNEL_LIST.contains(channel.getId())) {
             this.channelRefs.remove(channel.getId());
             checkState();

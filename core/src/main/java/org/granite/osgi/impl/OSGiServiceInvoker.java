@@ -18,29 +18,30 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.messaging.service;
+package org.granite.osgi.impl;
 
 import org.granite.config.flex.Destination;
+import org.granite.config.flex.IDestination;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.ServiceException;
+import org.granite.messaging.service.ServiceFactory;
+import org.granite.messaging.service.ServiceInvoker;
+import org.granite.messaging.service.SimpleServiceInvoker;
 
 /**
  * @author Franck WOLFF
  */
-public class OSGiServiceInvoker extends ServiceInvoker<SimpleServiceFactory> {
+public class OSGiServiceInvoker extends ServiceInvoker<ServiceFactory> {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(
             SimpleServiceInvoker.class);
 
-    protected OSGiServiceInvoker(
-            Destination destination,
-                                 SimpleServiceFactory factory, Object obj
-                                ) throws ServiceException {
+    protected OSGiServiceInvoker(IDestination destination,ServiceFactory factory, Object obj) throws ServiceException {
         super(destination, factory);
-        if(obj == null)
-            throw new ServiceException("Invalid object destination: " +
-                                               destination);
+        if (obj == null)
+            throw new ServiceException("Could not get OSGi destination: " + destination.getId());
         this.invokee = obj;
     }
 }

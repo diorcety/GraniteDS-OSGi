@@ -1,4 +1,4 @@
-package org.granite.config.flex;
+package org.granite.osgi.impl;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -6,6 +6,8 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.Factory;
+import org.granite.config.flex.IServicesConfig;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -17,7 +19,7 @@ public class OSGiFactory extends Factory {
     private static final Logger LOG = Logger.getLogger(OSGiFactory.class);
 
     @Requires
-    private ServicesConfigComponent servicesConfig;
+    private IServicesConfig servicesConfig;
 
 
     protected OSGiFactory() {

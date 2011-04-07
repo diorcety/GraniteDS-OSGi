@@ -1,13 +1,15 @@
-package org.granite.messaging.service;
+package org.granite.osgi.impl;
 
 import flex.messaging.messages.RemotingMessage;
-
 import org.apache.felix.ipojo.annotations.*;
-
 import org.granite.config.flex.Destination;
 import org.granite.config.flex.Factory;
+import org.granite.config.flex.IDestination;
+import org.granite.config.flex.IFactory;
 import org.granite.context.GraniteContext;
+import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.*;
 import org.granite.osgi.service.GraniteFactory;
 import org.granite.util.ClassUtil;
 
@@ -16,29 +18,27 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Component
+@Provides
 @Instantiate
-public class FactoryFactory {
+public class OSGiMainFactory implements IMainFactory {
 
-    private static final Logger log = Logger.getLogger(ServiceFactory.class);
+    private static final Logger log = Logger.getLogger(OSGiMainFactory.class);
 
     private final ReentrantLock lock = new ReentrantLock();
 
-    private static FactoryFactory DEFAULT = new FactoryFactory();
+    private Map<String, GraniteFactory> osgiServices = new Hashtable<String, GraniteFactory>();
 
-    ///////////////////////////////////////////////////////////////////////////
-    /// OSGi
-    private Map<String, GraniteFactory> osgiServices =
-            new Hashtable<String, GraniteFactory>();
+    @Requires
+    IServiceFactory osgiServiceFactory;
 
     @Validate
     private void starting() {
-        log.debug("Start FactoryFactory");
-        DEFAULT = this;
+        log.debug("Start MainFactory");
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("Stop FactoryFactory");
+        log.debug("Stop MainFactory");
     }
 
     @Bind(aggregate = true, optional = true)
@@ -52,10 +52,9 @@ public class FactoryFactory {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public ServiceFactory getFactoryInstance(
-            RemotingMessage request) throws ServiceException {
+    public IServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        IGraniteContext context = GraniteContext.getCurrentInstance();
 
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
@@ -64,8 +63,7 @@ public class FactoryFactory {
                 ">> Finding factoryId for messageType: %s and destinationId: %s",
                 messageType, destinationId);
 
-        Destination destination = context.getServicesConfig().findDestinationById(
-                messageType, destinationId);
+        IDestination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
             throw new ServiceException(
                     "Destination not found: " + destinationId);
@@ -79,40 +77,33 @@ public class FactoryFactory {
         return getServiceFactory(cache, context, factoryId, key);
     }
 
-    private ServiceFactory getServiceFactory(Map<String, Object> cache,
-                                             GraniteContext context,
-                                             String factoryId, String key) {
+    private IServiceFactory getServiceFactory(Map<String, Object> cache, IGraniteContext context, String factoryId, String key) {
         lock.lock();
         try {
 
-            ServiceFactory factory = (ServiceFactory) cache.get(key);
+            IServiceFactory factory = (IServiceFactory) cache.get(key);
             if (factory == null) {
 
                 log.debug(">> No cached factory for: %s", factoryId);
 
-                Factory config = context.getServicesConfig().findFactoryById(
-                        factoryId);
+                IFactory config = context.getServicesConfig().findFactoryById(factoryId);
 
                 if (config == null) {
-                    factory = ServiceFactory.getDefault();
-                }
-
-                ///////////////////////////////////////////////////////////////
-                /// OSGi
-                if (factory == null) {
-                    factory = osgiServices.get(config.getClassName());
-                }
-                ///////////////////////////////////////////////////////////////
-
-                if (factory == null) {
-                    try {
-                        Class<? extends ServiceFactory> clazz = ClassUtil.forName(
-                                config.getClassName(), ServiceFactory.class);
-                        factory = clazz.newInstance();
-                        factory.configure(config.getProperties());
-                    } catch (Exception e) {
-                        throw new ServiceException(
-                                "Could not instantiate factory: " + factory, e);
+                    factory = osgiServiceFactory;
+                } else {
+                    if (config.getProperties().get("OSGi") != null) {
+                        factory = osgiServices.get(config.getClassName());
+                        if (factory == null)
+                            throw new ServiceException("Could not get OSGi factory: " + factoryId);
+                    } else {
+                        try {
+                            Class<? extends ServiceFactory> clazz = ClassUtil.forName(
+                                    config.getClassName(), ServiceFactory.class);
+                            factory = clazz.newInstance();
+                            factory.configure(config.getProperties());
+                        } catch (Exception e) {
+                            throw new ServiceException("Could not instantiate factory: " + factoryId, e);
+                        }
                     }
                 }
                 cache.put(key, factory);
@@ -125,9 +116,5 @@ public class FactoryFactory {
         } finally {
             lock.unlock();
         }
-    }
-
-    public static FactoryFactory getDefault() {
-        return DEFAULT;
     }
 }

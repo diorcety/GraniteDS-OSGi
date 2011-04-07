@@ -18,29 +18,38 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.messaging.service;
+package org.granite.osgi.impl;
 
 import flex.messaging.messages.RemotingMessage;
 import org.apache.felix.ipojo.annotations.*;
 import org.granite.config.flex.Destination;
+import org.granite.config.flex.IDestination;
 import org.granite.context.GraniteContext;
+import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.ServiceException;
+import org.granite.messaging.service.ServiceFactory;
+import org.granite.messaging.service.ServiceInvoker;
+import org.granite.messaging.service.SimpleServiceInvoker;
 import org.granite.osgi.service.GraniteDestination;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Map;
 
 /**
  * @author Franck WOLFF
  */
 @Component
+@Provides
 @Instantiate
-public class SimpleServiceFactory extends ServiceFactory {
+public class OSGiServiceFactory extends ServiceFactory {
 
     private static final long serialVersionUID = 1L;
 
 
     private static final Logger LOG = Logger.getLogger(
-            SimpleServiceFactory.class);
+            OSGiServiceFactory.class);
 
     private Map<String, GraniteDestination> osgiServices =
             new Hashtable<String, GraniteDestination>();
@@ -60,7 +69,6 @@ public class SimpleServiceFactory extends ServiceFactory {
 
     @Validate
     private void starting() {
-        ServiceFactory.DEFAULT = this;
         LOG.debug("Start OSGiServiceFactory");
     }
 
@@ -75,8 +83,8 @@ public class SimpleServiceFactory extends ServiceFactory {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
-        Destination destination = context.getServicesConfig().findDestinationById(
+        IGraniteContext context = GraniteContext.getCurrentInstance();
+        IDestination destination = context.getServicesConfig().findDestinationById(
                 messageType, destinationId);
         if (destination == null)
             throw new ServiceException(
@@ -99,9 +107,8 @@ public class SimpleServiceFactory extends ServiceFactory {
         return service;
     }
 
-    private Map<String, Object> getCache(
-            Destination destination) throws ServiceException {
-        GraniteContext context = GraniteContext.getCurrentInstance();
+    private Map<String, Object> getCache(IDestination destination) throws ServiceException {
+        IGraniteContext context = GraniteContext.getCurrentInstance();
         String scope = destination.getProperties().get("scope");
 
         Map<String, Object> cache = null;
