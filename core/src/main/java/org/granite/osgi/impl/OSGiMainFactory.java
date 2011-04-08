@@ -16,9 +16,7 @@ import org.granite.config.flex.IFactory;
 import org.granite.context.GraniteContext;
 import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.IMainFactory;
-import org.granite.messaging.service.IServiceFactory;
-import org.granite.messaging.service.ServiceException;
+import org.granite.messaging.service.*;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
@@ -38,16 +36,6 @@ public class OSGiMainFactory implements IMainFactory {
 
     private Map<String, GraniteFactory> osgiServices = new Hashtable<String, GraniteFactory>();
 
-    private class CacheEntry {
-        public Map<String, Object> cache;
-        public String entry;
-
-        CacheEntry(Map<String, Object> cache, String entry) {
-            this.cache = cache;
-            this.entry = entry;
-        }
-    }
-
     private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
 
     @Requires
@@ -66,7 +54,8 @@ public class OSGiMainFactory implements IMainFactory {
         for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
             CacheEntry ce = ice.next();
             LOG.info("Remove \"" + ce.entry + "\" from the cache");
-            ce.cache.remove(ce.entry);
+            OSGiFactoryAbstraction service = (OSGiFactoryAbstraction) ce.cache.remove(ce.entry);
+            service.remove();
         }
     }
 
@@ -90,7 +79,8 @@ public class OSGiMainFactory implements IMainFactory {
         CacheEntry ce = cacheEntries.remove(factory.getId());
         if (ce != null) {
             LOG.info("Remove \"" + ce.entry + "\" (" + factory.getId() + ") from the cache");
-            ce.cache.remove(ce.entry);
+            OSGiFactoryAbstraction service = (OSGiFactoryAbstraction) ce.cache.remove(ce.entry);
+            service.remove();
         }
     }
 
@@ -134,9 +124,10 @@ public class OSGiMainFactory implements IMainFactory {
                 if (config == null) {
                     factory = osgiServiceFactory;
                 } else {
-                    factory = osgiServices.get(config.getId());
-                    if (factory == null)
+                    GraniteFactory gf = osgiServices.get(config.getId());
+                    if (gf == null)
                         throw new ServiceException("Could not get OSGi factory: " + factoryId);
+                    factory = new OSGiFactoryAbstraction(gf);
                     cacheEntries.put(config.getId(), new CacheEntry(cache, key));
                 }
                 cache.put(key, factory);
@@ -150,4 +141,5 @@ public class OSGiMainFactory implements IMainFactory {
             lock.unlock();
         }
     }
+
 }

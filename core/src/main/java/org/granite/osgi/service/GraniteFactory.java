@@ -1,7 +1,7 @@
 package org.granite.osgi.service;
 
-import org.granite.messaging.service.IServiceFactory;
-
-public interface GraniteFactory extends IServiceFactory {
+public interface GraniteFactory {
     public String getId();
+
+    Object newInstance();
 }

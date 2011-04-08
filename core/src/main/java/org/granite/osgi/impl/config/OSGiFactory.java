@@ -43,7 +43,7 @@ public class OSGiFactory extends SimpleFactory {
         this.id = id;
     }
 
-    @Property(name = "CLASS", mandatory = true)
+    @Property(name = "CLASS", mandatory = false)
     private void setClass(String className) {
         this.className = className;
     }

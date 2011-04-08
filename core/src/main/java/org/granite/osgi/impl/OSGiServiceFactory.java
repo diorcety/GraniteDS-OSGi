@@ -39,7 +39,6 @@ import org.granite.messaging.service.DefaultServiceExceptionHandler;
 import org.granite.messaging.service.IServiceFactory;
 import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
-import org.granite.messaging.service.SimpleServiceInvoker;
 import org.granite.osgi.service.GraniteDestination;
 
 import java.util.Collections;
@@ -57,22 +56,11 @@ public class OSGiServiceFactory implements IServiceFactory {
 
     private static final long serialVersionUID = 1L;
 
-
     private static final Logger LOG = Logger.getLogger(OSGiServiceFactory.class);
 
     private Map<String, GraniteDestination> osgiServices = new Hashtable<String, GraniteDestination>();
 
     private ServiceExceptionHandler serviceExceptionHandler;
-
-    private class CacheEntry {
-        public Map<String, Object> cache;
-        public String entry;
-
-        CacheEntry(Map<String, Object> cache, String entry) {
-            this.cache = cache;
-            this.entry = entry;
-        }
-    }
 
     private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
 
@@ -141,7 +129,7 @@ public class OSGiServiceFactory implements IServiceFactory {
             if (gd == null)
                 throw new ServiceException("Could not get OSGi destination: " + destination.getId());
 
-            service = new OSGiServiceInvoker(destination, this, gd);
+            service = new ObjectServiceInvoker(destination, this, gd);
 
             cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
             cache.put(key, service);
