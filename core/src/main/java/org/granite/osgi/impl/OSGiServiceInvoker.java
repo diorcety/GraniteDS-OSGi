@@ -20,25 +20,23 @@
 
 package org.granite.osgi.impl;
 
-import org.granite.config.flex.Destination;
 import org.granite.config.flex.IDestination;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.AbstractServiceInvoker;
 import org.granite.messaging.service.ServiceException;
-import org.granite.messaging.service.ServiceFactory;
-import org.granite.messaging.service.ServiceInvoker;
 import org.granite.messaging.service.SimpleServiceInvoker;
 
 /**
  * @author Franck WOLFF
  */
-public class OSGiServiceInvoker extends ServiceInvoker<ServiceFactory> {
+public class OSGiServiceInvoker extends AbstractServiceInvoker<OSGiServiceFactory> {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(
             SimpleServiceInvoker.class);
 
-    protected OSGiServiceInvoker(IDestination destination,ServiceFactory factory, Object obj) throws ServiceException {
+    protected OSGiServiceInvoker(IDestination destination, OSGiServiceFactory factory, Object obj) throws ServiceException {
         super(destination, factory);
         if (obj == null)
             throw new ServiceException("Could not get OSGi destination: " + destination.getId());

@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.Dictionary;
 
 @Component(name = "org.granite.config.flex.Destination")
-public class OSGiDestination extends Destination {
+public class OSGiDestination extends SimpleDestination {
 
     private static final Logger LOG = Logger.getLogger(OSGiDestination.class);
 

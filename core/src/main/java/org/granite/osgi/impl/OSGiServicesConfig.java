@@ -6,13 +6,13 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.ServicesConfig;
+import org.granite.config.flex.SimpleServicesConfig;
 import org.granite.logging.Logger;
 
 @Component(publicFactory = false)
 @Instantiate
 @Provides
-public class OSGiServicesConfig extends ServicesConfig {
+public class OSGiServicesConfig extends SimpleServicesConfig {
 
     private static final Logger LOG = Logger.getLogger(
             OSGiServicesConfig.class);

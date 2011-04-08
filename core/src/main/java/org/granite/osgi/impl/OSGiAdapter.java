@@ -6,7 +6,7 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.Adapter;
+import org.granite.config.flex.SimpleAdapter;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -14,7 +14,7 @@ import java.util.Dictionary;
 
 @Component(name = "org.granite.config.flex.Adapter")
 @Provides
-public class OSGiAdapter extends Adapter {
+public class OSGiAdapter extends SimpleAdapter {
 
     private static final Logger LOG = Logger.getLogger(OSGiAdapter.class);
 

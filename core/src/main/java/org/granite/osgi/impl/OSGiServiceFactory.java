@@ -21,15 +21,24 @@
 package org.granite.osgi.impl;
 
 import flex.messaging.messages.RemotingMessage;
-import org.apache.felix.ipojo.annotations.*;
-import org.granite.config.flex.Destination;
+
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+
 import org.granite.config.flex.IDestination;
 import org.granite.context.GraniteContext;
 import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.AbstractServiceInvoker;
+import org.granite.messaging.service.DefaultServiceExceptionHandler;
+import org.granite.messaging.service.IServiceFactory;
 import org.granite.messaging.service.ServiceException;
-import org.granite.messaging.service.ServiceFactory;
-import org.granite.messaging.service.ServiceInvoker;
+import org.granite.messaging.service.ServiceExceptionHandler;
 import org.granite.messaging.service.SimpleServiceInvoker;
 import org.granite.osgi.service.GraniteDestination;
 
@@ -43,27 +52,28 @@ import java.util.Map;
 @Component
 @Provides
 @Instantiate
-public class OSGiServiceFactory extends ServiceFactory {
+public class OSGiServiceFactory implements IServiceFactory {
 
     private static final long serialVersionUID = 1L;
 
 
-    private static final Logger LOG = Logger.getLogger(
-            OSGiServiceFactory.class);
+    private static final Logger LOG = Logger.getLogger(OSGiServiceFactory.class);
 
-    private Map<String, GraniteDestination> osgiServices =
-            new Hashtable<String, GraniteDestination>();
+    private Map<String, GraniteDestination> osgiServices = new Hashtable<String, GraniteDestination>();
 
+    private ServiceExceptionHandler serviceExceptionHandler;
+
+    OSGiServiceFactory() {
+        this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
+    }
 
     @Bind(aggregate = true, optional = true)
-    public final synchronized void bindDestination(
-            final GraniteDestination destination) {
+    public final synchronized void bindDestination(final GraniteDestination destination) {
         osgiServices.put(destination.getId(), destination);
     }
 
     @Unbind
-    public final synchronized void unbindDestination(
-            final GraniteDestination destination) {
+    public final synchronized void unbindDestination(final GraniteDestination destination) {
         osgiServices.remove(destination.getId());
     }
 
@@ -78,8 +88,7 @@ public class OSGiServiceFactory extends ServiceFactory {
     }
 
     @Override
-    public ServiceInvoker<?> getServiceInstance(
-            RemotingMessage request) throws ServiceException {
+    public AbstractServiceInvoker<?> getServiceInstance(RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
@@ -94,14 +103,10 @@ public class OSGiServiceFactory extends ServiceFactory {
 
         String key = SimpleServiceInvoker.class.getName() + '.' + destination.getId();
 
-        ServiceInvoker service = (SimpleServiceInvoker) cache.get(key);
+        AbstractServiceInvoker service = (SimpleServiceInvoker) cache.get(key);
         if (service == null) {
-            if (destination.getProperties().get("OSGi") == null) {
-                service = new SimpleServiceInvoker(destination, this);
-            } else {
-                GraniteDestination gd = osgiServices.get(destination.getId());
-                service = new OSGiServiceInvoker(destination, this, gd);
-            }
+            GraniteDestination gd = osgiServices.get(destination.getId());
+            service = new OSGiServiceInvoker(destination, this, gd);
             cache.put(key, service);
         }
         return service;
@@ -123,5 +128,9 @@ public class OSGiServiceFactory extends ServiceFactory {
                     "Illegal scope in destination: " + destination);
 
         return cache;
+    }
+
+    public ServiceExceptionHandler getServiceExceptionHandler() {
+        return serviceExceptionHandler;
     }
 }

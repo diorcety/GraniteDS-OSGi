@@ -10,7 +10,10 @@ import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.*;
+import org.granite.config.flex.IAdapter;
+import org.granite.config.flex.IDestination;
+import org.granite.config.flex.IServicesConfig;
+import org.granite.config.flex.SimpleService;
 import org.granite.logging.Logger;
 
 import java.util.Collection;
@@ -18,7 +21,7 @@ import java.util.HashMap;
 
 @Component(name = "org.granite.config.flex.Service")
 @Provides
-public class OSGiService extends Service {
+public class OSGiService extends SimpleService {
 
     private static final Logger LOG = Logger.getLogger(OSGiService.class);
 

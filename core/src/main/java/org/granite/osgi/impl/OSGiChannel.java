@@ -7,9 +7,9 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.Channel;
-import org.granite.config.flex.EndPoint;
 import org.granite.config.flex.IServicesConfig;
+import org.granite.config.flex.SimpleChannel;
+import org.granite.config.flex.SimpleEndPoint;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -17,7 +17,7 @@ import java.util.Dictionary;
 
 @Component(name = "org.granite.config.flex.Channel")
 @Provides
-public class OSGiChannel extends Channel {
+public class OSGiChannel extends SimpleChannel {
 
     private static final Logger LOG = Logger.getLogger(OSGiChannel.class);
 
@@ -46,14 +46,14 @@ public class OSGiChannel extends Channel {
     @Property(name = "ENDPOINT_URI", mandatory = true)
     private void setEndPointURI(String epURI) {
         this.ENDPOINT_URI = epURI;
-        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
     }
 
     @Property(name = "ENDPOINT_CLASS", mandatory = false,
               value = "flex.messaging.endpoints.AMFEndpoint")
     private void setEndPointClass(String epClass) {
         this.ENDPOINT_CLASS = epClass;
-        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
     }
 
 

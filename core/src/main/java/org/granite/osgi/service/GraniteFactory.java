@@ -1,5 +1,7 @@
 package org.granite.osgi.service;
 
-public abstract class GraniteFactory extends
-        org.granite.messaging.service.ServiceFactory {
+import org.granite.messaging.service.IServiceFactory;
+
+public interface GraniteFactory extends IServiceFactory {
+    public String getId();
 }

@@ -8,9 +8,8 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.GraniteConfig;
-import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.IServicesConfig;
-import org.granite.context.GraniteContext;
+import org.granite.context.AbstractGraniteContext;
 import org.granite.context.IGraniteClassLoader;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.IMainFactory;
@@ -21,7 +20,7 @@ import java.util.Map;
 @Component
 @Provides
 @Instantiate
-public class OSGiGraniteContext extends GraniteContext {
+public class OSGiGraniteContext extends AbstractGraniteContext {
 
     private static final Logger LOG = Logger.getLogger(
             OSGiGraniteContext.class);
@@ -39,8 +38,7 @@ public class OSGiGraniteContext extends GraniteContext {
 
     private GraniteConfig graniteConfig;
 
-    public OSGiGraniteContext(GraniteConfig graniteConfig,
-                              ServicesConfig servicesConfig) {
+    public OSGiGraniteContext(GraniteConfig graniteConfig, IServicesConfig servicesConfig) {
         super(null, null);
         this.servicesConfig = servicesConfig;
         this.graniteConfig = graniteConfig;

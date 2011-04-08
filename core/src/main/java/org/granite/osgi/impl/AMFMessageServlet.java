@@ -105,6 +105,8 @@ public class AMFMessageServlet extends HttpServlet {
 
                 if (uri != null) {
                     LOG.info("Remove alias: " + uri);
+                    aliases.remove(channel.getId());
+                    httpService.unregister(uri);
                 } else {
                     LOG.warn("Try to remove an unnregistred channel: "
                                      + channel.getId());

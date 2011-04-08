@@ -6,15 +6,15 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.Factory;
 import org.granite.config.flex.IServicesConfig;
+import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.Dictionary;
 
 @Component(name = "org.granite.config.flex.Factory")
-public class OSGiFactory extends Factory {
+public class OSGiFactory extends SimpleFactory {
 
     private static final Logger LOG = Logger.getLogger(OSGiFactory.class);
 

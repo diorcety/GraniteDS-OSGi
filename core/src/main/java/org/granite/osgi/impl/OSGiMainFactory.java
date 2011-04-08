@@ -1,17 +1,25 @@
 package org.granite.osgi.impl;
 
 import flex.messaging.messages.RemotingMessage;
-import org.apache.felix.ipojo.annotations.*;
-import org.granite.config.flex.Destination;
-import org.granite.config.flex.Factory;
+
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+
 import org.granite.config.flex.IDestination;
 import org.granite.config.flex.IFactory;
 import org.granite.context.GraniteContext;
 import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.*;
+import org.granite.messaging.service.IMainFactory;
+import org.granite.messaging.service.IServiceFactory;
+import org.granite.messaging.service.ServiceException;
 import org.granite.osgi.service.GraniteFactory;
-import org.granite.util.ClassUtil;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -43,12 +51,12 @@ public class OSGiMainFactory implements IMainFactory {
 
     @Bind(aggregate = true, optional = true)
     public final synchronized void bindFactory(final GraniteFactory factory) {
-        osgiServices.put(factory.getClass().getName(), factory);
+        osgiServices.put(factory.getId(), factory);
     }
 
     @Unbind
     public final synchronized void unbindFactory(final GraniteFactory factory) {
-        osgiServices.remove(factory.getClass().getName());
+        osgiServices.remove(factory.getId());
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -72,7 +80,7 @@ public class OSGiMainFactory implements IMainFactory {
         log.debug(">> Found factoryId: %s", factoryId);
 
         Map<String, Object> cache = context.getApplicationMap();
-        String key = ServiceFactory.class.getName() + '.' + factoryId;
+        String key = OSGiMainFactory.class.getName() + '.' + factoryId;
 
         return getServiceFactory(cache, context, factoryId, key);
     }
@@ -91,20 +99,9 @@ public class OSGiMainFactory implements IMainFactory {
                 if (config == null) {
                     factory = osgiServiceFactory;
                 } else {
-                    if (config.getProperties().get("OSGi") != null) {
-                        factory = osgiServices.get(config.getClassName());
+                        factory = osgiServices.get(config.getId());
                         if (factory == null)
                             throw new ServiceException("Could not get OSGi factory: " + factoryId);
-                    } else {
-                        try {
-                            Class<? extends ServiceFactory> clazz = ClassUtil.forName(
-                                    config.getClassName(), ServiceFactory.class);
-                            factory = clazz.newInstance();
-                            factory.configure(config.getProperties());
-                        } catch (Exception e) {
-                            throw new ServiceException("Could not instantiate factory: " + factoryId, e);
-                        }
-                    }
                 }
                 cache.put(key, factory);
             } else
