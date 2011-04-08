@@ -1,4 +1,4 @@
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;

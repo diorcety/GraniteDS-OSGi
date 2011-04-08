@@ -1,8 +1,9 @@
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -14,6 +15,7 @@ import org.granite.util.XMap;
 import java.util.Dictionary;
 
 @Component(name = "org.granite.config.flex.Factory")
+@Provides
 public class OSGiFactory extends SimpleFactory {
 
     private static final Logger LOG = Logger.getLogger(OSGiFactory.class);
@@ -23,7 +25,17 @@ public class OSGiFactory extends SimpleFactory {
 
 
     protected OSGiFactory() {
-        super(null,null, XMap.EMPTY_XMAP);
+        super(null, null, XMap.EMPTY_XMAP);
+    }
+
+    @Validate
+    public void starting() {
+        start();
+    }
+
+    @Invalidate
+    public void stopping() {
+        stop();
     }
 
     @Property(name = "ID", mandatory = true)
@@ -41,19 +53,9 @@ public class OSGiFactory extends SimpleFactory {
         this.properties = new XMap(properties);
     }
 
-    @Validate
-    public void starting() {
-        start();
-    }
-
     public void start() {
         LOG.debug("Start Factory:" + this.id);
         servicesConfig.addFactory(this);
-    }
-
-    @Invalidate
-    public void stopping() {
-        stop();
     }
 
     public void stop() {

@@ -38,8 +38,6 @@ public class OSGiServiceInvoker extends AbstractServiceInvoker<OSGiServiceFactor
 
     protected OSGiServiceInvoker(IDestination destination, OSGiServiceFactory factory, Object obj) throws ServiceException {
         super(destination, factory);
-        if (obj == null)
-            throw new ServiceException("Could not get OSGi destination: " + destination.getId());
         this.invokee = obj;
     }
 }

@@ -38,12 +38,6 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
 
     private GraniteConfig graniteConfig;
 
-    public OSGiGraniteContext(GraniteConfig graniteConfig, IServicesConfig servicesConfig) {
-        super(null, null);
-        this.servicesConfig = servicesConfig;
-        this.graniteConfig = graniteConfig;
-    }
-
     private OSGiGraniteContext() {
         super(null, null);
         try {
@@ -51,6 +45,16 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
         } catch (Exception ex) {
 
         }
+    }
+
+    @Validate
+    public void starting() {
+        LOG.debug("Start GraniteContext");
+    }
+
+    @Invalidate
+    public void stopping() {
+        LOG.debug("Stop GraniteContext");
     }
 
     @Override
@@ -104,15 +108,5 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
     public IMainFactory getMainFactory()
     {
         return mainFactory;
-    }
-
-    @Validate
-    public void starting() {
-        LOG.debug("Start GraniteContext");
-    }
-
-    @Invalidate
-    public void stopping() {
-        LOG.debug("Stop GraniteContext");
     }
 }

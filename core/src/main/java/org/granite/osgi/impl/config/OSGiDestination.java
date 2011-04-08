@@ -1,13 +1,17 @@
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.*;
+import org.granite.config.flex.IAdapter;
+import org.granite.config.flex.IChannel;
+import org.granite.config.flex.IService;
+import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -16,6 +20,7 @@ import java.util.Collection;
 import java.util.Dictionary;
 
 @Component(name = "org.granite.config.flex.Destination")
+@Provides
 public class OSGiDestination extends SimpleDestination {
 
     private static final Logger LOG = Logger.getLogger(OSGiDestination.class);
@@ -39,6 +44,21 @@ public class OSGiDestination extends SimpleDestination {
     protected OSGiDestination() {
         super(null, new ArrayList<String>(), XMap.EMPTY_XMAP,
               new ArrayList<String>(), null, null);
+    }
+
+    @Validate
+    public void starting() {
+        started = true;
+        checkState();
+    }
+
+    @Invalidate
+    public void stopping() {
+        if (this.state) {
+            stop();
+            this.state = false;
+        }
+        started = false;
     }
 
     @Property(name = "ID", mandatory = true)
@@ -117,24 +137,9 @@ public class OSGiDestination extends SimpleDestination {
         }
     }
 
-    @Validate
-    public void starting() {
-        started = true;
-        checkState();
-    }
-
     public void start() {
         LOG.debug("Start Destination:" + this.id);
         service.addDestination(this);
-    }
-
-    @Invalidate
-    public void stopping() {
-        if (this.state) {
-            stop();
-            this.state = false;
-        }
-        started = false;
     }
 
     public void stop() {

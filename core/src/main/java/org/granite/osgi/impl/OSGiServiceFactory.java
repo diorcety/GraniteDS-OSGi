@@ -44,6 +44,7 @@ import org.granite.osgi.service.GraniteDestination;
 
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -63,8 +64,37 @@ public class OSGiServiceFactory implements IServiceFactory {
 
     private ServiceExceptionHandler serviceExceptionHandler;
 
+    private class CacheEntry {
+        public Map<String, Object> cache;
+        public String entry;
+
+        CacheEntry(Map<String, Object> cache, String entry) {
+            this.cache = cache;
+            this.entry = entry;
+        }
+    }
+
+    private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
+
     OSGiServiceFactory() {
         this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
+    }
+
+    @Validate
+    private void starting() {
+        LOG.debug("Start OSGiServiceFactory");
+    }
+
+    @Invalidate
+    private void stopping() {
+        LOG.debug("Stop OSGiServiceFactory");
+
+        // Remove cache entries
+        for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
+            CacheEntry ce = ice.next();
+            LOG.info("Remove \"" + ce.entry + "\" from the cache");
+            ce.cache.remove(ce.entry);
+        }
     }
 
     @Bind(aggregate = true, optional = true)
@@ -77,14 +107,18 @@ public class OSGiServiceFactory implements IServiceFactory {
         osgiServices.remove(destination.getId());
     }
 
-    @Validate
-    private void starting() {
-        LOG.debug("Start OSGiServiceFactory");
+    @Bind(aggregate = true, optional = true)
+    public final synchronized void bindDestinationConfiguration(final IDestination destination) {
+
     }
 
-    @Invalidate
-    private void stopping() {
-        LOG.debug("Stop OSGiServiceFactory");
+    @Unbind
+    public final synchronized void unbindDestinationConfiguration(final IDestination destination) {
+        CacheEntry ce = cacheEntries.remove(destination.getId());
+        if (ce != null) {
+            LOG.info("Remove \"" + ce.entry + "\" (" + destination.getId() + ") from the cache");
+            ce.cache.remove(ce.entry);
+        }
     }
 
     @Override
@@ -93,41 +127,26 @@ public class OSGiServiceFactory implements IServiceFactory {
         String destinationId = request.getDestination();
 
         IGraniteContext context = GraniteContext.getCurrentInstance();
-        IDestination destination = context.getServicesConfig().findDestinationById(
-                messageType, destinationId);
+        IDestination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
-            throw new ServiceException(
-                    "No matching destination: " + destinationId);
+            throw new ServiceException("No matching destination: " + destinationId);
 
-        Map<String, Object> cache = getCache(destination);
+        Map<String, Object> cache = Collections.synchronizedMap(context.getApplicationMap());
 
-        String key = SimpleServiceInvoker.class.getName() + '.' + destination.getId();
+        String key = OSGiServiceFactory.class.getName() + '.' + destination.getId();
 
-        AbstractServiceInvoker service = (SimpleServiceInvoker) cache.get(key);
+        AbstractServiceInvoker<?> service = (AbstractServiceInvoker<?>) cache.get(key);
         if (service == null) {
             GraniteDestination gd = osgiServices.get(destination.getId());
+            if (gd == null)
+                throw new ServiceException("Could not get OSGi destination: " + destination.getId());
+
             service = new OSGiServiceInvoker(destination, this, gd);
+
+            cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
             cache.put(key, service);
         }
         return service;
-    }
-
-    private Map<String, Object> getCache(IDestination destination) throws ServiceException {
-        IGraniteContext context = GraniteContext.getCurrentInstance();
-        String scope = destination.getProperties().get("scope");
-
-        Map<String, Object> cache = null;
-        if (scope == null || "request".equals(scope))
-            cache = context.getRequestMap();
-        else if ("session".equals(scope))
-            cache = context.getSessionMap();
-        else if ("application".equals(scope))
-            cache = Collections.synchronizedMap(context.getApplicationMap());
-        else
-            throw new ServiceException(
-                    "Illegal scope in destination: " + destination);
-
-        return cache;
     }
 
     public ServiceExceptionHandler getServiceExceptionHandler() {

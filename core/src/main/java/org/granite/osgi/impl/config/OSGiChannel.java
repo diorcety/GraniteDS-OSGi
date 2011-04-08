@@ -1,4 +1,4 @@
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -32,6 +32,16 @@ public class OSGiChannel extends SimpleChannel {
         super(null, null, null, XMap.EMPTY_XMAP);
     }
 
+    @Validate
+    public void starting() {
+        start();
+    }
+
+    @Invalidate
+    public void stopping() {
+        stop();
+    }
+
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
@@ -62,19 +72,9 @@ public class OSGiChannel extends SimpleChannel {
         this.properties = new XMap(properties);
     }
 
-    @Validate
-    public void starting() {
-        start();
-    }
-
     public void start() {
         LOG.debug("Start Channel:" + this.id);
         servicesConfig.addChannel(this);
-    }
-
-    @Invalidate
-    public void stopping() {
-        stop();
     }
 
     public void stop() {

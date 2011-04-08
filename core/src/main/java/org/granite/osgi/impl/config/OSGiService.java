@@ -1,4 +1,4 @@
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
@@ -43,6 +43,21 @@ public class OSGiService extends SimpleService {
     public OSGiService() {
         super(null, null, null, null, new HashMap<String, IAdapter>(),
               new HashMap<String, IDestination>());
+    }
+
+    @Validate
+    public void starting() {
+        started = true;
+        checkState();
+    }
+
+    @Invalidate
+    public void stopping() {
+        if (this.state) {
+            stop();
+            this.state = false;
+        }
+        started = false;
     }
 
     @Property(name = "ID", mandatory = true)
@@ -107,25 +122,10 @@ public class OSGiService extends SimpleService {
         }
     }
 
-    @Validate
-    public void starting() {
-        started = true;
-        checkState();
-    }
-
     public void start() {
         LOG.debug("Start Service:" + this.id);
         getDestinations().clear();
         servicesConfig.addService(this);
-    }
-
-    @Invalidate
-    public void stopping() {
-        if (this.state) {
-            stop();
-            this.state = false;
-        }
-        started = false;
     }
 
     public void stop() {

@@ -21,7 +21,9 @@ import org.granite.messaging.service.IServiceFactory;
 import org.granite.messaging.service.ServiceException;
 import org.granite.osgi.service.GraniteFactory;
 
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,23 +32,42 @@ import java.util.concurrent.locks.ReentrantLock;
 @Instantiate
 public class OSGiMainFactory implements IMainFactory {
 
-    private static final Logger log = Logger.getLogger(OSGiMainFactory.class);
+    private static final Logger LOG = Logger.getLogger(OSGiMainFactory.class);
 
     private final ReentrantLock lock = new ReentrantLock();
 
     private Map<String, GraniteFactory> osgiServices = new Hashtable<String, GraniteFactory>();
+
+    private class CacheEntry {
+        public Map<String, Object> cache;
+        public String entry;
+
+        CacheEntry(Map<String, Object> cache, String entry) {
+            this.cache = cache;
+            this.entry = entry;
+        }
+    }
+
+    private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
 
     @Requires
     IServiceFactory osgiServiceFactory;
 
     @Validate
     private void starting() {
-        log.debug("Start MainFactory");
+        LOG.debug("Start MainFactory");
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("Stop MainFactory");
+        LOG.debug("Stop MainFactory");
+
+        // Remove cache entries
+        for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
+            CacheEntry ce = ice.next();
+            LOG.info("Remove \"" + ce.entry + "\" from the cache");
+            ce.cache.remove(ce.entry);
+        }
     }
 
     @Bind(aggregate = true, optional = true)
@@ -59,6 +80,21 @@ public class OSGiMainFactory implements IMainFactory {
         osgiServices.remove(factory.getId());
     }
 
+    @Bind(aggregate = true, optional = true)
+    public final synchronized void bindFactoryConfiguration(final IFactory factory) {
+
+    }
+
+    @Unbind
+    public final synchronized void unbindFactoryConfiguration(final IFactory factory) {
+        CacheEntry ce = cacheEntries.remove(factory.getId());
+        if (ce != null) {
+            LOG.info("Remove \"" + ce.entry + "\" (" + factory.getId() + ") from the cache");
+            ce.cache.remove(ce.entry);
+        }
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////
     public IServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
 
@@ -67,7 +103,7 @@ public class OSGiMainFactory implements IMainFactory {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        log.debug(
+        LOG.debug(
                 ">> Finding factoryId for messageType: %s and destinationId: %s",
                 messageType, destinationId);
 
@@ -77,37 +113,37 @@ public class OSGiMainFactory implements IMainFactory {
                     "Destination not found: " + destinationId);
         String factoryId = destination.getProperties().get("factory");
 
-        log.debug(">> Found factoryId: %s", factoryId);
+        LOG.debug(">> Found factoryId: %s", factoryId);
 
-        Map<String, Object> cache = context.getApplicationMap();
         String key = OSGiMainFactory.class.getName() + '.' + factoryId;
 
-        return getServiceFactory(cache, context, factoryId, key);
+        return getServiceFactory(context, factoryId, key);
     }
 
-    private IServiceFactory getServiceFactory(Map<String, Object> cache, IGraniteContext context, String factoryId, String key) {
+    private IServiceFactory getServiceFactory(IGraniteContext context, String factoryId, String key) {
         lock.lock();
         try {
-
+            Map<String, Object> cache = Collections.synchronizedMap(context.getApplicationMap());
             IServiceFactory factory = (IServiceFactory) cache.get(key);
             if (factory == null) {
 
-                log.debug(">> No cached factory for: %s", factoryId);
+                LOG.debug(">> No cached factory for: %s", factoryId);
 
                 IFactory config = context.getServicesConfig().findFactoryById(factoryId);
 
                 if (config == null) {
                     factory = osgiServiceFactory;
                 } else {
-                        factory = osgiServices.get(config.getId());
-                        if (factory == null)
-                            throw new ServiceException("Could not get OSGi factory: " + factoryId);
+                    factory = osgiServices.get(config.getId());
+                    if (factory == null)
+                        throw new ServiceException("Could not get OSGi factory: " + factoryId);
+                    cacheEntries.put(config.getId(), new CacheEntry(cache, key));
                 }
                 cache.put(key, factory);
             } else
-                log.debug(">> Found a cached factory for: %s", factoryId);
+                LOG.debug(">> Found a cached factory for: %s", factoryId);
 
-            log.debug("<< Returning factory: %s", factory);
+            LOG.debug("<< Returning factory: %s", factory);
 
             return factory;
         } finally {

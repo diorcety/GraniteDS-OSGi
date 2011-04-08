@@ -113,7 +113,6 @@
                             org.granite.messaging.amf.io.convert.impl,
                             org.granite.osgi.impl,
                         </Private-Package>
-                        <Bundle-Activator>org.granite.osgi.impl.Activator</Bundle-Activator>
                         <_nouses>true</_nouses>
                     </instructions>
                 </configuration>
