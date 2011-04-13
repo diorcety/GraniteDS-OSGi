@@ -43,6 +43,9 @@ public class AMFMessageServlet extends HttpServlet {
     @Requires
     private IGraniteContext graniteContext;
 
+    @Requires
+    private IGraniteDestinationSetter graniteDestinationSetter;
+
     private HttpContext httpContext;
 
     private Map<String, String> aliases = new HashMap<String, String>();
@@ -70,8 +73,7 @@ public class AMFMessageServlet extends HttpServlet {
     @Bind(aggregate = true, optional = true)
     private synchronized void bindChannel(final IChannel channel) {
         try {
-            if (channel.getClassName().equals(
-                    "mx.messaging.channels.AMFChannel")) {
+            if (channel.getClassName().equals("mx.messaging.channels.AMFChannel")) {
 
                 String uri = aliases.get(channel.getId());
 
@@ -83,8 +85,7 @@ public class AMFMessageServlet extends HttpServlet {
 
                     LOG.info("Add alias: " + uri);
                 } else {
-                    LOG.warn("Try to add a existing channel: "
-                                     + channel.getId());
+                    LOG.warn("Try to add a existing channel: " + channel.getId());
                 }
             } else {
                 LOG.debug("Ignored channel : " + channel.getId());
@@ -98,8 +99,7 @@ public class AMFMessageServlet extends HttpServlet {
     @Unbind
     private synchronized void unbindChannel(final IChannel channel) {
         try {
-            if (channel.getClassName().equals(
-                    "mx.messaging.channels.AMFChannel")) {
+            if (channel.getClassName().equals("mx.messaging.channels.AMFChannel")) {
 
                 String uri = aliases.get(channel.getId());
 
@@ -108,8 +108,7 @@ public class AMFMessageServlet extends HttpServlet {
                     aliases.remove(channel.getId());
                     httpService.unregister(uri);
                 } else {
-                    LOG.warn("Try to remove an unnregistred channel: "
-                                     + channel.getId());
+                    LOG.warn("Try to remove an unnregistred channel: " + channel.getId());
                 }
             } else {
                 LOG.debug("Ignore remove channel: " + channel.getId());
@@ -125,33 +124,28 @@ public class AMFMessageServlet extends HttpServlet {
             ServletException, IOException {
 
         if (graniteContext == null) {
-            LOG.error("Could not handle AMF request: GraniteContext " +
-                              "uninitialized");
+            LOG.error("Could not handle AMF request: GraniteContext uninitialized");
             return;
         }
         try {
             IGraniteContext context = new HttpGraniteContext(graniteContext, request, response);
-            GraniteContext.setCurrentInstance(context);
-
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");
             }
+            GraniteContext.setCurrentInstance(context);
 
             // Phase1 Deserializing AMF0 request
-            AMF0Deserializer deserializer = new AMF0Deserializer(
-                    new DataInputStream(request.getInputStream()));
+            OSGiAMF0Deserializer deserializer = new OSGiAMF0Deserializer(graniteDestinationSetter, new DataInputStream(request.getInputStream()));
             AMF0Message amf0Request = deserializer.getAMFMessage();
 
             // Phase2 Processing AMF0 request
             LOG.debug(">>>>> Processing AMF0 request: " + amf0Request);
-            AMF0Message amf0Response = AMF0MessageProcessor.process(
-                    amf0Request);
+            AMF0Message amf0Response = AMF0MessageProcessor.process(amf0Request);
             LOG.debug("<<<<< Returning AMF0 response: " + amf0Response);
 
             // Phase3 Serializing AMF0 response
             response.setContentType(AMF0Message.CONTENT_TYPE);
-            AMF0Serializer serializer = new AMF0Serializer(
-                    new DataOutputStream(response.getOutputStream()));
+            OSGiAMF0Serializer serializer = new OSGiAMF0Serializer(graniteDestinationSetter, new DataOutputStream(response.getOutputStream()));
             serializer.serializeMessage(amf0Response);
 
         } catch (Exception e) {

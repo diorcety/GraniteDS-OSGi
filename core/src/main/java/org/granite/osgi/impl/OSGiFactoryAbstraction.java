@@ -35,9 +35,13 @@ public class OSGiFactoryAbstraction implements IServiceFactory {
     public void remove() {
         // Remove cache entries
         for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
-            CacheEntry ce = ice.next();
-            LOG.info("Remove \"" + ce.entry + "\" from the cache");
-            ce.cache.remove(ce.entry);
+            try {
+                CacheEntry ce = ice.next();
+                LOG.info("Remove \"" + ce.entry + "\" from the cache");
+                ce.cache.remove(ce.entry);
+            } catch (IllegalStateException e) {
+                LOG.warn("Cache flush exception: " + e.getMessage());
+            }
         }
     }
 

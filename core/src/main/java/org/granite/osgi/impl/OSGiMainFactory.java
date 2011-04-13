@@ -52,10 +52,14 @@ public class OSGiMainFactory implements IMainFactory {
 
         // Remove cache entries
         for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
-            CacheEntry ce = ice.next();
-            LOG.info("Remove \"" + ce.entry + "\" from the cache");
-            OSGiFactoryAbstraction service = (OSGiFactoryAbstraction) ce.cache.remove(ce.entry);
-            service.remove();
+            try {
+                CacheEntry ce = ice.next();
+                LOG.info("Remove \"" + ce.entry + "\" from the cache");
+                OSGiFactoryAbstraction service = (OSGiFactoryAbstraction) ce.cache.remove(ce.entry);
+                service.remove();
+            } catch (Exception e) {
+                LOG.warn("Cache flush exception: " + e.getMessage());
+            }
         }
     }
 
@@ -93,14 +97,11 @@ public class OSGiMainFactory implements IMainFactory {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        LOG.debug(
-                ">> Finding factoryId for messageType: %s and destinationId: %s",
-                messageType, destinationId);
+        LOG.debug(">> Finding factoryId for messageType: %s and destinationId: %s", messageType, destinationId);
 
         IDestination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
-            throw new ServiceException(
-                    "Destination not found: " + destinationId);
+            throw new ServiceException( "Destination not found: " + destinationId);
         String factoryId = destination.getProperties().get("factory");
 
         LOG.debug(">> Found factoryId: %s", factoryId);

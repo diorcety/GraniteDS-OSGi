@@ -90,8 +90,12 @@ public class HttpGraniteContext implements IGraniteContext {
     }
 
     public Map<String, Object> getSessionMap(boolean create) {
-        if (sessionMap == null && (create || request.getSession(false) != null))
+        if (sessionMap == null) {
+            if (create)
+                request.getSession(true);
+
             sessionMap = new SessionMap(request);
+        }
         return sessionMap;
     }
 
@@ -169,8 +173,7 @@ abstract class BaseContextMap<T, U> extends AbstractMap<T, U> {
             Object inputValue = input.getValue();
 
             if (inputKey == key || (inputKey != null && inputKey.equals(key))) {
-                if (inputValue == value || (inputValue != null && inputValue.equals(
-                        value)))
+                if (inputValue == value || (inputValue != null && inputValue.equals(value)))
                     return true;
             }
             return false;
@@ -205,9 +208,7 @@ class InitialisationMap extends BaseContextMap<String, String> {
         Set<Map.Entry<String, String>> entries = new HashSet<Map.Entry<String, String>>();
         for (Enumeration<?> e = servletContext.getInitParameterNames(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-            entries.add(new Entry<String, String>(key,
-                                                  servletContext.getInitParameter(
-                                                          key)));
+            entries.add(new Entry<String, String>(key, servletContext.getInitParameter(key)));
         }
         return entries;
     }
@@ -263,8 +264,7 @@ class SessionMap extends BaseContextMap<String, Object> {
         HttpSession session = getSession();
         for (Enumeration<?> e = session.getAttributeNames(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-            entries.add(
-                    new Entry<String, Object>(key, session.getAttribute(key)));
+            entries.add(new Entry<String, Object>(key, session.getAttribute(key)));
         }
         return entries;
     }
@@ -277,7 +277,10 @@ class SessionMap extends BaseContextMap<String, Object> {
     }
 
     private HttpSession getSession() {
-        return request.getSession(true);
+        HttpSession session = request.getSession(false);
+        if (session == null)
+            throw new IllegalStateException("Session invalid");
+        return session;
     }
 }
 
@@ -321,8 +324,7 @@ class RequestMap extends BaseContextMap<String, Object> {
         Set<Map.Entry<String, Object>> entries = new HashSet<Map.Entry<String, Object>>();
         for (Enumeration<?> e = request.getAttributeNames(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-            entries.add(
-                    new Entry<String, Object>(key, request.getAttribute(key)));
+            entries.add(new Entry<String, Object>(key, request.getAttribute(key)));
         }
         return entries;
     }
