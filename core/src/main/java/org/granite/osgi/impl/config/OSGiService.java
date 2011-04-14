@@ -10,10 +10,9 @@ import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IAdapter;
-import org.granite.config.flex.IDestination;
-import org.granite.config.flex.IServicesConfig;
-import org.granite.config.flex.SimpleService;
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Destination;
+import org.granite.config.flex.Service;
 import org.granite.logging.Logger;
 
 import java.util.Collection;
@@ -21,7 +20,7 @@ import java.util.HashMap;
 
 @Component(name = "org.granite.config.flex.Service")
 @Provides
-public class OSGiService extends SimpleService {
+public class OSGiService extends Service implements IService {
 
     private static final Logger LOG = Logger.getLogger(OSGiService.class);
 
@@ -41,8 +40,7 @@ public class OSGiService extends SimpleService {
     private boolean started = false;
 
     public OSGiService() {
-        super(null, null, null, null, new HashMap<String, IAdapter>(),
-              new HashMap<String, IDestination>());
+        super(null, null, null, null, new HashMap<String, Adapter>(), new HashMap<String, Destination>());
     }
 
     @Validate
@@ -80,11 +78,11 @@ public class OSGiService extends SimpleService {
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(IAdapter adapter) {
         if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
-            this.adapters.put(adapter.getId(), adapter);
+            this.adapters.put(adapter.getId(), adapter.getAdapter());
 
             if (this.DEFAULT_ADAPTER != null &&
                     this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-                this.defaultAdapter = adapter;
+                this.defaultAdapter = adapter.getAdapter();
             }
             checkState();
         }
@@ -133,5 +131,10 @@ public class OSGiService extends SimpleService {
         if (servicesConfig != null) {
             servicesConfig.removeService(this.id);
         }
+    }
+
+    public Service getService()
+    {
+        return this;
     }
 }

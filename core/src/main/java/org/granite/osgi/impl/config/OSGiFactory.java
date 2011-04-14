@@ -7,16 +7,16 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IServicesConfig;
-import org.granite.config.flex.SimpleFactory;
+import org.granite.config.flex.Factory;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.Dictionary;
+import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Factory")
 @Provides
-public class OSGiFactory extends SimpleFactory {
+public class OSGiFactory extends Factory implements IFactory{
 
     private static final Logger log = Logger.getLogger(OSGiFactory.class);
 
@@ -49,7 +49,7 @@ public class OSGiFactory extends SimpleFactory {
     }
 
     @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Dictionary<String, String> properties) {
+    private void setProperties(Map<String, String> properties) {
         this.properties = new XMap(properties);
     }
 
@@ -63,5 +63,9 @@ public class OSGiFactory extends SimpleFactory {
         if (servicesConfig != null) {
             servicesConfig.removeFactory(this.id);
         }
+    }
+
+    public Factory getFactory() {
+        return this;
     }
 }

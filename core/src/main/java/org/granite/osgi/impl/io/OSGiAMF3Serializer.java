@@ -21,9 +21,8 @@
 package org.granite.osgi.impl.io;
 
 import flex.messaging.io.ArrayCollection;
-import org.granite.config.flex.IChannel;
+import org.granite.config.flex.Channel;
 import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF3Constants;
 import org.granite.messaging.amf.io.AMF3SerializationException;
@@ -60,7 +59,7 @@ public class OSGiAMF3Serializer extends DataOutputStream implements ObjectOutput
     protected final Map<String, IndexedJavaClassDescriptor> storedClassDescriptors
     	= new HashMap<String, IndexedJavaClassDescriptor>();
 
-    protected final IGraniteContext context = GraniteContext.getCurrentInstance();
+    protected final GraniteContext context = GraniteContext.getCurrentInstance();
     protected final Converters converters = context.getGraniteConfig().getConverters();
 
     protected final boolean externalizeLong
@@ -77,7 +76,7 @@ public class OSGiAMF3Serializer extends DataOutputStream implements ObjectOutput
     protected final boolean debug = log.isDebugEnabled();
     protected final boolean debugMore = logMore.isDebugEnabled();
 
-    protected IChannel channel = null;
+    protected Channel channel = null;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructor.
@@ -251,7 +250,7 @@ public class OSGiAMF3Serializer extends DataOutputStream implements ObjectOutput
         if (debugMore) logMore.debug("writeAMF3Xml(doc=%s)", doc);
 
         byte xmlType = AMF3_XMLSTRING;
-        IChannel channel = getChannel();
+        Channel channel = getChannel();
         if (channel != null && channel.isLegacyXmlSerialization())
             xmlType = AMF3_XML;
         write(xmlType);
@@ -321,7 +320,7 @@ public class OSGiAMF3Serializer extends DataOutputStream implements ObjectOutput
     protected void writeAMF3Collection(Collection<?> c) throws IOException {
         if (debugMore) logMore.debug("writeAMF3Collection(c=%s)", c);
 
-        IChannel channel = getChannel();
+        Channel channel = getChannel();
         if (channel != null && channel.isLegacyCollectionSerialization())
             writeAMF3Array(c.toArray());
         else {
@@ -502,7 +501,7 @@ public class OSGiAMF3Serializer extends DataOutputStream implements ObjectOutput
     ///////////////////////////////////////////////////////////////////////////
     // Utilities.
 
-    protected IChannel getChannel() {
+    protected Channel getChannel() {
         if (channel == null) {
             String channelId = context.getAMFContext().getChannelId();
             if (channelId != null) {

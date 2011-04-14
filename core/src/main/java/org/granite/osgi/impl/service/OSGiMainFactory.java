@@ -11,12 +11,12 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IDestination;
-import org.granite.config.flex.IFactory;
+import org.granite.config.flex.Destination;
+import org.granite.config.flex.Factory;
 import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.*;
+import org.granite.osgi.impl.config.IFactory;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
@@ -92,14 +92,14 @@ public class OSGiMainFactory implements IMainFactory {
     ///////////////////////////////////////////////////////////////////////////
     public IServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
 
-        IGraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteContext.getCurrentInstance();
 
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
         log.debug(">> Finding factoryId for messageType: %s and destinationId: %s", messageType, destinationId);
 
-        IDestination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
+        Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
             throw new ServiceException( "Destination not found: " + destinationId);
         String factoryId = destination.getProperties().get("factory");
@@ -111,7 +111,7 @@ public class OSGiMainFactory implements IMainFactory {
         return getServiceFactory(context, factoryId, key);
     }
 
-    private IServiceFactory getServiceFactory(IGraniteContext context, String factoryId, String key) {
+    private IServiceFactory getServiceFactory(GraniteContext context, String factoryId, String key) {
         lock.lock();
         try {
             Map<String, Object> cache = Collections.synchronizedMap(context.getApplicationMap());
@@ -120,7 +120,7 @@ public class OSGiMainFactory implements IMainFactory {
 
                 log.debug(">> No cached factory for: %s", factoryId);
 
-                IFactory config = context.getServicesConfig().findFactoryById(factoryId);
+                Factory config = context.getServicesConfig().findFactoryById(factoryId);
 
                 if (config == null) {
                     factory = osgiServiceFactory;

@@ -2,7 +2,7 @@ package org.granite.osgi.impl.io;
 
 import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.RemotingMessage;
-import org.granite.context.IGraniteContext;
+import org.granite.context.GraniteContext;
 import org.granite.messaging.amf.AMF0Body;
 import org.granite.messaging.amf.AMF0Message;
 
@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.List;
 
 public class OSGiResolver {
-    private final IGraniteContext graniteContext;
+    private final GraniteContext graniteContext;
 
-    public OSGiResolver(IGraniteContext graniteContext) {
+    public OSGiResolver(GraniteContext graniteContext) {
         this.graniteContext = graniteContext;
     }
 

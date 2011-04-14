@@ -8,14 +8,13 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IChannel;
 import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
 
 import org.granite.osgi.GraniteClassRegistry;
+import org.granite.osgi.impl.config.IChannel;
 import org.granite.osgi.impl.io.OSGiAMF0Deserializer;
 import org.granite.osgi.impl.io.OSGiAMF0Serializer;
 import org.granite.osgi.impl.io.OSGiResolver;
@@ -130,7 +129,7 @@ public class AMFMessageServlet extends HttpServlet {
             return;
         }
         try {
-            IGraniteContext context = new HttpGraniteContext(graniteContext, classRegistry, request, response);
+            GraniteContext context = new HttpGraniteContext(graniteContext.getGraniteContext(), classRegistry, request, response);
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");
             }

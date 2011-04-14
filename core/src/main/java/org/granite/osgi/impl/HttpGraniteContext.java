@@ -2,10 +2,9 @@ package org.granite.osgi.impl;
 
 
 import org.granite.config.GraniteConfig;
-import org.granite.config.flex.IServicesConfig;
+import org.granite.config.flex.ServicesConfig;
 import org.granite.context.AMFContext;
-import org.granite.context.IGraniteContext;
-import org.granite.messaging.service.IMainFactory;
+import org.granite.context.GraniteContext;
 import org.granite.osgi.GraniteClassRegistry;
 
 import javax.servlet.ServletContext;
@@ -19,7 +18,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class HttpGraniteContext implements IGraniteContext {
+public class HttpGraniteContext extends GraniteContext implements IGraniteContext {
 
     private static final String SESSION_LOCK_KEY = HttpGraniteContext.class.getName() + ".LOCK";
 
@@ -28,13 +27,15 @@ public class HttpGraniteContext implements IGraniteContext {
 
     private SessionMap sessionMap = null;
     private RequestMap requestMap = null;
-    private IGraniteContext graniteContext = null;
-    private GraniteClassRegistry  classRegistry = null;
+    private GraniteContext graniteContext = null;
+    private GraniteClassRegistry classRegistry = null;
+
     public HttpGraniteContext(
-            IGraniteContext context,
+            GraniteContext context,
             GraniteClassRegistry classRegistry,
             HttpServletRequest request,
             HttpServletResponse response) {
+        super(null, null);
         this.classRegistry = classRegistry;
         this.graniteContext = context;
         this.request = request;
@@ -57,7 +58,7 @@ public class HttpGraniteContext implements IGraniteContext {
         return request.getSession(true);
     }
 
-    public IServicesConfig getServicesConfig() {
+    public ServicesConfig getServicesConfig() {
         return graniteContext.getServicesConfig();
     }
 
@@ -87,7 +88,7 @@ public class HttpGraniteContext implements IGraniteContext {
     }
 
     public Class<?> forName(String type) throws ClassNotFoundException {
-                return classRegistry.forName((String)getRequestMap().get("destination"), type);
+                return classRegistry.forName((String) getRequestMap().get("destination"), type);
     }
 
     public Map<String, Object> getSessionMap() {
@@ -108,10 +109,6 @@ public class HttpGraniteContext implements IGraniteContext {
         if (requestMap == null)
             requestMap = new RequestMap(request);
         return requestMap;
-    }
-
-    public IMainFactory getMainFactory() {
-        return graniteContext.getMainFactory();
     }
 }
 

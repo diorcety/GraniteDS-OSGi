@@ -6,15 +6,16 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.SimpleAdapter;
+import org.granite.config.flex.Adapter;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.Dictionary;
+import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Adapter")
 @Provides
-public class OSGiAdapter extends SimpleAdapter {
+public class OSGiAdapter extends Adapter implements IAdapter{
 
     private static final Logger log = Logger.getLogger(OSGiAdapter.class);
 
@@ -46,7 +47,7 @@ public class OSGiAdapter extends SimpleAdapter {
     }
 
     @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Dictionary<String, String> properties) {
+    private void setProperties(Map<String, String> properties) {
         this.properties = new XMap(properties);
     }
 
@@ -57,5 +58,9 @@ public class OSGiAdapter extends SimpleAdapter {
 
     public void stop() {
         log.debug("Stop Adapter:" + this.id);
+    }
+
+    public Adapter getAdapter() {
+        return this;
     }
 }

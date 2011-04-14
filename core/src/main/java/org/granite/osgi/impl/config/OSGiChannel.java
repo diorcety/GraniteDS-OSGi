@@ -7,17 +7,17 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IServicesConfig;
-import org.granite.config.flex.SimpleChannel;
-import org.granite.config.flex.SimpleEndPoint;
+import org.granite.config.flex.Channel;
+import org.granite.config.flex.EndPoint;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.Dictionary;
+import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Channel")
 @Provides
-public class OSGiChannel extends SimpleChannel {
+public class OSGiChannel extends Channel implements IChannel{
 
     private static final Logger log = Logger.getLogger(OSGiChannel.class);
 
@@ -56,19 +56,19 @@ public class OSGiChannel extends SimpleChannel {
     @Property(name = "ENDPOINT_URI", mandatory = true)
     private void setEndPointURI(String epURI) {
         this.ENDPOINT_URI = epURI;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
     }
 
     @Property(name = "ENDPOINT_CLASS", mandatory = false,
               value = "flex.messaging.endpoints.AMFEndpoint")
     private void setEndPointClass(String epClass) {
         this.ENDPOINT_CLASS = epClass;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+        this.endPoint = new EndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
     }
 
 
     @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Dictionary<String, String> properties) {
+    private void setProperties(Map<String, String> properties) {
         this.properties = new XMap(properties);
     }
 
@@ -82,5 +82,9 @@ public class OSGiChannel extends SimpleChannel {
         if (servicesConfig != null) {
             servicesConfig.removeChannel(this.id);
         }
+    }
+
+    public Channel getChannel() {
+        return this;
     }
 }

@@ -21,7 +21,6 @@
 package org.granite.osgi.impl.io;
 
 import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF3Constants;
 import org.granite.messaging.amf.io.AMF3Deserializer;
@@ -52,7 +51,7 @@ public class OSGiAMF3Deserializer extends DataInputStream implements ObjectInput
     protected final List<Object> storedObjects = new ArrayList<Object>();
     protected final List<ActionScriptClassDescriptor> storedClassDescriptors = new ArrayList<ActionScriptClassDescriptor>();
 
-    protected final IGraniteContext context = GraniteContext.getCurrentInstance();
+    protected final GraniteContext context = GraniteContext.getCurrentInstance();
 
     protected final XMLUtil xmlUtil = new XMLUtil();
 

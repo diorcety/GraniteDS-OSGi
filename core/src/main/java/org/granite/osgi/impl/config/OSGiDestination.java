@@ -8,20 +8,18 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IAdapter;
-import org.granite.config.flex.IChannel;
-import org.granite.config.flex.IService;
-import org.granite.config.flex.SimpleDestination;
+import org.granite.config.flex.Destination;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Destination")
 @Provides
-public class OSGiDestination extends SimpleDestination {
+public class OSGiDestination extends Destination implements IDestination{
 
     private static final Logger log = Logger.getLogger(OSGiDestination.class);
 
@@ -67,7 +65,7 @@ public class OSGiDestination extends SimpleDestination {
     }
 
     @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Dictionary<String, String> properties) {
+    private void setProperties(Map<String, String> properties) {
         this.properties = new XMap(properties);
     }
 
@@ -91,7 +89,7 @@ public class OSGiDestination extends SimpleDestination {
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(IAdapter adapter) {
         if (adapter.getId() == this.ADAPTER) {
-            this.adapter = adapter;
+            this.adapter = adapter.getAdapter();
             checkState();
         }
     }
@@ -147,5 +145,9 @@ public class OSGiDestination extends SimpleDestination {
         if (service != null) {
             service.removeDestination(this.id);
         }
+    }
+
+    public Destination getDestination() {
+        return this;
     }
 }
