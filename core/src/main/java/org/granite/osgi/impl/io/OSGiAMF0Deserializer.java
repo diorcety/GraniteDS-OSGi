@@ -5,14 +5,18 @@
  * See terms of license at gnu.org.
  */
 
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.io;
 
 import flex.messaging.io.ASObject;
-import org.granite.context.GraniteContext;
+import flex.messaging.messages.CommandMessage;
+import flex.messaging.messages.RemotingMessage;
+import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Body;
+import org.granite.messaging.amf.AMF0Header;
 import org.granite.messaging.amf.AMF0Message;
 import org.granite.messaging.amf.io.AMF0Deserializer;
+import org.granite.messaging.amf.io.util.instantiator.AbstractInstantiator;
 import org.w3c.dom.Document;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -34,8 +38,6 @@ public class OSGiAMF0Deserializer {
 
     private List<Object> storedObjects = null;
 
-    private IGraniteDestinationSetter gds;
-
     /**
      * The AMF input stream
      */
@@ -46,7 +48,7 @@ public class OSGiAMF0Deserializer {
      * Object to store the deserialized data
      */
     private final AMF0Message message = new AMF0Message();
-
+    private final OSGiAMF3Deserializer amf3;
 
     /**
      * Deserialize message
@@ -54,8 +56,7 @@ public class OSGiAMF0Deserializer {
      * @param inputStream message input stream
      * @throws java.io.IOException
      */
-    public OSGiAMF0Deserializer(IGraniteDestinationSetter gds, InputStream inputStream) throws IOException {
-        this.gds = gds;
+    public OSGiAMF0Deserializer(InputStream inputStream) throws IOException {
         //log.info("Deserializing Message, for more info turn on debug level");
 
         // Save the input stream for this object
@@ -63,6 +64,8 @@ public class OSGiAMF0Deserializer {
         this.dataInputStream = inputStream instanceof DataInputStream
         	? ((DataInputStream)inputStream)
         	: new DataInputStream(inputStream);
+
+        this.amf3 = new OSGiAMF3Deserializer(rawInputStream);
 
         // Read the binary header
         readHeaders();
@@ -297,10 +300,9 @@ public class OSGiAMF0Deserializer {
      * @return the AMF3 decoded object
      */
     protected Object readAMF3Data() throws IOException {
-        ObjectInput amf3 = GraniteContext.getCurrentInstance().getGraniteConfig().newAMF3Deserializer(rawInputStream);
         try {
             return amf3.readObject();
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

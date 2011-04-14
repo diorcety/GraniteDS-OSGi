@@ -5,12 +5,11 @@
  * See terms of license at gnu.org.
  */
 
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.io;
 
 import flex.messaging.io.ASObject;
 import flex.messaging.io.ASRecordSet;
 import flex.messaging.messages.AcknowledgeMessage;
-import org.granite.context.GraniteContext;
 import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Body;
@@ -36,6 +35,7 @@ import java.util.*;
  * @author Pat Maddox <pergesu@users.sourceforge.net>
  * @author Sylwester Lachiewicz <lachiewicz@plusnet.pl>
  * @author Richard Pitt
+ *
  * @version $Revision: 1.54 $, $Date: 2006/03/25 23:41:41 $
  */
 public class OSGiAMF0Serializer {
@@ -43,10 +43,7 @@ public class OSGiAMF0Serializer {
     private static final Logger log = Logger.getLogger(AMF0Serializer.class);
 
     private static final int MILLS_PER_HOUR = 60000;
-    /*
 
-    */
-    private IGraniteDestinationSetter gds;
     /**
      * Null message
      */
@@ -60,18 +57,18 @@ public class OSGiAMF0Serializer {
 
     private final Map<Object, Integer> storedObjects = new IdentityHashMap<Object, Integer>();
     private int storedObjectCount = 0;
-
+    private final OSGiAMF3Serializer amf3;
     /**
      * Constructor
      *
      * @param outputStream
      */
-    public OSGiAMF0Serializer(IGraniteDestinationSetter gds, OutputStream outputStream) {
-        this.gds = gds;
-        this.rawOutputStream = outputStream;
+    public OSGiAMF0Serializer(OutputStream outputStream) {
+    	this.rawOutputStream = outputStream;
         this.dataOutputStream = outputStream instanceof DataOutputStream
-                ? ((DataOutputStream) outputStream)
-                : new DataOutputStream(outputStream);
+        	? ((DataOutputStream)outputStream)
+        	: new DataOutputStream(outputStream);
+        this.amf3 = new OSGiAMF3Serializer(rawOutputStream);
     }
 
     /**
@@ -98,17 +95,9 @@ public class OSGiAMF0Serializer {
         Iterator<AMF0Body> bodies = message.getBodies();
         while (bodies.hasNext()) {
             AMF0Body body = bodies.next();
-            if (body.getValue() instanceof AMF3Object) {
-                AMF3Object amf3o = (AMF3Object) body.getValue();
-                if (amf3o.getValue() instanceof AcknowledgeMessage) {
-                    AcknowledgeMessage ackmessage = (AcknowledgeMessage) amf3o.getValue();
-                    gds.setDestination(ackmessage.getDestination());
-                }
-            }
             writeBody(body);
         }
     }
-
     /**
      * Writes message header
      *
@@ -122,7 +111,6 @@ public class OSGiAMF0Serializer {
         dataOutputStream.writeInt(-1);
         writeData(header.getValue());
     }
-
     /**
      * Writes message body
      *
@@ -159,7 +147,7 @@ public class OSGiAMF0Serializer {
             // write null object
             dataOutputStream.writeByte(AMF0Body.DATA_TYPE_NULL);
         } else if (value instanceof AMF3Object) {
-            writeAMF3Data((AMF3Object) value);
+            writeAMF3Data((AMF3Object)value);
         } else if (isPrimitiveArray(value)) {
             writePrimitiveArray(value);
         } else if (value instanceof Number) {
@@ -167,7 +155,7 @@ public class OSGiAMF0Serializer {
             dataOutputStream.writeByte(AMF0Body.DATA_TYPE_NUMBER);
             dataOutputStream.writeDouble(((Number) value).doubleValue());
         } else if (value instanceof String) {
-            writeString((String) value);
+           writeString((String)value);
         } else if (value instanceof Character) {
             // write String object
             dataOutputStream.writeByte(AMF0Body.DATA_TYPE_STRING);
@@ -234,12 +222,12 @@ public class OSGiAMF0Serializer {
         try {
             PropertyDescriptor[] properties = null;
             try {
-                BeanInfo beanInfo = Introspector.getBeanInfo(object.getClass());
-                properties = beanInfo.getPropertyDescriptors();
+            	BeanInfo beanInfo = Introspector.getBeanInfo(object.getClass());
+            	properties = beanInfo.getPropertyDescriptors();
             } catch (IntrospectionException e) {
             }
             if (properties == null)
-                properties = new PropertyDescriptor[0];
+            	properties = new PropertyDescriptor[0];
 
             for (int i = 0; i < properties.length; i++) {
                 if (!properties[i].getName().equals("class")) {
@@ -290,60 +278,86 @@ public class OSGiAMF0Serializer {
 
         Object[] result = null;
 
-        if (componentType == null) {
+        if (componentType == null)
+        {
             throw new NullPointerException("componentType is null");
-        } else if (componentType == Character.TYPE) {
+        }
+        else if (componentType == Character.TYPE)
+        {
             char[] carray = (char[]) array;
             result = new Object[carray.length];
-            for (int i = 0; i < carray.length; i++) {
+            for (int i = 0; i < carray.length; i++)
+            {
                 result[i] = new Character(carray[i]);
             }
-        } else if (componentType == Byte.TYPE) {
+        }
+        else if (componentType == Byte.TYPE)
+        {
             byte[] barray = (byte[]) array;
             result = new Object[barray.length];
-            for (int i = 0; i < barray.length; i++) {
+            for (int i = 0; i < barray.length; i++)
+            {
                 result[i] = new Byte(barray[i]);
             }
-        } else if (componentType == Short.TYPE) {
+        }
+        else if (componentType == Short.TYPE)
+        {
             short[] sarray = (short[]) array;
             result = new Object[sarray.length];
-            for (int i = 0; i < sarray.length; i++) {
+            for (int i = 0; i < sarray.length; i++)
+            {
                 result[i] = new Short(sarray[i]);
             }
-        } else if (componentType == Integer.TYPE) {
+        }
+        else if (componentType == Integer.TYPE)
+        {
             int[] iarray = (int[]) array;
             result = new Object[iarray.length];
-            for (int i = 0; i < iarray.length; i++) {
+            for (int i = 0; i < iarray.length; i++)
+            {
                 result[i] = Integer.valueOf(iarray[i]);
             }
-        } else if (componentType == Long.TYPE) {
+        }
+        else if (componentType == Long.TYPE)
+        {
             long[] larray = (long[]) array;
             result = new Object[larray.length];
-            for (int i = 0; i < larray.length; i++) {
+            for (int i = 0; i < larray.length; i++)
+            {
                 result[i] = new Long(larray[i]);
             }
-        } else if (componentType == Double.TYPE) {
+        }
+        else if (componentType == Double.TYPE)
+        {
             double[] darray = (double[]) array;
             result = new Object[darray.length];
-            for (int i = 0; i < darray.length; i++) {
+            for (int i = 0; i < darray.length; i++)
+            {
                 result[i] = new Double(darray[i]);
             }
-        } else if (componentType == Float.TYPE) {
+        }
+        else if (componentType == Float.TYPE)
+        {
             float[] farray = (float[]) array;
             result = new Object[farray.length];
-            for (int i = 0; i < farray.length; i++) {
+            for (int i = 0; i < farray.length; i++)
+            {
                 result[i] = new Float(farray[i]);
             }
-        } else if (componentType == Boolean.TYPE) {
+        }
+        else if (componentType == Boolean.TYPE)
+        {
             boolean[] barray = (boolean[]) array;
             result = new Object[barray.length];
-            for (int i = 0; i < barray.length; i++) {
+            for (int i = 0; i < barray.length; i++)
+            {
                 result[i] = new Boolean(barray[i]);
             }
-        } else {
+        }
+        else {
             throw new IllegalArgumentException(
                     "unexpected component type: "
-                            + componentType.getClass().getName());
+                    + componentType.getClass().getName());
         }
 
         return result;
@@ -362,7 +376,6 @@ public class OSGiAMF0Serializer {
         }
         write(list);
     }
-
     /**
      * Writes collection
      *
@@ -377,7 +390,6 @@ public class OSGiAMF0Serializer {
             writeData(object);
         }
     }
-
     /**
      * Writes Object Map
      *
@@ -395,7 +407,7 @@ public class OSGiAMF0Serializer {
             dataOutputStream.writeInt(0);
         }
         for (Iterator<?> entrys = map.entrySet().iterator(); entrys.hasNext();) {
-            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) entrys.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>)entrys.next();
             log.debug("%s: %s", entry.getKey(), entry.getValue());
             dataOutputStream.writeUTF(entry.getKey().toString());
             writeData(entry.getValue());
@@ -426,59 +438,59 @@ public class OSGiAMF0Serializer {
      * which only supports Strings <= 65535 UTF-encoded characters.
      */
     protected int writeString(String str) throws IOException {
-        int strlen = str.length();
-        int utflen = 0;
-        char[] charr = new char[strlen];
-        int c, count = 0;
-
-        str.getChars(0, strlen, charr, 0);
-
-        // check the length of the UTF-encoded string
-        for (int i = 0; i < strlen; i++) {
-            c = charr[i];
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                utflen++;
-            } else if (c > 0x07FF) {
-                utflen += 3;
-            } else {
-                utflen += 2;
-            }
-        }
-
-        /**
-         * if utf-encoded String is < 64K, use the "String" data type, with a
-         * two-byte prefix specifying string length; otherwise use the "Long String"
-         * data type, withBUG#298 a four-byte prefix
-         */
-        byte[] bytearr;
-        if (utflen <= 65535) {
-            dataOutputStream.writeByte(AMF0Body.DATA_TYPE_STRING);
-            bytearr = new byte[utflen + 2];
-        } else {
-            dataOutputStream.writeByte(AMF0Body.DATA_TYPE_LONG_STRING);
-            bytearr = new byte[utflen + 4];
-            bytearr[count++] = (byte) ((utflen >>> 24) & 0xFF);
-            bytearr[count++] = (byte) ((utflen >>> 16) & 0xFF);
-        }
-
-        bytearr[count++] = (byte) ((utflen >>> 8) & 0xFF);
-        bytearr[count++] = (byte) ((utflen >>> 0) & 0xFF);
-        for (int i = 0; i < strlen; i++) {
-            c = charr[i];
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                bytearr[count++] = (byte) c;
-            } else if (c > 0x07FF) {
-                bytearr[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
-                bytearr[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
-                bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
-            } else {
-                bytearr[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
-                bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
-            }
-        }
-
-        dataOutputStream.write(bytearr);
-        return utflen + 2;
+	    int strlen = str.length();
+	    int utflen = 0;
+	    char[] charr = new char[strlen];
+	    int c, count = 0;
+	
+	    str.getChars(0, strlen, charr, 0);
+	
+	    // check the length of the UTF-encoded string
+	    for (int i = 0; i < strlen; i++) {
+	        c = charr[i];
+	        if ((c >= 0x0001) && (c <= 0x007F)) {
+	        	utflen++;
+	        } else if (c > 0x07FF) {
+	        	utflen += 3;
+	        } else {
+	        	utflen += 2;
+	        }
+	    }
+	
+	    /**
+	     * if utf-encoded String is < 64K, use the "String" data type, with a
+	     * two-byte prefix specifying string length; otherwise use the "Long String"
+	     * data type, withBUG#298 a four-byte prefix
+	     */
+	    byte[] bytearr;
+	    if (utflen <= 65535) {
+	    	dataOutputStream.writeByte(AMF0Body.DATA_TYPE_STRING);
+	    	bytearr = new byte[utflen+2];
+	    } else {
+	        dataOutputStream.writeByte(AMF0Body.DATA_TYPE_LONG_STRING);
+	        bytearr = new byte[utflen+4];
+	        bytearr[count++] = (byte) ((utflen >>> 24) & 0xFF);
+	        bytearr[count++] = (byte) ((utflen >>> 16) & 0xFF);
+	    }
+	
+	    bytearr[count++] = (byte) ((utflen >>> 8) & 0xFF);
+	    bytearr[count++] = (byte) ((utflen >>> 0) & 0xFF);
+	    for (int i = 0; i < strlen; i++) {
+	        c = charr[i];
+	        if ((c >= 0x0001) && (c <= 0x007F)) {
+		        bytearr[count++] = (byte) c;
+	        } else if (c > 0x07FF) {
+		        bytearr[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
+		        bytearr[count++] = (byte) (0x80 | ((c >>  6) & 0x3F));
+		        bytearr[count++] = (byte) (0x80 | ((c >>  0) & 0x3F));
+	        } else {
+		        bytearr[count++] = (byte) (0xC0 | ((c >>  6) & 0x1F));
+		        bytearr[count++] = (byte) (0x80 | ((c >>  0) & 0x3F));
+	        }
+	    }
+	
+	    dataOutputStream.write(bytearr);
+	    return utflen + 2;
     }
 
     private void writeStoredObject(Object obj) throws IOException {
@@ -504,7 +516,6 @@ public class OSGiAMF0Serializer {
 
     private void writeAMF3Data(AMF3Object data) throws IOException {
         dataOutputStream.writeByte(AMF0Body.DATA_TYPE_AMF3_OBJECT);
-        ObjectOutput amf3 = GraniteContext.getCurrentInstance().getGraniteConfig().newAMF3Serializer(rawOutputStream);
         amf3.writeObject(data.getValue());
     }
 

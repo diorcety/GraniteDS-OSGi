@@ -13,10 +13,12 @@ import org.granite.context.GraniteContext;
 import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
-import org.granite.messaging.amf.io.AMF0Deserializer;
-import org.granite.messaging.amf.io.AMF0Serializer;
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
 
+import org.granite.osgi.GraniteClassRegistry;
+import org.granite.osgi.impl.io.OSGiAMF0Deserializer;
+import org.granite.osgi.impl.io.OSGiAMF0Serializer;
+import org.granite.osgi.impl.io.OSGiResolver;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
@@ -44,7 +46,7 @@ public class AMFMessageServlet extends HttpServlet {
     private IGraniteContext graniteContext;
 
     @Requires
-    private IGraniteDestinationSetter graniteDestinationSetter;
+    private GraniteClassRegistry classRegistry;
 
     private HttpContext httpContext;
 
@@ -128,15 +130,18 @@ public class AMFMessageServlet extends HttpServlet {
             return;
         }
         try {
-            IGraniteContext context = new HttpGraniteContext(graniteContext, request, response);
+            IGraniteContext context = new HttpGraniteContext(graniteContext, classRegistry, request, response);
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");
             }
             GraniteContext.setCurrentInstance(context);
+            OSGiResolver resolver = new OSGiResolver(context);
 
             // Phase1 Deserializing AMF0 request
-            OSGiAMF0Deserializer deserializer = new OSGiAMF0Deserializer(graniteDestinationSetter, new DataInputStream(request.getInputStream()));
+
+            OSGiAMF0Deserializer deserializer = new OSGiAMF0Deserializer(new DataInputStream(request.getInputStream()));
             AMF0Message amf0Request = deserializer.getAMFMessage();
+            amf0Request = (AMF0Message) resolver.resolve(amf0Request);
 
             // Phase2 Processing AMF0 request
             LOG.debug(">>>>> Processing AMF0 request: " + amf0Request);
@@ -145,7 +150,7 @@ public class AMFMessageServlet extends HttpServlet {
 
             // Phase3 Serializing AMF0 response
             response.setContentType(AMF0Message.CONTENT_TYPE);
-            OSGiAMF0Serializer serializer = new OSGiAMF0Serializer(graniteDestinationSetter, new DataOutputStream(response.getOutputStream()));
+            OSGiAMF0Serializer serializer = new OSGiAMF0Serializer(new DataOutputStream(response.getOutputStream()));
             serializer.serializeMessage(amf0Response);
 
         } catch (Exception e) {

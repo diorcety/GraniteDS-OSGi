@@ -4,10 +4,9 @@ package org.granite.osgi.impl;
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.IServicesConfig;
 import org.granite.context.AMFContext;
-import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteClassLoader;
 import org.granite.context.IGraniteContext;
 import org.granite.messaging.service.IMainFactory;
+import org.granite.osgi.GraniteClassRegistry;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -29,12 +28,14 @@ public class HttpGraniteContext implements IGraniteContext {
 
     private SessionMap sessionMap = null;
     private RequestMap requestMap = null;
-    private IGraniteContext graniteContext;
-
+    private IGraniteContext graniteContext = null;
+    private GraniteClassRegistry  classRegistry = null;
     public HttpGraniteContext(
             IGraniteContext context,
+            GraniteClassRegistry classRegistry,
             HttpServletRequest request,
             HttpServletResponse response) {
+        this.classRegistry = classRegistry;
         this.graniteContext = context;
         this.request = request;
         this.response = response;
@@ -85,6 +86,10 @@ public class HttpGraniteContext implements IGraniteContext {
         return graniteContext.getApplicationMap();
     }
 
+    public Class<?> forName(String type) throws ClassNotFoundException {
+                return classRegistry.forName((String)getRequestMap().get("destination"), type);
+    }
+
     public Map<String, Object> getSessionMap() {
         return getSessionMap(true);
     }
@@ -103,10 +108,6 @@ public class HttpGraniteContext implements IGraniteContext {
         if (requestMap == null)
             requestMap = new RequestMap(request);
         return requestMap;
-    }
-
-    public IGraniteClassLoader getClassLoader() {
-        return graniteContext.getClassLoader();
     }
 
     public IMainFactory getMainFactory() {

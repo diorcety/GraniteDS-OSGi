@@ -2,7 +2,6 @@ package org.granite.osgi.impl;
 
 import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.context.IGraniteClassLoader;
 import org.granite.logging.Logger;
 import org.granite.osgi.GraniteClassRegistry;
 import org.granite.osgi.service.GraniteDestination;
@@ -14,13 +13,12 @@ import java.util.*;
 @Component
 @Provides
 @Instantiate
-public class OSGiGraniteClassLoader implements GraniteClassRegistry, IGraniteClassLoader, IGraniteDestinationSetter {
+public class OSGiGraniteClassLoader implements GraniteClassRegistry {
 
     private static final Logger log = Logger.getLogger(OSGiGraniteClassLoader.class);
 
     private Map<String, Map<String, Class>> destinationClasses = new Hashtable<String, Map<String, Class>>();
 
-    private String currentDestination;
 
     @Validate
     private void starting() {
@@ -32,14 +30,9 @@ public class OSGiGraniteClassLoader implements GraniteClassRegistry, IGraniteCla
         log.debug("Stop OSGiGraniteClassLoader");
     }
 
-    @Override
-    public void setDestination(String destination) {
-        currentDestination = destination;
-    }
-
-    public Class<?> forName(String type) throws ClassNotFoundException {
-        if (currentDestination != null) {
-            Map<String, Class> classMap = destinationClasses.get(currentDestination);
+    public Class<?> forName(String destination, String type) throws ClassNotFoundException {
+        if (destination != null) {
+            Map<String, Class> classMap = destinationClasses.get(destination);
             if (classMap != null && classMap.containsKey(type))
                 return classMap.get(type);
         }

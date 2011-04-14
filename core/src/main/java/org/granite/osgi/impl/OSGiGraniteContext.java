@@ -12,10 +12,10 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.IServicesConfig;
 import org.granite.context.AbstractGraniteContext;
-import org.granite.context.IGraniteClassLoader;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.process.AMF3MessageInterceptor;
 import org.granite.messaging.service.IMainFactory;
+import org.granite.osgi.GraniteClassRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,9 +31,6 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
     protected Map<String, Object> applicationMap = null;
 
     @Requires
-    private IGraniteClassLoader graniteClassLoader;
-
-    @Requires
     private IMainFactory mainFactory;
 
     @Requires
@@ -45,7 +42,6 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
         super(null, null);
         try {
             graniteConfig = new GraniteConfig(null, null, null, null);
-            graniteConfig.setAmf3MessageInterceptor(new OSGiInterceptor());
         } catch (Exception e) {
             LOG.error(e, "Can't create GraniteContext");
         }
@@ -104,24 +100,7 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
     }
 
     @Override
-    public IGraniteClassLoader getClassLoader() {
-        return graniteClassLoader;
-    }
-
-    @Override
     public IMainFactory getMainFactory() {
         return mainFactory;
-    }
-
-    private class OSGiInterceptor implements AMF3MessageInterceptor {
-
-        @Override
-        public void before(Message request) {
-        }
-
-        @Override
-        public void after(Message request, Message response) {
-            response.setDestination(request.getDestination());
-        }
     }
 }
