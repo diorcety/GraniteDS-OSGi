@@ -19,7 +19,7 @@ import java.util.Dictionary;
 @Provides
 public class OSGiChannel extends SimpleChannel {
 
-    private static final Logger LOG = Logger.getLogger(OSGiChannel.class);
+    private static final Logger log = Logger.getLogger(OSGiChannel.class);
 
     @Requires
     private IServicesConfig servicesConfig;
@@ -73,12 +73,12 @@ public class OSGiChannel extends SimpleChannel {
     }
 
     public void start() {
-        LOG.debug("Start Channel:" + this.id);
+        log.debug("Start Channel:" + this.id);
         servicesConfig.addChannel(this);
     }
 
     public void stop() {
-        LOG.debug("Stop Channel:" + this.id);
+        log.debug("Stop Channel:" + this.id);
         if (servicesConfig != null) {
             servicesConfig.removeChannel(this.id);
         }

@@ -16,7 +16,7 @@ import java.util.Dictionary;
 @Provides
 public class OSGiAdapter extends SimpleAdapter {
 
-    private static final Logger LOG = Logger.getLogger(OSGiAdapter.class);
+    private static final Logger log = Logger.getLogger(OSGiAdapter.class);
 
     ///////////////////////////////////////////////////////////////////////////
     // OSGi
@@ -51,11 +51,11 @@ public class OSGiAdapter extends SimpleAdapter {
     }
 
     public void start() {
-        LOG.debug("Start Adapter:" + this.id);
+        log.debug("Start Adapter:" + this.id);
     }
 
 
     public void stop() {
-        LOG.debug("Stop Adapter:" + this.id);
+        log.debug("Stop Adapter:" + this.id);
     }
 }

@@ -1,7 +1,5 @@
 package org.granite.osgi.impl;
 
-import flex.messaging.messages.Message;
-
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -13,9 +11,7 @@ import org.granite.config.GraniteConfig;
 import org.granite.config.flex.IServicesConfig;
 import org.granite.context.AbstractGraniteContext;
 import org.granite.logging.Logger;
-import org.granite.messaging.amf.process.AMF3MessageInterceptor;
 import org.granite.messaging.service.IMainFactory;
-import org.granite.osgi.GraniteClassRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,8 +21,7 @@ import java.util.Map;
 @Instantiate
 public class OSGiGraniteContext extends AbstractGraniteContext {
 
-    private static final Logger LOG = Logger.getLogger(
-            OSGiGraniteContext.class);
+    private static final Logger log = Logger.getLogger(OSGiGraniteContext.class);
 
     protected Map<String, Object> applicationMap = null;
 
@@ -43,18 +38,18 @@ public class OSGiGraniteContext extends AbstractGraniteContext {
         try {
             graniteConfig = new GraniteConfig(null, null, null, null);
         } catch (Exception e) {
-            LOG.error(e, "Can't create GraniteContext");
+            log.error(e, "Can't create GraniteContext");
         }
     }
 
     @Validate
     public void starting() {
-        LOG.debug("Start GraniteContext");
+        log.debug("Start GraniteContext");
     }
 
     @Invalidate
     public void stopping() {
-        LOG.debug("Stop GraniteContext");
+        log.debug("Stop GraniteContext");
     }
 
     @Override

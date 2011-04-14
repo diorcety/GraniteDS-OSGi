@@ -14,7 +14,7 @@ import org.granite.logging.Logger;
 @Provides
 public class OSGiServicesConfig extends SimpleServicesConfig {
 
-    private static final Logger LOG = Logger.getLogger(
+    private static final Logger log = Logger.getLogger(
             OSGiServicesConfig.class);
 
     public OSGiServicesConfig() {
@@ -22,11 +22,11 @@ public class OSGiServicesConfig extends SimpleServicesConfig {
 
     @Validate
     public void starting() {
-        LOG.debug("Start ServicesConfig");
+        log.debug("Start ServicesConfig");
     }
 
     @Invalidate
     public void stopping() {
-        LOG.debug("Stop ServicesConfig");
+        log.debug("Stop ServicesConfig");
     }
 }

@@ -1,4 +1,4 @@
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
 
@@ -11,7 +11,6 @@ import org.granite.messaging.service.IServiceFactory;
 import org.granite.messaging.service.IServiceInvoker;
 import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
-import org.granite.messaging.service.SimpleServiceInvoker;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
@@ -21,7 +20,7 @@ import java.util.Map;
 
 public class OSGiFactoryAbstraction implements IServiceFactory {
 
-    private static final Logger LOG = Logger.getLogger(OSGiFactoryAbstraction.class);
+    private static final Logger log = Logger.getLogger(OSGiFactoryAbstraction.class);
 
     private ServiceExceptionHandler serviceExceptionHandler;
     private final GraniteFactory graniteFactory;
@@ -37,10 +36,10 @@ public class OSGiFactoryAbstraction implements IServiceFactory {
         for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
             try {
                 CacheEntry ce = ice.next();
-                LOG.info("Remove \"" + ce.entry + "\" from the cache");
+                log.info("Remove \"" + ce.entry + "\" from the cache");
                 ce.cache.remove(ce.entry);
             } catch (IllegalStateException e) {
-                LOG.warn("Cache flush exception: " + e.getMessage());
+                log.warn("Cache flush exception: " + e.getMessage());
             }
         }
     }

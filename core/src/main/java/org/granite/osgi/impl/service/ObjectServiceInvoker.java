@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.service;
 
 import org.granite.config.flex.IDestination;
 import org.granite.logging.Logger;
@@ -33,7 +33,7 @@ public class ObjectServiceInvoker extends AbstractServiceInvoker<IServiceFactory
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOG = Logger.getLogger(ObjectServiceInvoker.class);
+    private static final Logger log = Logger.getLogger(ObjectServiceInvoker.class);
 
     protected ObjectServiceInvoker(IDestination destination, IServiceFactory factory, Object obj) throws ServiceException {
         super(destination, factory);

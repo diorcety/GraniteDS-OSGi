@@ -18,7 +18,7 @@ import java.util.Dictionary;
 @Provides
 public class OSGiFactory extends SimpleFactory {
 
-    private static final Logger LOG = Logger.getLogger(OSGiFactory.class);
+    private static final Logger log = Logger.getLogger(OSGiFactory.class);
 
     @Requires
     private IServicesConfig servicesConfig;
@@ -54,12 +54,12 @@ public class OSGiFactory extends SimpleFactory {
     }
 
     public void start() {
-        LOG.debug("Start Factory:" + this.id);
+        log.debug("Start Factory:" + this.id);
         servicesConfig.addFactory(this);
     }
 
     public void stop() {
-        LOG.debug("Stop Factory:" + this.id);
+        log.debug("Stop Factory:" + this.id);
         if (servicesConfig != null) {
             servicesConfig.removeFactory(this.id);
         }

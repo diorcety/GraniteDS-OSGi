@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl;
+package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
 
@@ -56,7 +56,7 @@ public class OSGiServiceFactory implements IServiceFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOG = Logger.getLogger(OSGiServiceFactory.class);
+    private static final Logger log = Logger.getLogger(OSGiServiceFactory.class);
 
     private Map<String, GraniteDestination> osgiServices = new Hashtable<String, GraniteDestination>();
 
@@ -70,17 +70,17 @@ public class OSGiServiceFactory implements IServiceFactory {
 
     @Validate
     private void starting() {
-        LOG.debug("Start OSGiServiceFactory");
+        log.debug("Start OSGiServiceFactory");
     }
 
     @Invalidate
     private void stopping() {
-        LOG.debug("Stop OSGiServiceFactory");
+        log.debug("Stop OSGiServiceFactory");
 
         // Remove cache entries
         for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
             CacheEntry ce = ice.next();
-            LOG.info("Remove \"" + ce.entry + "\" from the cache");
+            log.info("Remove \"" + ce.entry + "\" from the cache");
             ce.cache.remove(ce.entry);
         }
     }
@@ -104,7 +104,7 @@ public class OSGiServiceFactory implements IServiceFactory {
     public final synchronized void unbindDestinationConfiguration(final IDestination destination) {
         CacheEntry ce = cacheEntries.remove(destination.getId());
         if (ce != null) {
-            LOG.info("Remove \"" + ce.entry + "\" (" + destination.getId() + ") from the cache");
+            log.info("Remove \"" + ce.entry + "\" (" + destination.getId() + ") from the cache");
             ce.cache.remove(ce.entry);
         }
     }

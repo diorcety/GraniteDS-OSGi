@@ -23,7 +23,7 @@ import java.util.Dictionary;
 @Provides
 public class OSGiDestination extends SimpleDestination {
 
-    private static final Logger LOG = Logger.getLogger(OSGiDestination.class);
+    private static final Logger log = Logger.getLogger(OSGiDestination.class);
 
     @Property(mandatory = true)
     public String SERVICE;
@@ -138,12 +138,12 @@ public class OSGiDestination extends SimpleDestination {
     }
 
     public void start() {
-        LOG.debug("Start Destination:" + this.id);
+        log.debug("Start Destination:" + this.id);
         service.addDestination(this);
     }
 
     public void stop() {
-        LOG.debug("Stop Destination:" + this.id);
+        log.debug("Stop Destination:" + this.id);
         if (service != null) {
             service.removeDestination(this.id);
         }

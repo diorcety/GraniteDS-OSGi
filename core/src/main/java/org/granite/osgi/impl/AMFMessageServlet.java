@@ -37,7 +37,7 @@ import java.util.Map;
 @Component
 @Instantiate
 public class AMFMessageServlet extends HttpServlet {
-    private static final Logger LOG = Logger.getLogger(AMFMessageServlet.class);
+    private static final Logger log = Logger.getLogger(AMFMessageServlet.class);
 
     @Requires
     private HttpService httpService;
@@ -54,21 +54,21 @@ public class AMFMessageServlet extends HttpServlet {
 
     @Validate
     private void starting() {
-        LOG.debug("GraniteDS's AMFMessageServlet started");
+        log.debug("GraniteDS's AMFMessageServlet started");
 
         httpContext = httpService.createDefaultHttpContext();
     }
 
     @Invalidate
     private void stopping() {
-        LOG.debug("GraniteDS's AMFMessageServlet stopped");
+        log.debug("GraniteDS's AMFMessageServlet stopped");
 
         // Remove all aliases
         for (Iterator<String> it = aliases.keySet().iterator(); it.hasNext();) {
             String uri = it.next();
             httpService.unregister(uri);
             it.remove();
-            LOG.info("Remove alias: " + uri);
+            log.info("Remove alias: " + uri);
         }
     }
 
@@ -85,16 +85,16 @@ public class AMFMessageServlet extends HttpServlet {
 
                     aliases.put(channel.getId(), uri);
 
-                    LOG.info("Add alias: " + uri);
+                    log.info("Add alias: " + uri);
                 } else {
-                    LOG.warn("Try to add a existing channel: " + channel.getId());
+                    log.warn("Try to add a existing channel: " + channel.getId());
                 }
             } else {
-                LOG.debug("Ignored channel : " + channel.getId());
+                log.debug("Ignored channel : " + channel.getId());
             }
 
         } catch (Exception e) {
-            LOG.error(e, "Can't add channel: " + channel.getId());
+            log.error(e, "Can't add channel: " + channel.getId());
         }
     }
 
@@ -106,17 +106,17 @@ public class AMFMessageServlet extends HttpServlet {
                 String uri = aliases.get(channel.getId());
 
                 if (uri != null) {
-                    LOG.info("Remove alias: " + uri);
+                    log.info("Remove alias: " + uri);
                     aliases.remove(channel.getId());
                     httpService.unregister(uri);
                 } else {
-                    LOG.warn("Try to remove an unnregistred channel: " + channel.getId());
+                    log.warn("Try to remove an unnregistred channel: " + channel.getId());
                 }
             } else {
-                LOG.debug("Ignore remove channel: " + channel.getId());
+                log.debug("Ignore remove channel: " + channel.getId());
             }
         } catch (Exception e) {
-            LOG.error(e, "Can't remove channel: " + channel.getId());
+            log.error(e, "Can't remove channel: " + channel.getId());
         }
     }
 
@@ -126,7 +126,7 @@ public class AMFMessageServlet extends HttpServlet {
             ServletException, IOException {
 
         if (graniteContext == null) {
-            LOG.error("Could not handle AMF request: GraniteContext uninitialized");
+            log.error("Could not handle AMF request: GraniteContext uninitialized");
             return;
         }
         try {
@@ -144,9 +144,9 @@ public class AMFMessageServlet extends HttpServlet {
             amf0Request = (AMF0Message) resolver.resolve(amf0Request);
 
             // Phase2 Processing AMF0 request
-            LOG.debug(">>>>> Processing AMF0 request: " + amf0Request);
+            log.debug(">>>>> Processing AMF0 request: " + amf0Request);
             AMF0Message amf0Response = AMF0MessageProcessor.process(amf0Request);
-            LOG.debug("<<<<< Returning AMF0 response: " + amf0Response);
+            log.debug("<<<<< Returning AMF0 response: " + amf0Response);
 
             // Phase3 Serializing AMF0 response
             response.setContentType(AMF0Message.CONTENT_TYPE);
@@ -154,7 +154,7 @@ public class AMFMessageServlet extends HttpServlet {
             serializer.serializeMessage(amf0Response);
 
         } catch (Exception e) {
-            LOG.error(e, "Could not handle AMF request");
+            log.error(e, "Could not handle AMF request");
         }
     }
 }
