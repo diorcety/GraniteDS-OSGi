@@ -91,15 +91,6 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
     @Unbind
     public final synchronized void unbindDestination(final GraniteDestination destination) {
         osgiServices.remove(destination.getId());
-    }
-
-    @Bind(aggregate = true, optional = true)
-    public final synchronized void bindDestinationConfiguration(final Destination destination) {
-
-    }
-
-    @Unbind
-    public final synchronized void unbindDestinationConfiguration(final Destination destination) {
         CacheEntry ce = cacheEntries.remove(destination.getId());
         if (ce != null) {
             log.info("Remove \"" + ce.entry + "\" (" + destination.getId() + ") from the cache");
@@ -139,8 +130,7 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
         return serviceExceptionHandler;
     }
 
-    public ServiceFactory getServiceFactory()
-    {
+    public ServiceFactory getServiceFactory() {
         return this;
     }
 }
