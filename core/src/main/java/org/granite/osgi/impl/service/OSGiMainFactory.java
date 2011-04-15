@@ -80,9 +80,9 @@ public class OSGiMainFactory implements IMainFactory {
 
     @Unbind
     public final synchronized void unbindFactoryConfiguration(final IFactory factory) {
-        CacheEntry ce = cacheEntries.remove(factory.getId());
+        CacheEntry ce = cacheEntries.remove(factory.getFactory().getId());
         if (ce != null) {
-            log.info("Remove \"" + ce.entry + "\" (" + factory.getId() + ") from the cache");
+            log.info("Remove \"" + ce.entry + "\" (" + factory.getFactory().getId() + ") from the cache");
             OSGiFactoryAbstraction service = (OSGiFactoryAbstraction) ce.cache.remove(ce.entry);
             service.remove();
         }
@@ -90,7 +90,7 @@ public class OSGiMainFactory implements IMainFactory {
 
 
     ///////////////////////////////////////////////////////////////////////////
-    public IServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
+    public ServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
 
         GraniteContext context = GraniteContext.getCurrentInstance();
 
@@ -111,11 +111,11 @@ public class OSGiMainFactory implements IMainFactory {
         return getServiceFactory(context, factoryId, key);
     }
 
-    private IServiceFactory getServiceFactory(GraniteContext context, String factoryId, String key) {
+    private ServiceFactory getServiceFactory(GraniteContext context, String factoryId, String key) {
         lock.lock();
         try {
             Map<String, Object> cache = Collections.synchronizedMap(context.getApplicationMap());
-            IServiceFactory factory = (IServiceFactory) cache.get(key);
+            ServiceFactory factory = (ServiceFactory) cache.get(key);
             if (factory == null) {
 
                 log.debug(">> No cached factory for: %s", factoryId);
@@ -123,7 +123,7 @@ public class OSGiMainFactory implements IMainFactory {
                 Factory config = context.getServicesConfig().findFactoryById(factoryId);
 
                 if (config == null) {
-                    factory = osgiServiceFactory;
+                    factory = osgiServiceFactory.getServiceFactory();
                 } else {
                     GraniteFactory gf = osgiServices.get(config.getId());
                     if (gf == null)

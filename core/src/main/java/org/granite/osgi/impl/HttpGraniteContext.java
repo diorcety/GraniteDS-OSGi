@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class HttpGraniteContext extends GraniteContext implements IGraniteContext {
+public class HttpGraniteContext extends GraniteContext {
 
     private static final String SESSION_LOCK_KEY = HttpGraniteContext.class.getName() + ".LOCK";
 
@@ -58,18 +58,22 @@ public class HttpGraniteContext extends GraniteContext implements IGraniteContex
         return request.getSession(true);
     }
 
+    @Override
     public ServicesConfig getServicesConfig() {
         return graniteContext.getServicesConfig();
     }
 
+    @Override
     public GraniteConfig getGraniteConfig() {
         return graniteContext.getGraniteConfig();
     }
 
+    @Override
     public AMFContext getAMFContext() {
         return graniteContext.getAMFContext();
     }
 
+    @Override
     public synchronized Object getSessionLock() {
         Object lock = request.getSession(true).getAttribute(SESSION_LOCK_KEY);
         if (lock == null) {
@@ -79,22 +83,27 @@ public class HttpGraniteContext extends GraniteContext implements IGraniteContex
         return lock;
     }
 
+    @Override
     public Map<String, String> getInitialisationMap() {
         return graniteContext.getInitialisationMap();
     }
 
+    @Override
     public Map<String, Object> getApplicationMap() {
         return graniteContext.getApplicationMap();
     }
 
+
     public Class<?> forName(String type) throws ClassNotFoundException {
-                return classRegistry.forName((String) getRequestMap().get("destination"), type);
+        return classRegistry.forName((String) getRequestMap().get("destination"), type);
     }
 
+    @Override
     public Map<String, Object> getSessionMap() {
         return getSessionMap(true);
     }
 
+    @Override
     public Map<String, Object> getSessionMap(boolean create) {
         if (sessionMap == null) {
             if (create)
@@ -105,6 +114,7 @@ public class HttpGraniteContext extends GraniteContext implements IGraniteContex
         return sessionMap;
     }
 
+    @Override
     public Map<String, Object> getRequestMap() {
         if (requestMap == null)
             requestMap = new RequestMap(request);

@@ -2,15 +2,14 @@ package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
 
-import org.granite.config.flex.IDestination;
+import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.DefaultServiceExceptionHandler;
-import org.granite.messaging.service.IServiceFactory;
-import org.granite.messaging.service.IServiceInvoker;
 import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
+import org.granite.messaging.service.ServiceFactory;
+import org.granite.messaging.service.ServiceInvoker;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
@@ -18,7 +17,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-public class OSGiFactoryAbstraction implements IServiceFactory {
+public class OSGiFactoryAbstraction extends ServiceFactory {
 
     private static final Logger log = Logger.getLogger(OSGiFactoryAbstraction.class);
 
@@ -45,12 +44,12 @@ public class OSGiFactoryAbstraction implements IServiceFactory {
     }
 
     @Override
-    public IServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
+    public ServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        IGraniteContext context = GraniteContext.getCurrentInstance();
-        IDestination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
+        GraniteContext context = GraniteContext.getCurrentInstance();
+        Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
             throw new ServiceException("No matching destination: " + destinationId);
 
@@ -58,9 +57,9 @@ public class OSGiFactoryAbstraction implements IServiceFactory {
 
         String key = OSGiFactoryAbstraction.class.getName() + '.' + destination.getId();
 
-        IServiceInvoker service = (IServiceInvoker) cache.get(key);
+        ServiceInvoker service = (ServiceInvoker) cache.get(key);
         if (service == null) {
-            service = new ObjectServiceInvoker(destination, this, graniteFactory.newInstance());
+            service = new ObjectServiceInvoker<OSGiFactoryAbstraction>(destination, this, graniteFactory.newInstance());
             cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
             cache.put(key, service);
         }
@@ -72,8 +71,8 @@ public class OSGiFactoryAbstraction implements IServiceFactory {
         return this.serviceExceptionHandler;
     }
 
-    private Map<String, Object> getCache(IDestination destination) throws ServiceException {
-        IGraniteContext context = GraniteContext.getCurrentInstance();
+    private Map<String, Object> getCache(Destination destination) throws ServiceException {
+        GraniteContext context = GraniteContext.getCurrentInstance();
         String scope = destination.getProperties().get("scope");
 
         Map<String, Object> cache = null;

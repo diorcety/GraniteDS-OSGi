@@ -10,7 +10,6 @@ package org.granite.osgi.impl.io;
 import flex.messaging.io.ASObject;
 import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.RemotingMessage;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Body;
 import org.granite.messaging.amf.AMF0Header;

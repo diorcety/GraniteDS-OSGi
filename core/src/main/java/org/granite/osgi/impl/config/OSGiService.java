@@ -77,11 +77,10 @@ public class OSGiService extends Service implements IService {
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(IAdapter adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
-            this.adapters.put(adapter.getId(), adapter.getAdapter());
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getAdapter().getId())) {
+            this.adapters.put(adapter.getAdapter().getId(), adapter.getAdapter());
 
-            if (this.DEFAULT_ADAPTER != null &&
-                    this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getAdapter().getId())) {
                 this.defaultAdapter = adapter.getAdapter();
             }
             checkState();
@@ -90,12 +89,10 @@ public class OSGiService extends Service implements IService {
 
     @Unbind
     private void unbindAdapter(IAdapter adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(
-                adapter.getId())) {
-            this.adapters.remove(adapter.getId());
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getAdapter().getId())) {
+            this.adapters.remove(adapter.getAdapter().getId());
 
-            if (this.DEFAULT_ADAPTER != null &&
-                    this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getAdapter().getId())) {
                 this.defaultAdapter = null;
             }
             checkState();
@@ -104,8 +101,7 @@ public class OSGiService extends Service implements IService {
 
     private void checkState() {
         boolean new_state;
-        if (started && (adapters == null || ADAPTER_LIST == null
-                || adapters.size() == ADAPTER_LIST.size())) {
+        if (started && (adapters == null || ADAPTER_LIST == null || adapters.size() == ADAPTER_LIST.size())) {
             new_state = true;
         } else {
             new_state = false;
@@ -123,13 +119,13 @@ public class OSGiService extends Service implements IService {
     public void start() {
         LOG.debug("Start Service:" + this.id);
         getDestinations().clear();
-        servicesConfig.addService(this);
+        servicesConfig.getServicesConfig().addService(this);
     }
 
     public void stop() {
         LOG.debug("Stop Service:" + this.id);
         if (servicesConfig != null) {
-            servicesConfig.removeService(this.id);
+            servicesConfig.getServicesConfig().removeService(this.id);
         }
     }
 

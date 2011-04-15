@@ -30,15 +30,13 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.IDestination;
+import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
-import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.AbstractServiceInvoker;
 import org.granite.messaging.service.DefaultServiceExceptionHandler;
-import org.granite.messaging.service.IServiceFactory;
 import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
+import org.granite.messaging.service.ServiceFactory;
 import org.granite.osgi.service.GraniteDestination;
 
 import java.util.Collections;
@@ -52,7 +50,7 @@ import java.util.Map;
 @Component
 @Provides
 @Instantiate
-public class OSGiServiceFactory implements IServiceFactory {
+public class OSGiServiceFactory extends ServiceFactory implements IServiceFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -96,12 +94,12 @@ public class OSGiServiceFactory implements IServiceFactory {
     }
 
     @Bind(aggregate = true, optional = true)
-    public final synchronized void bindDestinationConfiguration(final IDestination destination) {
+    public final synchronized void bindDestinationConfiguration(final Destination destination) {
 
     }
 
     @Unbind
-    public final synchronized void unbindDestinationConfiguration(final IDestination destination) {
+    public final synchronized void unbindDestinationConfiguration(final Destination destination) {
         CacheEntry ce = cacheEntries.remove(destination.getId());
         if (ce != null) {
             log.info("Remove \"" + ce.entry + "\" (" + destination.getId() + ") from the cache");
@@ -110,12 +108,12 @@ public class OSGiServiceFactory implements IServiceFactory {
     }
 
     @Override
-    public AbstractServiceInvoker<?> getServiceInstance(RemotingMessage request) throws ServiceException {
+    public ObjectServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        IGraniteContext context = GraniteContext.getCurrentInstance();
-        IDestination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
+        GraniteContext context = GraniteContext.getCurrentInstance();
+        Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
             throw new ServiceException("No matching destination: " + destinationId);
 
@@ -123,13 +121,13 @@ public class OSGiServiceFactory implements IServiceFactory {
 
         String key = OSGiServiceFactory.class.getName() + '.' + destination.getId();
 
-        AbstractServiceInvoker<?> service = (AbstractServiceInvoker<?>) cache.get(key);
+        ObjectServiceInvoker service = (ObjectServiceInvoker) cache.get(key);
         if (service == null) {
             GraniteDestination gd = osgiServices.get(destination.getId());
             if (gd == null)
                 throw new ServiceException("Could not get OSGi destination: " + destination.getId());
 
-            service = new ObjectServiceInvoker(destination, this, gd);
+            service = new ObjectServiceInvoker<OSGiServiceFactory>(destination, this, gd);
 
             cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
             cache.put(key, service);
@@ -139,5 +137,10 @@ public class OSGiServiceFactory implements IServiceFactory {
 
     public ServiceExceptionHandler getServiceExceptionHandler() {
         return serviceExceptionHandler;
+    }
+
+    public ServiceFactory getServiceFactory()
+    {
+        return this;
     }
 }

@@ -72,7 +72,7 @@ public class OSGiDestination extends Destination implements IDestination{
 
     @Bind(aggregate = true, optional = true)
     private void bindService(IService service) {
-        if (service.getId() == this.SERVICE) {
+        if (service.getService().getId() == this.SERVICE) {
             this.service = service;
             checkState();
         }
@@ -80,7 +80,7 @@ public class OSGiDestination extends Destination implements IDestination{
 
     @Unbind
     private void unbindService(IService service) {
-        if (service.getId() == this.SERVICE) {
+        if (service.getService().getId() == this.SERVICE) {
             this.service = null;
             checkState();
         }
@@ -88,7 +88,7 @@ public class OSGiDestination extends Destination implements IDestination{
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(IAdapter adapter) {
-        if (adapter.getId() == this.ADAPTER) {
+        if (adapter.getAdapter().getId() == this.ADAPTER) {
             this.adapter = adapter.getAdapter();
             checkState();
         }
@@ -96,7 +96,7 @@ public class OSGiDestination extends Destination implements IDestination{
 
     @Unbind
     private void unbindAdapter(IAdapter adapter) {
-        if (adapter.getId() == this.ADAPTER) {
+        if (adapter.getAdapter().getId() == this.ADAPTER) {
             this.adapter = null;
             checkState();
         }
@@ -104,16 +104,16 @@ public class OSGiDestination extends Destination implements IDestination{
 
     @Bind(aggregate = true, optional = true)
     private void bindChannel(IChannel channel) {
-        if (this.CHANNEL_LIST.contains(channel.getId())) {
-            this.channelRefs.add(channel.getId());
+        if (this.CHANNEL_LIST.contains(channel.getChannel().getId())) {
+            this.channelRefs.add(channel.getChannel().getId());
             checkState();
         }
     }
 
     @Unbind
     private void unbindChannel(IChannel channel) {
-        if (this.CHANNEL_LIST.contains(channel.getId())) {
-            this.channelRefs.remove(channel.getId());
+        if (this.CHANNEL_LIST.contains(channel.getChannel().getId())) {
+            this.channelRefs.remove(channel.getChannel().getId());
             checkState();
         }
     }
@@ -137,13 +137,13 @@ public class OSGiDestination extends Destination implements IDestination{
 
     public void start() {
         log.debug("Start Destination:" + this.id);
-        service.addDestination(this);
+        service.getService().addDestination(this);
     }
 
     public void stop() {
         log.debug("Stop Destination:" + this.id);
         if (service != null) {
-            service.removeDestination(this.id);
+            service.getService().removeDestination(this.id);
         }
     }
 

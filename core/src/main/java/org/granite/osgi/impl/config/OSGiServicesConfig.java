@@ -15,13 +15,17 @@ import java.io.IOException;
 @Component(publicFactory = false)
 @Instantiate
 @Provides
-public class OSGiServicesConfig extends ServicesConfig implements IServicesConfig{
+public class OSGiServicesConfig extends ServicesConfig implements IServicesConfig {
 
     private static final Logger log = Logger.getLogger(
             OSGiServicesConfig.class);
 
     public OSGiServicesConfig() throws IOException, SAXException {
-        super(null,null, false);
+        super(null, null, false);
+    }
+
+    public ServicesConfig getServicesConfig() {
+        return this;
     }
 
     @Validate

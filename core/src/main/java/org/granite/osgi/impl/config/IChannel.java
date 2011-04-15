@@ -5,17 +5,5 @@ import org.granite.config.flex.EndPoint;
 import org.granite.util.XMap;
 
 public interface IChannel {
-    public String getClassName();
-
-    public EndPoint getEndPoint();
-
-    public String getId();
-
-    public XMap getProperties();
-
-    public boolean isLegacyXmlSerialization() ;
-
-    public boolean isLegacyCollectionSerialization();
-
     public Channel getChannel();
 }

@@ -8,6 +8,7 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.Channel;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
@@ -18,6 +19,8 @@ import org.granite.osgi.impl.config.IChannel;
 import org.granite.osgi.impl.io.OSGiAMF0Deserializer;
 import org.granite.osgi.impl.io.OSGiAMF0Serializer;
 import org.granite.osgi.impl.io.OSGiResolver;
+import org.granite.osgi.impl.process.OSGiAMF0MessageProcessor;
+import org.granite.osgi.impl.service.IMainFactory;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
@@ -47,6 +50,9 @@ public class AMFMessageServlet extends HttpServlet {
     @Requires
     private GraniteClassRegistry classRegistry;
 
+    @Requires
+    private IMainFactory mainFactory;
+
     private HttpContext httpContext;
 
     private Map<String, String> aliases = new HashMap<String, String>();
@@ -72,7 +78,8 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Bind(aggregate = true, optional = true)
-    private synchronized void bindChannel(final IChannel channel) {
+    private synchronized void bindChannel(final IChannel ichannel) {
+        Channel channel = ichannel.getChannel();
         try {
             if (channel.getClassName().equals("mx.messaging.channels.AMFChannel")) {
 
@@ -98,7 +105,8 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Unbind
-    private synchronized void unbindChannel(final IChannel channel) {
+    private synchronized void unbindChannel(final IChannel ichannel) {
+        Channel channel = ichannel.getChannel();
         try {
             if (channel.getClassName().equals("mx.messaging.channels.AMFChannel")) {
 
@@ -137,14 +145,14 @@ public class AMFMessageServlet extends HttpServlet {
             OSGiResolver resolver = new OSGiResolver(context);
 
             // Phase1 Deserializing AMF0 request
-
             OSGiAMF0Deserializer deserializer = new OSGiAMF0Deserializer(new DataInputStream(request.getInputStream()));
             AMF0Message amf0Request = deserializer.getAMFMessage();
             amf0Request = (AMF0Message) resolver.resolve(amf0Request);
+            context.getRequestMap().put("mainFactory", mainFactory);
 
             // Phase2 Processing AMF0 request
             log.debug(">>>>> Processing AMF0 request: " + amf0Request);
-            AMF0Message amf0Response = AMF0MessageProcessor.process(amf0Request);
+            AMF0Message amf0Response = OSGiAMF0MessageProcessor.process(amf0Request);
             log.debug("<<<<< Returning AMF0 response: " + amf0Response);
 
             // Phase3 Serializing AMF0 response
