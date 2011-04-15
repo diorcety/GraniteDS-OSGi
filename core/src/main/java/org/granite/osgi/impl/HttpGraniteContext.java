@@ -5,6 +5,7 @@ import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.context.AMFContext;
 import org.granite.context.GraniteContext;
+import org.granite.messaging.service.MainFactory;
 import org.granite.osgi.GraniteClassRegistry;
 
 import javax.servlet.ServletContext;
@@ -119,6 +120,11 @@ public class HttpGraniteContext extends GraniteContext {
         if (requestMap == null)
             requestMap = new RequestMap(request);
         return requestMap;
+    }
+
+    @Override
+    public MainFactory getMainFactory() {
+        return graniteContext.getMainFactory();
     }
 }
 

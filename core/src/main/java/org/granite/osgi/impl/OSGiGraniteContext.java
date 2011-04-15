@@ -11,7 +11,9 @@ import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
+import org.granite.messaging.service.MainFactory;
 import org.granite.osgi.impl.config.IServicesConfig;
+import org.granite.osgi.impl.service.IMainFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +21,7 @@ import java.util.Map;
 @Component
 @Provides
 @Instantiate
-public class OSGiGraniteContext extends GraniteContext implements IGraniteContext{
+public class OSGiGraniteContext extends GraniteContext implements IGraniteContext {
 
     private static final Logger log = Logger.getLogger(OSGiGraniteContext.class);
 
@@ -27,6 +29,9 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
 
     @Requires
     private IServicesConfig servicesConfig;
+
+    @Requires
+    private IMainFactory mainFactory;
 
     private GraniteConfig graniteConfig;
 
@@ -94,5 +99,10 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
     @Override
     public GraniteContext getGraniteContext() {
         return this;
+    }
+
+    @Override
+    public MainFactory getMainFactory() {
+        return mainFactory.getMainFactory();
     }
 }

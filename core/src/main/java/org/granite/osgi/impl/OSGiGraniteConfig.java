@@ -2,7 +2,9 @@ package org.granite.osgi.impl;
 
 import org.granite.config.GraniteConfig;
 import org.granite.messaging.amf.io.util.ActionScriptClassDescriptor;
+import org.granite.messaging.service.MainFactory;
 import org.granite.osgi.impl.io.OSGiActionScriptClassDescriptor;
+import org.granite.osgi.impl.service.OSGiMainFactory;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;

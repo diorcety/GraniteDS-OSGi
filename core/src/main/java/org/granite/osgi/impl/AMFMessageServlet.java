@@ -15,11 +15,10 @@ import org.granite.messaging.amf.AMF0Message;
 import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
+import org.granite.messaging.amf.process.AMF0MessageProcessor;
 import org.granite.osgi.GraniteClassRegistry;
 import org.granite.osgi.impl.config.IChannel;
 import org.granite.osgi.impl.io.OSGiResolver;
-import org.granite.osgi.impl.process.OSGiAMF0MessageProcessor;
-import org.granite.osgi.impl.service.IMainFactory;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
@@ -48,9 +47,6 @@ public class AMFMessageServlet extends HttpServlet {
 
     @Requires
     private GraniteClassRegistry classRegistry;
-
-    @Requires
-    private IMainFactory mainFactory;
 
     private HttpContext httpContext;
 
@@ -147,11 +143,10 @@ public class AMFMessageServlet extends HttpServlet {
             AMF0Deserializer deserializer = new AMF0Deserializer(new DataInputStream(request.getInputStream()));
             AMF0Message amf0Request = deserializer.getAMFMessage();
             amf0Request = (AMF0Message) resolver.resolve(amf0Request);
-            context.getRequestMap().put("mainFactory", mainFactory);
 
             // Phase2 Processing AMF0 request
             log.debug(">>>>> Processing AMF0 request: " + amf0Request);
-            AMF0Message amf0Response = OSGiAMF0MessageProcessor.process(amf0Request);
+            AMF0Message amf0Response = AMF0MessageProcessor.process(amf0Request);
             log.debug("<<<<< Returning AMF0 response: " + amf0Response);
 
             // Phase3 Serializing AMF0 response

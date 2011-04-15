@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Component
 @Provides
 @Instantiate
-public class OSGiMainFactory implements IMainFactory {
+public class OSGiMainFactory extends MainFactory implements IMainFactory {
 
     private static final Logger log = Logger.getLogger(OSGiMainFactory.class);
 
@@ -143,4 +143,8 @@ public class OSGiMainFactory implements IMainFactory {
         }
     }
 
+    public MainFactory getMainFactory()
+    {
+        return this;
+    }
 }
