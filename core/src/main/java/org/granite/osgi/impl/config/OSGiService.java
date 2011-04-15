@@ -124,8 +124,8 @@ public class OSGiService extends SimpleService {
 
     public void start() {
         LOG.debug("Start Service:" + this.id);
-        getDestinations().clear();
-        servicesConfig.addService(this);
+        destinations.clear();
+        servicesConfig.getServicesConfig().addService(this);
     }
 
     public void stop() {
