@@ -1,20 +1,15 @@
 package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
-
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.DefaultServiceExceptionHandler;
-import org.granite.messaging.service.ServiceException;
-import org.granite.messaging.service.ServiceExceptionHandler;
-import org.granite.messaging.service.ServiceFactory;
-import org.granite.messaging.service.ServiceInvoker;
+import org.granite.messaging.service.*;
+import org.granite.osgi.impl.config.IDestination;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 
 public class OSGiFactoryAbstraction extends ServiceFactory {
@@ -30,14 +25,13 @@ public class OSGiFactoryAbstraction extends ServiceFactory {
         this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
     }
 
-    public void remove() {
-        // Remove cache entries
-        for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
+    public void remove(IDestination destination) {
+        CacheEntry ce = cacheEntries.remove(destination.getDestination().getId());
+        if (ce != null) {
             try {
-                CacheEntry ce = ice.next();
-                log.info("Remove \"" + ce.entry + "\" from the cache");
+                log.info("Remove \"" + ce.entry + "\" (" + destination.getDestination().getId() + ") from the cache");
                 ce.cache.remove(ce.entry);
-            } catch (IllegalStateException e) {
+            } catch (Exception e) {
                 log.warn("Cache flush exception: " + e.getMessage());
             }
         }

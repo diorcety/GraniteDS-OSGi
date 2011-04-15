@@ -21,15 +21,7 @@
 package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
-
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
-
+import org.apache.felix.ipojo.annotations.*;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
@@ -37,6 +29,7 @@ import org.granite.messaging.service.DefaultServiceExceptionHandler;
 import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
 import org.granite.messaging.service.ServiceFactory;
+import org.granite.osgi.impl.config.IDestination;
 import org.granite.osgi.service.GraniteDestination;
 
 import java.util.Collections;
@@ -76,27 +69,54 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
         log.debug("Stop OSGiServiceFactory");
 
         // Remove cache entries
-        for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
-            CacheEntry ce = ice.next();
-            log.info("Remove \"" + ce.entry + "\" from the cache");
-            ce.cache.remove(ce.entry);
+        synchronized (cacheEntries) {
+            for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
+                try {
+                    CacheEntry ce = ice.next();
+                    log.info("Remove \"" + ce.entry + "\" from the cache");
+                    ce.cache.remove(ce.entry);
+                } catch (Exception e) {
+                    log.warn("Cache flush exception: " + e.getMessage());
+                }
+            }
         }
     }
 
     @Bind(aggregate = true, optional = true)
-    public final synchronized void bindDestination(final GraniteDestination destination) {
-        osgiServices.put(destination.getId(), destination);
+    public final void bindDestination(final GraniteDestination destination) {
+        synchronized (osgiServices) {
+            osgiServices.put(destination.getId(), destination);
+        }
     }
 
     @Unbind
-    public final synchronized void unbindDestination(final GraniteDestination destination) {
-        osgiServices.remove(destination.getId());
-        CacheEntry ce = cacheEntries.remove(destination.getId());
-        if (ce != null) {
-            log.info("Remove \"" + ce.entry + "\" (" + destination.getId() + ") from the cache");
-            ce.cache.remove(ce.entry);
+    public final void unbindDestination(final GraniteDestination destination) {
+        synchronized (osgiServices) {
+            osgiServices.remove(destination.getId());
         }
     }
+
+    @Bind(aggregate = true, optional = true)
+    public final void bindDestinationConfiguration(final IDestination destination) {
+
+    }
+
+    @Unbind
+    public final void unbindDestinationConfiguration(final IDestination destination) {
+        CacheEntry ce;
+        synchronized (cacheEntries) {
+            ce = cacheEntries.remove(destination.getDestination().getId());
+        }
+        if (ce != null) {
+            try {
+                log.info("Remove \"" + ce.entry + "\" (" + destination.getDestination().getId() + ") from the cache");
+                ce.cache.remove(ce.entry);
+            } catch (Exception e) {
+                log.warn("Cache flush exception: " + e.getMessage());
+            }
+        }
+    }
+
 
     @Override
     public ObjectServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
@@ -114,13 +134,17 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
 
         ObjectServiceInvoker service = (ObjectServiceInvoker) cache.get(key);
         if (service == null) {
-            GraniteDestination gd = osgiServices.get(destination.getId());
+            GraniteDestination gd;
+            synchronized (osgiServices) {
+                gd = osgiServices.get(destination.getId());
+            }
             if (gd == null)
                 throw new ServiceException("Could not get OSGi destination: " + destination.getId());
 
             service = new ObjectServiceInvoker<OSGiServiceFactory>(destination, this, gd);
-
-            cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
+            synchronized (cacheEntries) {
+                cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
+            }
             cache.put(key, service);
         }
         return service;

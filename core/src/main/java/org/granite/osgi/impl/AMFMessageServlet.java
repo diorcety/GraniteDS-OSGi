@@ -82,10 +82,11 @@ public class AMFMessageServlet extends HttpServlet {
 
                 if (uri == null) {
                     uri = channel.getEndPoint().getUri();
-                    httpService.registerServlet(uri, this, null, httpContext);
 
-                    aliases.put(channel.getId(), uri);
-
+                    synchronized (aliases) {
+                        httpService.registerServlet(uri, this, null, httpContext);
+                        aliases.put(channel.getId(), uri);
+                    }
                     log.info("Add alias: " + uri);
                 } else {
                     log.warn("Try to add a existing channel: " + channel.getId());
@@ -108,9 +109,11 @@ public class AMFMessageServlet extends HttpServlet {
                 String uri = aliases.get(channel.getId());
 
                 if (uri != null) {
+                    synchronized (aliases) {
+                        aliases.remove(channel.getId());
+                        httpService.unregister(uri);
+                    }
                     log.info("Remove alias: " + uri);
-                    aliases.remove(channel.getId());
-                    httpService.unregister(uri);
                 } else {
                     log.warn("Try to remove an unnregistred channel: " + channel.getId());
                 }

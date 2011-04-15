@@ -32,23 +32,26 @@ public class OSGiGraniteClassLoader implements GraniteClassRegistry {
 
     public Class<?> forName(String destination, String type) throws ClassNotFoundException {
         if (destination != null) {
-            Map<String, Class> classMap = destinationClasses.get(destination);
+            Map<String, Class> classMap;
+            synchronized (destinationClasses) {
+                classMap = destinationClasses.get(destination);
+            }
             if (classMap != null && classMap.containsKey(type))
                 return classMap.get(type);
         }
         throw new ClassNotFoundException(type);
     }
 
-    public final synchronized void registerClass(String destination, Class clazz) {
+    public final void registerClass(String destination, Class clazz) {
         addClass(destination, clazz);
     }
 
-    public final synchronized void unregisterClass(String destination, Class clazz) {
+    public final void unregisterClass(String destination, Class clazz) {
         removeClass(destination, clazz);
     }
 
     @Bind(aggregate = true, optional = true)
-    public final synchronized void bindDestination(final GraniteDestination destination) {
+    public final void bindDestination(final GraniteDestination destination) {
         List<Class> list = analyseClass(destination.getClass());
         for (Class clazz : list) {
             addClass(destination.getId(), clazz);
@@ -56,7 +59,7 @@ public class OSGiGraniteClassLoader implements GraniteClassRegistry {
     }
 
     @Unbind
-    public final synchronized void unbindDestination(final GraniteDestination destination) {
+    public final void unbindDestination(final GraniteDestination destination) {
         List<Class> list = analyseClass(destination.getClass());
         for (Class clazz : list) {
             removeClass(destination.getId(), clazz);
@@ -64,23 +67,28 @@ public class OSGiGraniteClassLoader implements GraniteClassRegistry {
     }
 
     private void addClass(String destination, Class clazz) {
-        Map<String, Class> classes = destinationClasses.get(destination);
-        if (classes == null) {
-            classes = new Hashtable<String, Class>();
-            destinationClasses.put(destination, classes);
+        synchronized (destinationClasses) {
+            Map<String, Class> classes = destinationClasses.get(destination);
+            if (classes == null) {
+                classes = new Hashtable<String, Class>();
+                destinationClasses.put(destination, classes);
+            }
+
+            classes.put(clazz.getName(), clazz);
         }
-        classes.put(clazz.getName(), clazz);
         log.info("Register class: " + clazz.getName() + " to " + destination);
     }
 
     private void removeClass(String destination, Class clazz) {
-        Map<String, Class> classes = destinationClasses.get(destination);
-        if (classes != null) {
-            classes.remove(clazz.getName());
-            if (classes.size() == 0)
-                destinationClasses.remove(destination);
-            log.info("Unregister class: " + clazz.getName() + " to " + destination);
+        synchronized (destinationClasses) {
+            Map<String, Class> classes = destinationClasses.get(destination);
+            if (classes != null) {
+                classes.remove(clazz.getName());
+                if (classes.size() == 0)
+                    destinationClasses.remove(destination);
+            }
         }
+        log.info("Unregister class: " + clazz.getName() + " to " + destination);
     }
 
     private List<Class> analyseClass(Class cls) {
