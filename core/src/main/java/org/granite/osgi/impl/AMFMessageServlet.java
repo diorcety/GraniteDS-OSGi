@@ -13,11 +13,11 @@ import org.granite.context.GraniteContext;
 import org.granite.context.IGraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
-import org.granite.messaging.amf.process.AMF0MessageProcessor;
+import org.granite.messaging.amf.io.AMF0Deserializer;
+import org.granite.messaging.amf.io.AMF0Serializer;
 
 import org.granite.osgi.GraniteClassRegistry;
-import org.granite.osgi.impl.io.OSGiAMF0Deserializer;
-import org.granite.osgi.impl.io.OSGiAMF0Serializer;
+import org.granite.osgi.impl.config.IChannel;
 import org.granite.osgi.impl.io.OSGiResolver;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
@@ -138,8 +138,7 @@ public class AMFMessageServlet extends HttpServlet {
             OSGiResolver resolver = new OSGiResolver(context);
 
             // Phase1 Deserializing AMF0 request
-
-            OSGiAMF0Deserializer deserializer = new OSGiAMF0Deserializer(new DataInputStream(request.getInputStream()));
+            AMF0Deserializer deserializer = new AMF0Deserializer(new DataInputStream(request.getInputStream()));
             AMF0Message amf0Request = deserializer.getAMFMessage();
             amf0Request = (AMF0Message) resolver.resolve(amf0Request);
 
@@ -150,7 +149,7 @@ public class AMFMessageServlet extends HttpServlet {
 
             // Phase3 Serializing AMF0 response
             response.setContentType(AMF0Message.CONTENT_TYPE);
-            OSGiAMF0Serializer serializer = new OSGiAMF0Serializer(new DataOutputStream(response.getOutputStream()));
+            AMF0Serializer serializer = new AMF0Serializer(new DataOutputStream(response.getOutputStream()));
             serializer.serializeMessage(amf0Response);
 
         } catch (Exception e) {
