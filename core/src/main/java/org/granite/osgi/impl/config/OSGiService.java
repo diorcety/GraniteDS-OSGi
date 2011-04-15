@@ -118,7 +118,7 @@ public class OSGiService extends Service implements IService {
 
     public void start() {
         LOG.debug("Start Service:" + this.id);
-        getDestinations().clear();
+        destinations.clear();
         servicesConfig.getServicesConfig().addService(this);
     }
 
