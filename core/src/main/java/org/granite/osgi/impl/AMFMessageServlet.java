@@ -16,8 +16,8 @@ import org.granite.messaging.amf.AMF0Message;
 import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
+import org.granite.messaging.amf.process.AMF0MessageProcessor;
 import org.granite.osgi.GraniteClassRegistry;
-import org.granite.osgi.impl.config.IChannel;
 import org.granite.osgi.impl.io.OSGiResolver;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
