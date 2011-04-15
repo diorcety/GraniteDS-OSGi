@@ -33,7 +33,7 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
     private OSGiGraniteContext() {
         super(null, null);
         try {
-            graniteConfig = new GraniteConfig(null, null, null, null);
+            graniteConfig = new OSGiGraniteConfig();
         } catch (Exception e) {
             log.error(e, "Can't create GraniteContext");
         }
