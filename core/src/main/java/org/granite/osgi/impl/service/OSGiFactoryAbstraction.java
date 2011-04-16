@@ -2,10 +2,10 @@ package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
 import org.granite.config.flex.Destination;
+import org.granite.config.flex.Factory;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.*;
-import org.granite.osgi.impl.config.IDestination;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
@@ -18,23 +18,12 @@ public class OSGiFactoryAbstraction extends ServiceFactory {
 
     private ServiceExceptionHandler serviceExceptionHandler;
     private final GraniteFactory graniteFactory;
-    private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
+    private Factory factory;
 
-    OSGiFactoryAbstraction(GraniteFactory gf) {
-        this.graniteFactory = gf;
+    OSGiFactoryAbstraction(GraniteFactory graniteFactory, Factory factory) {
+        this.graniteFactory = graniteFactory;
+        this.factory = factory;
         this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
-    }
-
-    public void remove(IDestination destination) {
-        CacheEntry ce = cacheEntries.remove(destination.getDestination().getId());
-        if (ce != null) {
-            try {
-                log.info("Remove \"" + ce.entry + "\" (" + destination.getDestination().getId() + ") from the cache");
-                ce.cache.remove(ce.entry);
-            } catch (Exception e) {
-                log.warn("Cache flush exception: " + e.getMessage());
-            }
-        }
     }
 
     @Override
@@ -51,13 +40,23 @@ public class OSGiFactoryAbstraction extends ServiceFactory {
 
         String key = OSGiFactoryAbstraction.class.getName() + '.' + destination.getId();
 
-        ServiceInvoker service = (ServiceInvoker) cache.get(key);
+        ObjectServiceInvoker service = (ObjectServiceInvoker) cache.get(key);
+
+        // Check update in configuration
+        if (service != null && service.getDestination() != destination) {
+            service = null;
+            log.info("Flush \"" + key + "\" from cache");
+        }
+
         if (service == null) {
             service = new ObjectServiceInvoker<OSGiFactoryAbstraction>(destination, this, graniteFactory.newInstance());
-            cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
             cache.put(key, service);
         }
         return service;
+    }
+
+    public Factory getFactory() {
+        return factory;
     }
 
     @Override
