@@ -37,8 +37,6 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
 
     private Map<String, GraniteFactory> osgiServices = new Hashtable<String, GraniteFactory>();
 
-    private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
-
     @Requires
     IServiceFactory osgiServiceFactory;
 
@@ -50,19 +48,6 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
     @Invalidate
     private void stopping() {
         log.debug("Stop MainFactory");
-
-        // Remove cache entries
-        synchronized (cacheEntries) {
-            for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
-                try {
-                    CacheEntry ce = ice.next();
-                    log.info("Remove \"" + ce.entry + "\" from the cache");
-                    ce.cache.remove(ce.entry);
-                } catch (Exception e) {
-                    log.warn("Cache flush exception: " + e.getMessage());
-                }
-            }
-        }
     }
 
     @Bind(aggregate = true, optional = true)
@@ -79,47 +64,6 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
         }
     }
 
-    @Bind(aggregate = true, optional = true)
-    public final void bindFactoryConfiguration(final IFactory factory) {
-
-    }
-
-    @Unbind
-    public final void unbindFactoryConfiguration(final IFactory factory) {
-        CacheEntry ce;
-        synchronized (cacheEntries) {
-            ce = cacheEntries.remove(factory.getFactory().getId());
-        }
-        if (ce != null) {
-            try {
-                log.info("Remove \"" + ce.entry + "\" (" + factory.getFactory().getId() + ") from the cache");
-                ce.cache.remove(ce.entry);
-            } catch (Exception e) {
-                log.warn("Cache flush exception: " + e.getMessage());
-            }
-        }
-    }
-
-    @Bind(aggregate = true, optional = true)
-    public final void bindDestinationConfiguration(final IDestination destination) {
-
-    }
-
-    @Unbind
-    public final void unbindDestinationConfiguration(final IDestination destination) {
-        String factory = destination.getDestination().getProperties().get("factory");
-        if (factory != null) {
-            CacheEntry ce;
-            synchronized (cacheEntries) {
-                ce = cacheEntries.get(factory);
-            }
-            if (ce != null) {
-                OSGiFactoryAbstraction service = (OSGiFactoryAbstraction) ce.cache.get(ce.entry);
-                if(service != null)
-                    service.remove(destination);
-            }
-        }
-    }
     ///////////////////////////////////////////////////////////////////////////
     public ServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
 
@@ -132,7 +76,7 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
 
         Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
-            throw new ServiceException( "Destination not found: " + destinationId);
+            throw new ServiceException("Destination not found: " + destinationId);
         String factoryId = destination.getProperties().get("factory");
 
         log.debug(">> Found factoryId: %s", factoryId);
@@ -146,26 +90,34 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
         lock.lock();
         try {
             Map<String, Object> cache = Collections.synchronizedMap(context.getApplicationMap());
+            Factory config = context.getServicesConfig().findFactoryById(factoryId);
+
             ServiceFactory factory = (ServiceFactory) cache.get(key);
+
+            // Check update in configuration
+            if (factory != null && factory instanceof OSGiFactoryAbstraction) {
+                OSGiFactoryAbstraction factoryAbstraction = (OSGiFactoryAbstraction) factory;
+                if (factoryAbstraction.getFactory() != config) {
+                    factory = null;
+                    log.info("Flush \"" + key + "\" from cache");
+                }
+            }
+
             if (factory == null) {
 
                 log.debug(">> No cached factory for: %s", factoryId);
 
-                Factory config = context.getServicesConfig().findFactoryById(factoryId);
 
                 if (config == null) {
                     factory = osgiServiceFactory.getServiceFactory();
                 } else {
-                    GraniteFactory gf;
+                    GraniteFactory graniteFactory;
                     synchronized (osgiServices) {
-                        gf = osgiServices.get(config.getId());
+                        graniteFactory = osgiServices.get(config.getId());
                     }
-                    if (gf == null)
+                    if (graniteFactory == null)
                         throw new ServiceException("Could not get OSGi factory: " + factoryId);
-                    factory = new OSGiFactoryAbstraction(gf);
-                    synchronized (cacheEntries) {
-                        cacheEntries.put(config.getId(), new CacheEntry(cache, key));
-                    }
+                    factory = new OSGiFactoryAbstraction(graniteFactory, config);
                 }
                 cache.put(key, factory);
             } else
@@ -179,8 +131,7 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
         }
     }
 
-    public MainFactory getMainFactory()
-    {
+    public MainFactory getMainFactory() {
         return this;
     }
 }

@@ -39,4 +39,9 @@ public class ObjectServiceInvoker<T extends ServiceFactory> extends ServiceInvok
         super(destination, factory);
         this.invokee = obj;
     }
+
+    public Destination getDestination()
+    {
+        return this.destination;
+    }
 }

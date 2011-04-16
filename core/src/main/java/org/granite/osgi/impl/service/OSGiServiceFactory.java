@@ -53,8 +53,6 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
 
     private ServiceExceptionHandler serviceExceptionHandler;
 
-    private Map<String, CacheEntry> cacheEntries = new Hashtable<String, CacheEntry>();
-
     OSGiServiceFactory() {
         this.serviceExceptionHandler = new DefaultServiceExceptionHandler();
     }
@@ -67,19 +65,6 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
     @Invalidate
     private void stopping() {
         log.debug("Stop OSGiServiceFactory");
-
-        // Remove cache entries
-        synchronized (cacheEntries) {
-            for (Iterator<CacheEntry> ice = cacheEntries.values().iterator(); ice.hasNext();) {
-                try {
-                    CacheEntry ce = ice.next();
-                    log.info("Remove \"" + ce.entry + "\" from the cache");
-                    ce.cache.remove(ce.entry);
-                } catch (Exception e) {
-                    log.warn("Cache flush exception: " + e.getMessage());
-                }
-            }
-        }
     }
 
     @Bind(aggregate = true, optional = true)
@@ -96,28 +81,6 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
         }
     }
 
-    @Bind(aggregate = true, optional = true)
-    public final void bindDestinationConfiguration(final IDestination destination) {
-
-    }
-
-    @Unbind
-    public final void unbindDestinationConfiguration(final IDestination destination) {
-        CacheEntry ce;
-        synchronized (cacheEntries) {
-            ce = cacheEntries.remove(destination.getDestination().getId());
-        }
-        if (ce != null) {
-            try {
-                log.info("Remove \"" + ce.entry + "\" (" + destination.getDestination().getId() + ") from the cache");
-                ce.cache.remove(ce.entry);
-            } catch (Exception e) {
-                log.warn("Cache flush exception: " + e.getMessage());
-            }
-        }
-    }
-
-
     @Override
     public ObjectServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
@@ -133,6 +96,12 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
         String key = OSGiServiceFactory.class.getName() + '.' + destination.getId();
 
         ObjectServiceInvoker service = (ObjectServiceInvoker) cache.get(key);
+        // Check update in configuration
+        if (service != null && service.getDestination() != destination) {
+            service = null;
+            log.info("Flush \"" + key + "\" from cache");
+        }
+
         if (service == null) {
             GraniteDestination gd;
             synchronized (osgiServices) {
@@ -142,9 +111,6 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
                 throw new ServiceException("Could not get OSGi destination: " + destination.getId());
 
             service = new ObjectServiceInvoker<OSGiServiceFactory>(destination, this, gd);
-            synchronized (cacheEntries) {
-                cacheEntries.put(destination.getId(), new CacheEntry(cache, key));
-            }
             cache.put(key, service);
         }
         return service;
