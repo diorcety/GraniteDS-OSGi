@@ -54,12 +54,12 @@ public class OSGiFactory extends Factory implements IFactory{
     }
 
     public void start() {
-        log.debug("Start Factory:" + this.id);
+        log.debug("Start Factory: " + this.id);
         servicesConfig.getServicesConfig().addFactory(this);
     }
 
     public void stop() {
-        log.debug("Stop Factory:" + this.id);
+        log.debug("Stop Factory: " + this.id);
         if (servicesConfig != null) {
             servicesConfig.getServicesConfig().removeFactory(this.id);
         }

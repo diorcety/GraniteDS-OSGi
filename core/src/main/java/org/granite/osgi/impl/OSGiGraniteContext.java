@@ -12,6 +12,7 @@ import org.granite.config.flex.ServicesConfig;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.MainFactory;
+import org.granite.osgi.impl.config.IGraniteConfig;
 import org.granite.osgi.impl.config.IServicesConfig;
 import org.granite.osgi.impl.service.IMainFactory;
 
@@ -31,17 +32,13 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
     private IServicesConfig servicesConfig;
 
     @Requires
-    private IMainFactory mainFactory;
+    private IGraniteConfig graniteConfig;
 
-    private GraniteConfig graniteConfig;
+    @Requires
+    private IMainFactory mainFactory;
 
     private OSGiGraniteContext() {
         super(null, null);
-        try {
-            graniteConfig = new OSGiGraniteConfig();
-        } catch (Exception e) {
-            log.error(e, "Can't create GraniteContext");
-        }
     }
 
     @Validate
@@ -61,7 +58,7 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
 
     @Override
     public GraniteConfig getGraniteConfig() {
-        return graniteConfig;
+        return graniteConfig.getGraniteConfig();
     }
 
     @Override

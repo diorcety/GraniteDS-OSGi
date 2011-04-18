@@ -19,7 +19,7 @@ import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Destination")
 @Provides
-public class OSGiDestination extends Destination implements IDestination{
+public class OSGiDestination extends Destination implements IDestination {
 
     private static final Logger log = Logger.getLogger(OSGiDestination.class);
 
@@ -41,7 +41,7 @@ public class OSGiDestination extends Destination implements IDestination{
 
     protected OSGiDestination() {
         super(null, new ArrayList<String>(), XMap.EMPTY_XMAP,
-              new ArrayList<String>(), null, null);
+                new ArrayList<String>(), null, null);
     }
 
     @Validate
@@ -136,12 +136,14 @@ public class OSGiDestination extends Destination implements IDestination{
     }
 
     public void start() {
-        log.debug("Start Destination:" + this.id);
+        log.debug("Start Destination: " + this.id);
+        if (this.adapter == null)
+            this.adapter = service.getService().getDefaultAdapter();
         service.getService().addDestination(this);
     }
 
     public void stop() {
-        log.debug("Stop Destination:" + this.id);
+        log.debug("Stop Destination: " + this.id);
         if (service != null) {
             service.getService().removeDestination(this.id);
         }

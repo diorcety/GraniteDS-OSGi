@@ -52,12 +52,12 @@ public class OSGiAdapter extends Adapter implements IAdapter{
     }
 
     public void start() {
-        log.debug("Start Adapter:" + this.id);
+        log.debug("Start Adapter: " + this.id);
     }
 
 
     public void stop() {
-        log.debug("Stop Adapter:" + this.id);
+        log.debug("Stop Adapter: " + this.id);
     }
 
     public Adapter getAdapter() {

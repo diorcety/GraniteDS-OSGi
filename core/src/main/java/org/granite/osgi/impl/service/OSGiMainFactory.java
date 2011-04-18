@@ -104,9 +104,7 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
             }
 
             if (factory == null) {
-
                 log.debug(">> No cached factory for: %s", factoryId);
-
 
                 if (config == null) {
                     factory = osgiServiceFactory.getServiceFactory();
