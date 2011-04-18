@@ -73,12 +73,12 @@ public class OSGiChannel extends Channel implements IChannel{
     }
 
     public void start() {
-        log.debug("Start Channel:" + this.id);
+        log.debug("Start Channel: " + this.id);
         servicesConfig.getServicesConfig().addChannel(this);
     }
 
     public void stop() {
-        log.debug("Stop Channel:" + this.id);
+        log.debug("Stop Channel: " + this.id);
         if (servicesConfig != null) {
             servicesConfig.getServicesConfig().removeChannel(this.id);
         }

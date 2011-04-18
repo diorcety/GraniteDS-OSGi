@@ -12,7 +12,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 
-@Component(publicFactory = false)
+@Component
 @Instantiate
 @Provides
 public class OSGiServicesConfig extends ServicesConfig implements IServicesConfig {

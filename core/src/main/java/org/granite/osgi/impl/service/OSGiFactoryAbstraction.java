@@ -16,9 +16,9 @@ public class OSGiFactoryAbstraction extends ServiceFactory {
 
     private static final Logger log = Logger.getLogger(OSGiFactoryAbstraction.class);
 
-    private ServiceExceptionHandler serviceExceptionHandler;
+    private final ServiceExceptionHandler serviceExceptionHandler;
     private final GraniteFactory graniteFactory;
-    private Factory factory;
+    private final Factory factory;
 
     OSGiFactoryAbstraction(GraniteFactory graniteFactory, Factory factory) {
         this.graniteFactory = graniteFactory;
