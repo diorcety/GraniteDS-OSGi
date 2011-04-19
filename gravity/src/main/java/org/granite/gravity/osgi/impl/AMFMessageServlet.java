@@ -12,11 +12,16 @@ import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Channel;
+import org.granite.context.GraniteContext;
 import org.granite.gravity.AbstractGravityServlet;
 import org.granite.gravity.AsyncHttpContext;
+import org.granite.gravity.Gravity;
+import org.granite.gravity.GravityManager;
 import org.granite.gravity.generic.GenericChannel;
 import org.granite.gravity.generic.WaitingContinuation;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteClassRegistry;
+import org.granite.osgi.impl.*;
 import org.granite.osgi.impl.config.IChannel;
 
 import org.osgi.service.http.HttpContext;
@@ -39,14 +44,17 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     private HttpService httpService;
 
     @Requires
-    private IGravity gravity;
+    private IGraniteContext graniteContext;
+
+    @Requires
+    private Gravity gravity;
 
     private HttpContext httpContext;
 
     private Map<String, String> aliases = new HashMap<String, String>();
 
     @Validate
-    private void starting() {
+    private void starting() throws ServletException {
         log.debug("Gravity's AMFMessageServlet started");
 
         httpContext = httpService.createDefaultHttpContext();
@@ -55,7 +63,6 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     @Invalidate
     private void stopping() {
         log.debug("Gravity's AMFMessageServlet stopped");
-
         // Remove all aliases
         for (Iterator<String> it = aliases.keySet().iterator(); it.hasNext();) {
             String uri = it.next();
@@ -124,35 +131,39 @@ public class AMFMessageServlet extends AbstractGravityServlet {
             ServletException, IOException {
 
 
-    	log.debug("doPost: from %s:%d", request.getRemoteAddr(), request.getRemotePort());
+        log.debug("doPost: from %s:%d", request.getRemoteAddr(), request.getRemotePort());
 
-		try {
-			// Setup context (thread local GraniteContext, etc.)
-			initializeRequest(gravity.getGravity(), request, response);
+        GravityManager.setGravity(gravity, getServletContext());
+        gravity.getGravityConfig().getChannelFactory().init(gravity.getGravityConfig(), getServletConfig());
 
-			AsyncMessage connect = getConnectMessage(request);
+        try {
+            GraniteContext context = new HttpGraniteContext(graniteContext.getGraniteContext(), request, response);
+            if (context == null) {
+                throw new ServletException("GraniteContext not Initialized!!");
+            }
+            GraniteContext.setCurrentInstance(context);
 
-			// Resumed request (new received messages or timeout).
-			if (connect != null) {
-				try {
-					String channelId = (String)connect.getClientId();
-					GenericChannel channel = (GenericChannel)gravity.getGravity().getChannel(channelId);
-					// Reset channel continuation instance and deliver pending messages.
-					synchronized (channel) {
-						channel.reset();
-						channel.runReceived(new AsyncHttpContext(request, response, connect));
-					}
-				}
-				finally {
-					removeConnectMessage(request);
-				}
-				return;
-			}
+            AsyncMessage connect = getConnectMessage(request);
 
-			// New Request.
-    			Message[] amf3Requests = deserialize(gravity.getGravity(), request);
+            // Resumed request (new received messages or timeout).
+            if (connect != null) {
+                try {
+                    String channelId = (String) connect.getClientId();
+                    GenericChannel channel = (GenericChannel) gravity.getChannel(channelId);
+                    // Reset channel continuation instance and deliver pending messages.
+                    synchronized (channel) {
+                        channel.reset();
+                        channel.runReceived(new AsyncHttpContext(request, response, connect));
+                    }
+                } finally {
+                    removeConnectMessage(request);
+                }
+                return;
+            }
 
-            log.debug(">> [AMF3 REQUESTS] %s", (Object)amf3Requests);
+            // New Request.
+            Message[] amf3Requests = deserialize(gravity, request);
+            log.debug(">> [AMF3 REQUESTS] %s", (Object) amf3Requests);
 
             Message[] amf3Responses = null;
 
@@ -161,57 +172,54 @@ public class AMFMessageServlet extends AbstractGravityServlet {
                 Message amf3Request = amf3Requests[i];
 
                 // Ask gravity to create a specific response (will be null for connect request from tunnel).
-                Message amf3Response = gravity.getGravity().handleMessage(amf3Request);
-                String channelId = (String)amf3Request.getClientId();
+                Message amf3Response = gravity.handleMessage(amf3Request);
+                String channelId = (String) amf3Request.getClientId();
 
                 // Mark current channel (if any) as accessed.
                 if (!accessed)
-                	accessed = gravity.getGravity().access(channelId);
+                    accessed = gravity.access(channelId);
 
                 // (Re)Connect message from tunnel.
                 if (amf3Response == null) {
                     if (amf3Requests.length > 1)
                         throw new IllegalArgumentException("Only one request is allowed on tunnel.");
 
-                	GenericChannel channel = (GenericChannel)gravity.getGravity().getChannel(channelId);
-                	if (channel == null)
-                		throw new NullPointerException("No channel on tunnel connect");
+                    GenericChannel channel = (GenericChannel) gravity.getChannel(channelId);
+                    if (channel == null)
+                        throw new NullPointerException("No channel on tunnel connect");
 
                     // Try to send pending messages if any (using current container thread).
-                	if (!channel.runReceived(new AsyncHttpContext(request, response, amf3Request))) {
+                    if (!channel.runReceived(new AsyncHttpContext(request, response, amf3Request))) {
                         // No pending messages, wait for new ones or timeout.
-	                    setConnectMessage(request, amf3Request);
-	                	synchronized (channel) {
-	                		WaitingContinuation continuation = new WaitingContinuation(channel);
-		                	channel.setContinuation(continuation);
-		                	continuation.suspend(gravity.getGravity().getGravityConfig().getLongPollingTimeoutMillis());
-	                	}
-                	}
+                        setConnectMessage(request, amf3Request);
+                        synchronized (channel) {
+                            WaitingContinuation continuation = new WaitingContinuation(channel);
+                            channel.setContinuation(continuation);
+                            continuation.suspend(gravity.getGravityConfig().getLongPollingTimeoutMillis());
+                        }
+                    }
 
-                	return;
+                    return;
                 }
 
                 if (amf3Responses == null)
-                	amf3Responses = new Message[amf3Requests.length];
+                    amf3Responses = new Message[amf3Requests.length];
                 amf3Responses[i] = amf3Response;
             }
 
-            log.debug("<< [AMF3 RESPONSES] %s", (Object)amf3Responses);
+            log.debug("<< [AMF3 RESPONSES] %s", (Object) amf3Responses);
 
-            serialize(gravity.getGravity(), response, amf3Responses);
-		}
-        catch (IOException e) {
+            serialize(gravity, response, amf3Responses);
+        } catch (IOException e) {
             log.error(e, "Gravity message error");
             throw e;
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             log.error(e, "Gravity message error");
             throw new ServletException("Gravity message error", e);
+        } finally {
+            // Cleanup context (thread local GraniteContext, etc.)
+            cleanupRequest(request);
         }
-		finally {
-			// Cleanup context (thread local GraniteContext, etc.)
-			cleanupRequest(request);
-		}
 
         removeConnectMessage(request);
     }

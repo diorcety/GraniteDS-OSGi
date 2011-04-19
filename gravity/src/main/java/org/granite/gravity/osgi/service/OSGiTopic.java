@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity.osgi.impl.service;
+package org.granite.gravity.osgi.service;
 
 import flex.messaging.messages.AsyncMessage;
 import org.granite.gravity.Channel;
@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentMap;
 public class OSGiTopic {
 
     private final TopicId id;
-    private final OSGiServiceAdapter serviceAdapter;
+    private final OSGiEventAdminAdapter serviceAdapter;
 
     private ConcurrentMap<String, Subscription> subscriptions = new ConcurrentHashMap<String, Subscription>();
     private ConcurrentMap<String, OSGiTopic> children = new ConcurrentHashMap<String, OSGiTopic>();
@@ -44,7 +44,7 @@ public class OSGiTopic {
     private OSGiTopic wildWild;
 
 
-    public OSGiTopic(String topicId, OSGiServiceAdapter serviceAdapter) {
+    public OSGiTopic(String topicId, OSGiEventAdminAdapter serviceAdapter) {
         this.id = new TopicId(topicId);
         this.serviceAdapter = serviceAdapter;
     }
