@@ -1,11 +1,34 @@
+/*
+  GRANITE DATA SERVICES
+  Copyright (C) 2011 GRANITE DATA SERVICES S.A.S.
+
+  This file is part of Granite Data Services.
+
+  Granite Data Services is free software; you can redistribute it and/or modify
+  it under the terms of the GNU Library General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or (at your
+  option) any later version.
+
+  Granite Data Services is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public License
+  for more details.
+
+  You should have received a copy of the GNU Library General Public License
+  along with this library; if not, see <http://www.gnu.org/licenses/>.
+*/
+
 package org.granite.gravity.osgi.impl;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
-import flex.messaging.messages.AcknowledgeMessage;
-import flex.messaging.messages.AsyncMessage;
-import flex.messaging.messages.CommandMessage;
-import flex.messaging.messages.ErrorMessage;
-import flex.messaging.messages.Message;
+import javax.management.ObjectName;
+import javax.servlet.http.HttpSession;
 
 import org.apache.felix.ipojo.annotations.*;
 
@@ -13,17 +36,20 @@ import org.granite.config.GraniteConfig;
 import org.granite.config.flex.Destination;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.context.GraniteContext;
+import org.granite.context.SimpleGraniteContext;
 import org.granite.gravity.AbstractChannel;
 import org.granite.gravity.AsyncChannelRunner;
 import org.granite.gravity.AsyncHttpContext;
 import org.granite.gravity.Channel;
 import org.granite.gravity.ChannelTimerTask;
+import org.granite.gravity.DefaultGravityMBean;
 import org.granite.gravity.Gravity;
 import org.granite.gravity.GravityConfig;
 import org.granite.gravity.GravityPool;
 import org.granite.gravity.MessageReceivingException;
 import org.granite.gravity.Subscription;
 import org.granite.gravity.TimeChannel;
+import org.granite.gravity.adapters.AdapterFactory;
 import org.granite.gravity.adapters.ServiceAdapter;
 import org.granite.gravity.osgi.impl.config.IGravityConfig;
 import org.granite.gravity.osgi.impl.service.IAdapterFactory;
@@ -36,37 +62,35 @@ import org.granite.messaging.amf.process.AMF3MessageInterceptor;
 import org.granite.messaging.service.security.SecurityService;
 import org.granite.messaging.service.security.SecurityServiceException;
 import org.granite.messaging.webapp.HttpGraniteContext;
-import org.granite.osgi.impl.IGraniteContext;
 import org.granite.osgi.impl.config.IGraniteConfig;
 import org.granite.osgi.impl.config.IServicesConfig;
 import org.granite.util.UUIDUtil;
 
-import javax.management.ObjectName;
-import javax.servlet.http.HttpSession;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
+import flex.messaging.messages.AcknowledgeMessage;
+import flex.messaging.messages.AsyncMessage;
+import flex.messaging.messages.CommandMessage;
+import flex.messaging.messages.ErrorMessage;
+import flex.messaging.messages.Message;
 
+/**
+ * @author William DRAI
+ * @author Franck WOLFF
+ */
 @Component
 @Instantiate
 @Provides
-public class OSGiGravity implements Gravity, IGravity {
+public class OSGiGravity implements Gravity, DefaultGravityMBean {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields.
 
     private static final Logger log = Logger.getLogger(Gravity.class);
 
+    private final Map<String, Object> applicationMap = new HashMap<String, Object>();
     private final ConcurrentHashMap<String, TimeChannel> channels = new ConcurrentHashMap<String, TimeChannel>();
 
     @Requires
     private IGravityConfig gravityConfig;
-
-    @Requires
-    private IGraniteContext graniteContext;
 
     @Requires
     private IServicesConfig servicesConfig;
@@ -74,10 +98,11 @@ public class OSGiGravity implements Gravity, IGravity {
     @Requires
     private IGraniteConfig graniteConfig;
 
-    @Requires
-    private IAdapterFactory adapterFactory;
-
     private Channel serverChannel = null;
+
+    @Requires
+    private IAdapterFactory adapterFactory = null;
+
     private GravityPool gravityPool = null;
 
     private Timer channelsTimer;
@@ -120,6 +145,7 @@ public class OSGiGravity implements Gravity, IGravity {
     	log.info("Starting Gravity...");
         synchronized (this) {
         	if (!started) {
+	            //adapterFactory = new AdapterFactory(this);
 	            internalStart();
 	            serverChannel = new ServerChannel(this, gravityConfig.getGravityConfig(), ServerChannel.class.getName());
 	            started = true;
@@ -127,11 +153,11 @@ public class OSGiGravity implements Gravity, IGravity {
         }
     	log.info("Gravity successfully started.");
     }
-
+    
     protected void internalStart() {
         gravityPool = new GravityPool(gravityConfig.getGravityConfig());
         channelsTimer = new Timer();
-
+        
         if (graniteConfig.getGraniteConfig().isRegisterMBeans()) {
 	        try {
 	            ObjectName name = new ObjectName("org.granite:type=Gravity,context=" + graniteConfig.getGraniteConfig().getMBeanContextName());
@@ -144,19 +170,19 @@ public class OSGiGravity implements Gravity, IGravity {
 	        }
         }
     }
-
+    
     public void restart() throws Exception {
-    /*	synchronized (this) {
+    	synchronized (this) {
     		stop();
     		start();
-    	} */
+    	}
 	}
 
 	public void reconfigure(GravityConfig gravityConfig, GraniteConfig graniteConfig) {
-    /*	this.gravityConfig = gravityConfig;
+    	/*this.gravityConfig = gravityConfig;
     	this.graniteConfig = graniteConfig;
     	if (gravityPool != null)
-    		gravityPool.reconfigure(gravityConfig);      */
+    		gravityPool.reconfigure(gravityConfig);   */
     }
 
     @Invalidate
@@ -184,7 +210,7 @@ public class OSGiGravity implements Gravity, IGravity {
 				}
 	            serverChannel = null;
         	}
-
+            
             if (channelsTimer != null) {
 	            try {
 					channelsTimer.cancel();
@@ -193,7 +219,7 @@ public class OSGiGravity implements Gravity, IGravity {
 				}
 	            channelsTimer = null;
             }
-
+        	
         	if (gravityPool != null) {
         		try {
 	        		if (now)
@@ -206,7 +232,7 @@ public class OSGiGravity implements Gravity, IGravity {
         		}
         		gravityPool = null;
         	}
-
+            
             started = false;
         }
         log.info("Gravity sucessfully stopped.");
@@ -315,7 +341,7 @@ public class OSGiGravity implements Gravity, IGravity {
 
     ///////////////////////////////////////////////////////////////////////////
     // Channel's operations.
-
+    
     protected Channel createChannel() {
     	Channel channel = gravityConfig.getGravityConfig().getChannelFactory().newChannel(UUIDUtil.randomUUID());
     	TimeChannel timeChannel = new TimeChannel(channel);
@@ -326,10 +352,10 @@ public class OSGiGravity implements Gravity, IGravity {
             channel = gravityConfig.getGravityConfig().getChannelFactory().newChannel(UUIDUtil.randomUUID());
             timeChannel = new TimeChannel(channel);
         }
-
+        
         // Initialize timer task.
         access(channel.getId());
-
+    	
         return channel;
     }
 
@@ -358,9 +384,9 @@ public class OSGiGravity implements Gravity, IGravity {
         	catch (Exception e) {
         		// Should never happen...
         	}
-
+        	
         	channel = timeChannel.getChannel();
-
+        	
         	try {
 	            for (Subscription subscription : channel.getSubscriptions()) {
 	            	try {
@@ -384,7 +410,7 @@ public class OSGiGravity implements Gravity, IGravity {
 
         return channel;
     }
-
+    
     public boolean access(String channelId) {
     	if (channelId != null) {
 	    	TimeChannel timeChannel = channels.get(channelId);
@@ -396,10 +422,10 @@ public class OSGiGravity implements Gravity, IGravity {
 			            timerTask.cancel();
 		    			timeChannel.setTimerTask(null);
 		    		}
-
+		            
 		    		timerTask = new ChannelTimerTask(this, channelId);
 		            timeChannel.setTimerTask(timerTask);
-
+		            
 		            long timeout = gravityConfig.getGravityConfig().getChannelIdleTimeoutMillis();
 		            log.debug("Scheduling TimerTask: %s for %s ms.", timerTask, timeout);
 		            channelsTimer.schedule(timerTask, timeout);
@@ -409,7 +435,7 @@ public class OSGiGravity implements Gravity, IGravity {
     	}
     	return false;
     }
-
+    
     public void execute(AsyncChannelRunner runner) {
     	if (gravityPool == null) {
     		runner.reset();
@@ -417,7 +443,7 @@ public class OSGiGravity implements Gravity, IGravity {
     	}
     	gravityPool.execute(runner);
     }
-
+    
     public boolean cancel(AsyncChannelRunner runner) {
     	if (gravityPool == null) {
     		runner.reset();
@@ -438,22 +464,22 @@ public class OSGiGravity implements Gravity, IGravity {
         AMF3MessageInterceptor interceptor = null;
         if (!skipInterceptor)
         	interceptor = GraniteContext.getCurrentInstance().getGraniteConfig().getAmf3MessageInterceptor();
-
+        
         Message reply = null;
-
+        
         try {
 	        if (interceptor != null)
 	            interceptor.before(message);
 
 	        if (message instanceof CommandMessage) {
 	            CommandMessage command = (CommandMessage)message;
-
+	
 	            switch (command.getOperation()) {
-
+	
 	            case CommandMessage.LOGIN_OPERATION:
 	            case CommandMessage.LOGOUT_OPERATION:
 	                return handleSecurityMessage(command);
-
+	
 	            case CommandMessage.CLIENT_PING_OPERATION:
 	                return handlePingMessage(command);
 	            case CommandMessage.CONNECT_OPERATION:
@@ -464,19 +490,19 @@ public class OSGiGravity implements Gravity, IGravity {
 	                return handleSubscribeMessage(command);
 	            case CommandMessage.UNSUBSCRIBE_OPERATION:
 	                return handleUnsubscribeMessage(command);
-
+	
 	            default:
 	                throw new UnsupportedOperationException("Unsupported command operation: " + command);
 	            }
 	        }
-
+	
 	        reply = handlePublishMessage((AsyncMessage)message);
         }
         finally {
 	        if (interceptor != null)
 	            interceptor.after(message, reply);
         }
-
+        
         if (reply != null) {
 	        GraniteContext context = GraniteContext.getCurrentInstance();
 	        if (context instanceof HttpGraniteContext) {
@@ -485,7 +511,7 @@ public class OSGiGravity implements Gravity, IGravity {
 	                reply.setHeader("org.granite.sessionId", session.getId());
 	        }
         }
-
+        
         return reply;
     }
 
@@ -493,11 +519,12 @@ public class OSGiGravity implements Gravity, IGravity {
     // Other Public API methods.
 
     public GraniteContext initThread() {
-        GraniteContext context = graniteContext.getGraniteContext();
-        GraniteContext.setCurrentInstance(context);
+        GraniteContext context = GraniteContext.getCurrentInstance();
+        if (context == null)
+            context = SimpleGraniteContext.createThreadIntance(graniteConfig.getGraniteConfig(), servicesConfig.getServicesConfig(), applicationMap);
         return context;
     }
-
+    
     public void releaseThread() {
     	GraniteContext.release();
 	}
@@ -513,9 +540,9 @@ public class OSGiGravity implements Gravity, IGravity {
     }
 
     private Message handlePingMessage(CommandMessage message) {
-
+        
     	Channel channel = createChannel();
-
+    	
         AsyncMessage reply = new AcknowledgeMessage(message);
         reply.setClientId(channel.getId());
         Map<String, Object> advice = new HashMap<String, Object>();
@@ -630,11 +657,11 @@ public class OSGiGravity implements Gravity, IGravity {
             subscriptionId = UUIDUtil.randomUUID();
             message.setHeader(AsyncMessage.DESTINATION_CLIENT_ID_HEADER, subscriptionId);
         }
-
+        
         HttpSession session = null;
         if (context instanceof HttpGraniteContext)
         	session = ((HttpGraniteContext)context).getSession(false);
-
+        
         if (session != null && Boolean.TRUE.toString().equals(destination.getProperties().get("session-selector"))) {
         	String selector = (String)session.getAttribute("org.granite.gravity.selector." + destination.getId());
         	log.debug("Session selector found in session %s: %s", session.getId(), selector);
@@ -643,9 +670,9 @@ public class OSGiGravity implements Gravity, IGravity {
         }
 
         ServiceAdapter adapter = adapterFactory.getServiceAdapter(message);
-
+        
         AsyncMessage reply = (AsyncMessage)adapter.manage(channel, message);
-
+        
         postManage(channel);
 
         reply.setDestination(message.getDestination());
@@ -668,9 +695,9 @@ public class OSGiGravity implements Gravity, IGravity {
         AsyncMessage reply = null;
 
         ServiceAdapter adapter = adapterFactory.getServiceAdapter(message);
-
+        
         reply = (AcknowledgeMessage)adapter.manage(channel, message);
-
+        
         postManage(channel);
 
         reply.setDestination(message.getDestination());
@@ -679,14 +706,14 @@ public class OSGiGravity implements Gravity, IGravity {
 
         return reply;
     }
-
+    
     protected void postManage(Channel channel) {
     }
 
     private Message handlePublishMessage(AsyncMessage message) {
     	return handlePublishMessage(message, null);
     }
-
+    
     private Message handlePublishMessage(AsyncMessage message, Channel channel) {
 
         GraniteContext context = GraniteContext.getCurrentInstance();
@@ -730,7 +757,7 @@ public class OSGiGravity implements Gravity, IGravity {
             return handleUnknownClientMessage(message);
 
         ServiceAdapter adapter = adapterFactory.getServiceAdapter(message);
-
+        
         AsyncMessage reply = (AsyncMessage)adapter.invoke(fromChannel, message);
 
         reply.setDestination(message.getDestination());
@@ -767,7 +794,7 @@ public class OSGiGravity implements Gravity, IGravity {
     private static class ServerChannel extends AbstractChannel implements Serializable {
 
 		private static final long serialVersionUID = 1L;
-
+		
 		private final Gravity gravity;
 
 		public ServerChannel(Gravity gravity, GravityConfig gravityConfig, String channelId) {
@@ -797,9 +824,5 @@ public class OSGiGravity implements Gravity, IGravity {
 		@Override
 		protected void releaseAsyncHttpContext(AsyncHttpContext context) {
 		}
-    }
-
-    public Gravity getGravity() {
-        return this;
     }
 }

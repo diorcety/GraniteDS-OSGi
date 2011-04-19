@@ -3,41 +3,46 @@ package org.granite.gravity.osgi.impl.service;
 import flex.messaging.messages.AsyncMessage;
 import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.Message;
-import org.apache.felix.ipojo.annotations.*;
+
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+
 import org.granite.config.flex.Adapter;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
 import org.granite.gravity.Gravity;
 import org.granite.gravity.adapters.AdapterFactory;
 import org.granite.gravity.adapters.ServiceAdapter;
-import org.granite.gravity.adapters.SimpleServiceAdapter;
-import org.granite.gravity.osgi.impl.IGravity;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.ServiceException;
-import org.granite.osgi.impl.service.OSGiFactoryAbstraction;
 import org.granite.osgi.service.GraniteAdapter;
-import org.granite.osgi.service.GraniteDestination;
-import org.granite.util.ClassUtil;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 @Instantiate
 @Provides
-public class OSGiAdapterFactory implements IAdapterFactory {
+public class OSGiAdapterFactory extends AdapterFactory implements IAdapterFactory {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(AdapterFactory.class);
+
     private static final ReentrantLock lock = new ReentrantLock();
 
     private Map<String, GraniteAdapter> osgiServices = new Hashtable<String, GraniteAdapter>();
 
-    private static Class<SimpleServiceAdapter> defaultAdapterClass = SimpleServiceAdapter.class;
-
+    public OSGiAdapterFactory() {
+        super(null);
+    }
 
     @Bind(aggregate = true, optional = true)
     public final void bindAdapter(final GraniteAdapter adapter) {
@@ -52,7 +57,6 @@ public class OSGiAdapterFactory implements IAdapterFactory {
             osgiServices.remove(adapter.getId());
         }
     }
-
 
     public ServiceAdapter getServiceAdapter(Message request) throws ServiceException {
 
@@ -78,14 +82,10 @@ public class OSGiAdapterFactory implements IAdapterFactory {
         }
 
         Adapter adapter = destination.getAdapter();
+        if (adapter == null)
+            throw new ServiceException("No adapter defined: " + destinationId);
 
-        String key = null;
-
-        if (adapter != null) {
-            log.debug(">> Found adapterRef: %s", adapter.getId());
-            key = AdapterFactory.class.getName() + '@' + destination.getId() + '.' + adapter.getId();
-        } else
-            key = defaultAdapterClass.getName() + '@' + destination.getId();
+        String key = AdapterFactory.class.getName() + '@' + destination.getId() + '.' + adapter.getId();
 
         return getServiceAdapter(context, destination, key, adapter != null ? adapter.getId() : null);
     }
@@ -152,5 +152,4 @@ public class OSGiAdapterFactory implements IAdapterFactory {
                 (append != null ? append : "") +
                 "\n}";
     }
-
 }

@@ -1,4 +1,4 @@
-package org.granite.gravity.osgi.impl.service;
+package org.granite.gravity.osgi.service;
 
 import flex.messaging.messages.AcknowledgeMessage;
 import flex.messaging.messages.AsyncMessage;
@@ -12,22 +12,23 @@ import org.granite.gravity.Channel;
 import org.granite.gravity.adapters.ServiceAdapter;
 import org.granite.gravity.adapters.TopicId;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.ServiceException;
 import org.granite.osgi.service.GraniteAdapter;
-import org.granite.util.XMap;
 
 import org.osgi.service.event.Event;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component (name = "org.granite.gravity.osgi.OSGiServiceAdapter")
+@Component(name = "org.granite.gravity.osgi.OSGiEventAdminAdapter")
 @Provides
-public class OSGiServiceAdapter extends ServiceAdapter implements GraniteAdapter {
+public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdapter {
 
-    private static final Logger log = Logger.getLogger(OSGiServiceAdapter.class);
+    private static final Logger log = Logger.getLogger(OSGiEventAdminAdapter.class);
 
     private final OSGiTopic rootTopic = new OSGiTopic("/", this);
     private transient ConcurrentHashMap<String, TopicId> _topicIdCache = new ConcurrentHashMap<String, TopicId>();
+    private transient ConcurrentHashMap<String, Channel> topicChannels = new ConcurrentHashMap<String, Channel>();
 
     @Property(name = "ID", mandatory = true)
     private String ID;
@@ -35,21 +36,19 @@ public class OSGiServiceAdapter extends ServiceAdapter implements GraniteAdapter
     private boolean noLocal = false;
 
     @org.apache.felix.ipojo.handlers.event.Publisher(
-            name = "GravityPublisher",
-            topics = "GravityDefaultTopic",
-            synchronous = false
+            name = "GravityPublisher"
     )
 
     private Publisher publisher;
 
     @Validate
     public void starting() {
-        log.debug("Start OSGiServiceAdapter \""+ ID +"\"");
+        log.debug("Start OSGiServiceAdapter \"" + ID + "\"");
     }
 
     @Invalidate
     public void stopping() {
-        log.debug("Stop OSGiServiceAdapter \""+ ID +"\"");
+        log.debug("Stop OSGiServiceAdapter \"" + ID + "\"");
     }
 
     public OSGiTopic getTopic(TopicId id) {
@@ -99,16 +98,15 @@ public class OSGiServiceAdapter extends ServiceAdapter implements GraniteAdapter
         if (getSecurityPolicy().canPublish(fromChannel, topicId, message)) {
             TopicId tid = getTopicId(topicId);
 
-            //try {
-            //fromChannel.publish(new AsyncPublishedMessage(rootTopic, tid, message));
+            Dictionary<String, Object> prop = new Hashtable<String, Object>();
+            prop.put("message.topic", topicId);
+            prop.put("message.data", message.getBody());
+            prop.put("message.destination", message.getDestination());
+            publisher.send(prop);
+            log.info("AMF -> EA: " + topicId);
+
             reply = new AcknowledgeMessage(message);
             reply.setMessageId(message.getMessageId());
-            /*}
-               catch (MessagePublishingException e) {
-                   log.error(e, "Error while publishing message: %s from channel %s to topic: %s", message, fromChannel, tid);
-                   reply = new ErrorMessage(message, null);
-                   ((ErrorMessage)reply).setFaultString("Server.Publish.Error");
-               } */
         } else {
             log.warn("Channel %s tried to publish a message to topic %s", fromChannel, topicId);
             reply = new ErrorMessage(message, null);
@@ -131,6 +129,7 @@ public class OSGiServiceAdapter extends ServiceAdapter implements GraniteAdapter
                     topic = getTopic(subscribeTopicId, true);
 
                 if (topic != null) {
+                    topicChannels.put(topic.getId(), fromChannel);
                     String subscriptionId = (String) message.getHeader(AsyncMessage.DESTINATION_CLIENT_ID_HEADER);
                     String selector = (String) message.getHeader(CommandMessage.SELECTOR_HEADER);
                     if (subscriptionId == null)
@@ -171,15 +170,29 @@ public class OSGiServiceAdapter extends ServiceAdapter implements GraniteAdapter
         return reply;
     }
 
-    public String getId() {
-        return ID;
+    @org.apache.felix.ipojo.handlers.event.Subscriber(
+            name = "GravitySubscriber"
+    )
+    public final void receive(final Event event) {
+        try {
+            String topicId = (String) event.getProperty("message.topic");
+            String destination = (String) event.getProperty("message.destination");
+            Object data = event.getProperty("message.data");
+            log.info("EA -> AMF: " + topicId);
+            Channel channel = topicChannels.get(topicId);
+            if (channel != null) {
+                TopicId tid = getTopicId(topicId);
+                AsyncMessage message = new AsyncMessage();
+                message.setDestination(destination);
+                message.setBody(data);
+                rootTopic.publish(tid, channel, message);
+            }
+        } catch (Exception e) {
+            log.warn(e, "Error during transmit to topic");
+        }
     }
 
-    @org.apache.felix.ipojo.handlers.event.Subscriber(
-            name = "GravitySubscriber",
-            topics = "GravityDefaultTopic"
-    )
-    public final void receive(final Event e) {
-
+    public String getId() {
+        return ID;
     }
 }
