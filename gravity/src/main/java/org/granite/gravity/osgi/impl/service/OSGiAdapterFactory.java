@@ -36,7 +36,6 @@ import org.granite.config.flex.Adapter;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
 import org.granite.context.GraniteManager;
-import org.granite.gravity.Gravity;
 import org.granite.gravity.adapters.AdapterFactory;
 import org.granite.gravity.adapters.ServiceAdapter;
 import org.granite.logging.Logger;
@@ -51,7 +50,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Component
 @Instantiate
 @Provides
-public class OSGiAdapterFactory extends AdapterFactory implements IAdapterFactory {
+public class OSGiAdapterFactory implements AdapterFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -62,7 +61,6 @@ public class OSGiAdapterFactory extends AdapterFactory implements IAdapterFactor
     private Map<String, GraniteAdapter> osgiServices = new Hashtable<String, GraniteAdapter>();
 
     public OSGiAdapterFactory() {
-        super(null);
     }
 
     @Bind(aggregate = true, optional = true)
@@ -109,6 +107,10 @@ public class OSGiAdapterFactory extends AdapterFactory implements IAdapterFactor
         String key = AdapterFactory.class.getName() + '@' + destination.getId() + '.' + adapter.getId();
 
         return getServiceAdapter(context, destination, key, adapter != null ? adapter.getId() : null);
+    }
+
+    @Override
+    public void stopAll() {
     }
 
     private ServiceAdapter getServiceAdapter(GraniteContext context, Destination destination, String key, String adapterId) {

@@ -30,7 +30,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.management.ObjectName;
 import javax.servlet.http.HttpSession;
 
-import org.apache.felix.ipojo.annotations.*;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.Destination;
@@ -49,8 +54,8 @@ import org.granite.gravity.GravityPool;
 import org.granite.gravity.MessageReceivingException;
 import org.granite.gravity.Subscription;
 import org.granite.gravity.TimeChannel;
+import org.granite.gravity.adapters.AdapterFactory;
 import org.granite.gravity.adapters.ServiceAdapter;
-import org.granite.gravity.osgi.impl.service.IAdapterFactory;
 import org.granite.gravity.security.GravityDestinationSecurizer;
 import org.granite.gravity.security.GravityInvocationContext;
 import org.granite.jmx.MBeanServerLocator;
@@ -97,7 +102,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     private Channel serverChannel = null;
 
     @Requires
-    private IAdapterFactory adapterFactory = null;
+    private AdapterFactory adapterFactory = null;
 
     private GravityPool gravityPool = null;
 
