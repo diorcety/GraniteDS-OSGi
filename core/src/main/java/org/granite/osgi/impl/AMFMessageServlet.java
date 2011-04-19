@@ -16,9 +16,7 @@ import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
-import org.granite.osgi.GraniteClassRegistry;
 import org.granite.osgi.impl.config.IChannel;
-import org.granite.osgi.impl.io.OSGiResolver;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
@@ -44,9 +42,6 @@ public class AMFMessageServlet extends HttpServlet {
 
     @Requires
     private IGraniteContext graniteContext;
-
-    @Requires
-    private GraniteClassRegistry classRegistry;
 
     private HttpContext httpContext;
 
@@ -135,17 +130,15 @@ public class AMFMessageServlet extends HttpServlet {
             return;
         }
         try {
-            GraniteContext context = new HttpGraniteContext(graniteContext.getGraniteContext(), classRegistry, request, response);
+            GraniteContext context = new HttpGraniteContext(graniteContext.getGraniteContext(), request, response);
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");
             }
             GraniteContext.setCurrentInstance(context);
-            OSGiResolver resolver = new OSGiResolver(context);
 
             // Phase1 Deserializing AMF0 request
             AMF0Deserializer deserializer = new AMF0Deserializer(new DataInputStream(request.getInputStream()));
             AMF0Message amf0Request = deserializer.getAMFMessage();
-            amf0Request = (AMF0Message) resolver.resolve(amf0Request);
 
             // Phase2 Processing AMF0 request
             log.debug(">>>>> Processing AMF0 request: " + amf0Request);

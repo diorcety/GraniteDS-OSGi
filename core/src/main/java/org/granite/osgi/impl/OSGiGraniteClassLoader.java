@@ -17,6 +17,18 @@ public class OSGiGraniteClassLoader implements GraniteClassRegistry {
 
     private static final Logger log = Logger.getLogger(OSGiGraniteClassLoader.class);
 
+    private static ThreadLocal<String> destination_instance = new ThreadLocal<String>() {
+        @Override
+        protected String initialValue() {
+            return (null);
+        }
+    };
+
+    public static void setDestination(String destination) {
+        destination_instance.set(destination);
+    }
+
+
     private Map<String, Map<String, Class>> destinationClasses = new Hashtable<String, Map<String, Class>>();
 
 
@@ -30,11 +42,11 @@ public class OSGiGraniteClassLoader implements GraniteClassRegistry {
         log.debug("Stop OSGiGraniteClassLoader");
     }
 
-    public Class<?> forName(String destination, String type) throws ClassNotFoundException {
-        if (destination != null) {
+    public Class<?> forName(String type) throws ClassNotFoundException {
+        if (destination_instance.get() != null) {
             Map<String, Class> classMap;
             synchronized (destinationClasses) {
-                classMap = destinationClasses.get(destination);
+                classMap = destinationClasses.get(destination_instance.get());
             }
             if (classMap != null && classMap.containsKey(type))
                 return classMap.get(type);

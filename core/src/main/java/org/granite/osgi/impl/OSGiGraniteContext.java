@@ -12,6 +12,7 @@ import org.granite.config.flex.ServicesConfig;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.MainFactory;
+import org.granite.osgi.GraniteClassRegistry;
 import org.granite.osgi.impl.config.IGraniteConfig;
 import org.granite.osgi.impl.config.IServicesConfig;
 import org.granite.osgi.impl.service.IMainFactory;
@@ -36,6 +37,9 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
 
     @Requires
     private IMainFactory mainFactory;
+
+    @Requires
+    private GraniteClassRegistry classRegistry;
 
     private OSGiGraniteContext() {
         super(null, null);
@@ -96,6 +100,11 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
     @Override
     public GraniteContext getGraniteContext() {
         return this;
+    }
+
+    @Override
+    public Class<?> forName(String type) throws ClassNotFoundException {
+        return classRegistry.forName(type);
     }
 
     @Override
