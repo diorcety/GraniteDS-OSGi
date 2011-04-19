@@ -10,13 +10,13 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Channel;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
 import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
-import org.granite.osgi.impl.config.IChannel;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
@@ -41,7 +41,7 @@ public class AMFMessageServlet extends HttpServlet {
     private HttpService httpService;
 
     @Requires
-    private IGraniteContext graniteContext;
+    private GraniteContext graniteContext;
 
     private HttpContext httpContext;
 
@@ -68,8 +68,7 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Bind(aggregate = true, optional = true)
-    private synchronized void bindChannel(final IChannel ichannel) {
-        Channel channel = ichannel.getChannel();
+    private synchronized void bindChannel(final Channel channel) {
         try {
             if (channel.getClassName().equals("mx.messaging.channels.AMFChannel")) {
 
@@ -96,8 +95,7 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Unbind
-    private synchronized void unbindChannel(final IChannel ichannel) {
-        Channel channel = ichannel.getChannel();
+    private synchronized void unbindChannel(final Channel channel) {
         try {
             if (channel.getClassName().equals("mx.messaging.channels.AMFChannel")) {
 
@@ -130,11 +128,11 @@ public class AMFMessageServlet extends HttpServlet {
             return;
         }
         try {
-            GraniteContext context = new HttpGraniteContext(graniteContext.getGraniteContext(), request, response);
+            GraniteContext context = new HttpGraniteContext(graniteContext, request, response);
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");
             }
-            GraniteContext.setCurrentInstance(context);
+            GraniteManager.setCurrentInstance(context);
 
             // Phase1 Deserializing AMF0 request
             AMF0Deserializer deserializer = new AMF0Deserializer(new DataInputStream(request.getInputStream()));

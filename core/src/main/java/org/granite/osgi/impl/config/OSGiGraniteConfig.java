@@ -2,6 +2,7 @@ package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.*;
 import org.granite.config.GraniteConfig;
+import org.granite.config.SimpleGraniteConfig;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.io.util.ActionScriptClassDescriptor;
 import org.granite.messaging.amf.process.AMF3MessageInterceptor;
@@ -16,7 +17,7 @@ import java.io.*;
 @Component
 @Instantiate
 @Provides
-public class OSGiGraniteConfig extends GraniteConfig implements IGraniteConfig {
+public class OSGiGraniteConfig extends SimpleGraniteConfig {
 
     private static final Logger log = Logger.getLogger(OSGiGraniteConfig.class);
 

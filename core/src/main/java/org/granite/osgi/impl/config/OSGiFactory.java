@@ -8,20 +8,21 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Factory;
+import org.granite.config.flex.ServicesConfig;
+import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-import java.util.Dictionary;
 import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Factory")
 @Provides
-public class OSGiFactory extends Factory implements IFactory{
+public class OSGiFactory extends SimpleFactory {
 
     private static final Logger log = Logger.getLogger(OSGiFactory.class);
 
     @Requires
-    private IServicesConfig servicesConfig;
+    private ServicesConfig servicesConfig;
 
 
     protected OSGiFactory() {
@@ -55,13 +56,13 @@ public class OSGiFactory extends Factory implements IFactory{
 
     public void start() {
         log.debug("Start Factory: " + this.id);
-        servicesConfig.getServicesConfig().addFactory(this);
+        servicesConfig.addFactory(this);
     }
 
     public void stop() {
         log.debug("Stop Factory: " + this.id);
         if (servicesConfig != null) {
-            servicesConfig.getServicesConfig().removeFactory(this.id);
+            servicesConfig.removeFactory(this.id);
         }
     }
 

@@ -9,13 +9,12 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;
+import org.granite.context.AMFContext;
+import org.granite.context.AMFContextImpl;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.MainFactory;
 import org.granite.osgi.GraniteClassRegistry;
-import org.granite.osgi.impl.config.IGraniteConfig;
-import org.granite.osgi.impl.config.IServicesConfig;
-import org.granite.osgi.impl.service.IMainFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,26 +22,28 @@ import java.util.Map;
 @Component
 @Provides
 @Instantiate
-public class OSGiGraniteContext extends GraniteContext implements IGraniteContext {
+public class OSGiGraniteContext implements GraniteContext {
 
     private static final Logger log = Logger.getLogger(OSGiGraniteContext.class);
 
+
     protected Map<String, Object> applicationMap = null;
+    private final AMFContext amfContext;
 
     @Requires
-    private IServicesConfig servicesConfig;
+    private ServicesConfig servicesConfig;
 
     @Requires
-    private IGraniteConfig graniteConfig;
+    private GraniteConfig graniteConfig;
 
     @Requires
-    private IMainFactory mainFactory;
+    private MainFactory mainFactory;
 
     @Requires
     private GraniteClassRegistry classRegistry;
 
     private OSGiGraniteContext() {
-        super(null, null);
+        this.amfContext = new AMFContextImpl();
     }
 
     @Validate
@@ -57,12 +58,17 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
 
     @Override
     public ServicesConfig getServicesConfig() {
-        return servicesConfig.getServicesConfig();
+        return servicesConfig;
     }
 
     @Override
     public GraniteConfig getGraniteConfig() {
-        return graniteConfig.getGraniteConfig();
+        return graniteConfig;
+    }
+
+    @Override
+    public AMFContext getAMFContext() {
+        return amfContext;
     }
 
     @Override
@@ -98,17 +104,12 @@ public class OSGiGraniteContext extends GraniteContext implements IGraniteContex
     }
 
     @Override
-    public GraniteContext getGraniteContext() {
-        return this;
-    }
-
-    @Override
     public Class<?> forName(String type) throws ClassNotFoundException {
         return classRegistry.forName(type);
     }
 
     @Override
     public MainFactory getMainFactory() {
-        return mainFactory.getMainFactory();
+        return mainFactory;
     }
 }

@@ -4,15 +4,17 @@ import flex.messaging.messages.RemotingMessage;
 import org.granite.config.flex.Destination;
 import org.granite.config.flex.Factory;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.*;
 import org.granite.osgi.service.GraniteFactory;
+import org.granite.util.XMap;
 
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
 
-public class OSGiFactoryAbstraction extends ServiceFactory {
+public class OSGiFactoryAbstraction implements ServiceFactory {
 
     private static final Logger log = Logger.getLogger(OSGiFactoryAbstraction.class);
 
@@ -27,11 +29,15 @@ public class OSGiFactoryAbstraction extends ServiceFactory {
     }
 
     @Override
+    public void configure(XMap properties) throws ServiceException {
+    }
+
+    @Override
     public ServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
         Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
             throw new ServiceException("No matching destination: " + destinationId);
@@ -65,7 +71,7 @@ public class OSGiFactoryAbstraction extends ServiceFactory {
     }
 
     private Map<String, Object> getCache(Destination destination) throws ServiceException {
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
         String scope = destination.getProperties().get("scope");
 
         Map<String, Object> cache = null;

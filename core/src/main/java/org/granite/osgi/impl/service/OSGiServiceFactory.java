@@ -24,17 +24,17 @@ import flex.messaging.messages.RemotingMessage;
 import org.apache.felix.ipojo.annotations.*;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.DefaultServiceExceptionHandler;
 import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
 import org.granite.messaging.service.ServiceFactory;
-import org.granite.osgi.impl.config.IDestination;
 import org.granite.osgi.service.GraniteDestination;
+import org.granite.util.XMap;
 
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -43,7 +43,7 @@ import java.util.Map;
 @Component
 @Provides
 @Instantiate
-public class OSGiServiceFactory extends ServiceFactory implements IServiceFactory {
+public class OSGiServiceFactory implements ServiceFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -82,11 +82,15 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
     }
 
     @Override
+    public void configure(XMap properties) throws ServiceException {
+    }
+
+    @Override
     public ObjectServiceInvoker getServiceInstance(RemotingMessage request) throws ServiceException {
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
         Destination destination = context.getServicesConfig().findDestinationById(messageType, destinationId);
         if (destination == null)
             throw new ServiceException("No matching destination: " + destinationId);
@@ -118,9 +122,5 @@ public class OSGiServiceFactory extends ServiceFactory implements IServiceFactor
 
     public ServiceExceptionHandler getServiceExceptionHandler() {
         return serviceExceptionHandler;
-    }
-
-    public ServiceFactory getServiceFactory() {
-        return this;
     }
 }

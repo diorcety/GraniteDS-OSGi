@@ -7,6 +7,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.ServicesConfig;
+import org.granite.config.flex.SimpleServicesConfig;
 import org.granite.logging.Logger;
 import org.xml.sax.SAXException;
 
@@ -15,7 +16,7 @@ import java.io.IOException;
 @Component
 @Instantiate
 @Provides
-public class OSGiServicesConfig extends ServicesConfig implements IServicesConfig {
+public class OSGiServicesConfig extends SimpleServicesConfig {
 
     private static final Logger log = Logger.getLogger(
             OSGiServicesConfig.class);

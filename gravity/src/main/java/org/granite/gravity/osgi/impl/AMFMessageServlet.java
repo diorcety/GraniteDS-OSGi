@@ -13,6 +13,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Channel;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.gravity.AbstractGravityServlet;
 import org.granite.gravity.AsyncHttpContext;
 import org.granite.gravity.Gravity;
@@ -20,9 +21,7 @@ import org.granite.gravity.GravityManager;
 import org.granite.gravity.generic.GenericChannel;
 import org.granite.gravity.generic.WaitingContinuation;
 import org.granite.logging.Logger;
-import org.granite.osgi.GraniteClassRegistry;
 import org.granite.osgi.impl.*;
-import org.granite.osgi.impl.config.IChannel;
 
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
@@ -44,7 +43,7 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     private HttpService httpService;
 
     @Requires
-    private IGraniteContext graniteContext;
+    private GraniteContext graniteContext;
 
     @Requires
     private Gravity gravity;
@@ -73,8 +72,7 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     }
 
     @Bind(aggregate = true, optional = true)
-    private synchronized void bindChannel(final IChannel ichannel) {
-        Channel channel = ichannel.getChannel();
+    private synchronized void bindChannel(final Channel channel) {
         try {
             if (channel.getClassName().equals("org.granite.gravity.channels.GravityChannel")) {
 
@@ -101,8 +99,7 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     }
 
     @Unbind
-    private synchronized void unbindChannel(final IChannel ichannel) {
-        Channel channel = ichannel.getChannel();
+    private synchronized void unbindChannel(final Channel channel) {
         try {
             if (channel.getClassName().equals("org.granite.gravity.channels.GravityChannel")) {
 
@@ -137,11 +134,11 @@ public class AMFMessageServlet extends AbstractGravityServlet {
         gravity.getGravityConfig().getChannelFactory().init(gravity.getGravityConfig(), getServletConfig());
 
         try {
-            GraniteContext context = new HttpGraniteContext(graniteContext.getGraniteContext(), request, response);
+            GraniteContext context = new HttpGraniteContext(graniteContext, request, response);
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");
             }
-            GraniteContext.setCurrentInstance(context);
+            GraniteManager.setCurrentInstance(context);
 
             AsyncMessage connect = getConnectMessage(request);
 

@@ -4,11 +4,9 @@ import org.apache.felix.ipojo.annotations.*;
 
 import org.granite.gravity.ChannelFactory;
 import org.granite.gravity.GravityConfig;
-import org.granite.gravity.generic.GenericChannelFactory;
-import org.granite.gravity.osgi.impl.OSGiGravity;
+import org.granite.gravity.SimpleGravityConfig;
 import org.granite.logging.Logger;
 
-import org.granite.osgi.impl.IGraniteContext;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -17,7 +15,7 @@ import java.io.IOException;
 @Component
 @Instantiate
 @Provides
-public class OSGiGravityConfig extends GravityConfig implements IGravityConfig {
+public class OSGiGravityConfig extends SimpleGravityConfig {
 
     @Requires
     ChannelFactory channelFactory;

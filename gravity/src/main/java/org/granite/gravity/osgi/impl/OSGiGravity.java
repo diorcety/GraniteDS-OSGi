@@ -36,7 +36,7 @@ import org.granite.config.GraniteConfig;
 import org.granite.config.flex.Destination;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.context.GraniteContext;
-import org.granite.context.SimpleGraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.gravity.AbstractChannel;
 import org.granite.gravity.AsyncChannelRunner;
 import org.granite.gravity.AsyncHttpContext;
@@ -49,9 +49,7 @@ import org.granite.gravity.GravityPool;
 import org.granite.gravity.MessageReceivingException;
 import org.granite.gravity.Subscription;
 import org.granite.gravity.TimeChannel;
-import org.granite.gravity.adapters.AdapterFactory;
 import org.granite.gravity.adapters.ServiceAdapter;
-import org.granite.gravity.osgi.impl.config.IGravityConfig;
 import org.granite.gravity.osgi.impl.service.IAdapterFactory;
 import org.granite.gravity.security.GravityDestinationSecurizer;
 import org.granite.gravity.security.GravityInvocationContext;
@@ -62,8 +60,6 @@ import org.granite.messaging.amf.process.AMF3MessageInterceptor;
 import org.granite.messaging.service.security.SecurityService;
 import org.granite.messaging.service.security.SecurityServiceException;
 import org.granite.messaging.webapp.HttpGraniteContext;
-import org.granite.osgi.impl.config.IGraniteConfig;
-import org.granite.osgi.impl.config.IServicesConfig;
 import org.granite.util.UUIDUtil;
 
 import flex.messaging.messages.AcknowledgeMessage;
@@ -90,13 +86,13 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     private final ConcurrentHashMap<String, TimeChannel> channels = new ConcurrentHashMap<String, TimeChannel>();
 
     @Requires
-    private IGravityConfig gravityConfig;
+    private GravityConfig gravityConfig;
 
     @Requires
-    private IServicesConfig servicesConfig;
+    private ServicesConfig servicesConfig;
 
     @Requires
-    private IGraniteConfig graniteConfig;
+    private GraniteConfig graniteConfig;
 
     private Channel serverChannel = null;
 
@@ -118,15 +114,15 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     // Properties.
 
     public GravityConfig getGravityConfig() {
-		return gravityConfig.getGravityConfig();
+		return gravityConfig;
 	}
 
     public ServicesConfig getServicesConfig() {
-        return servicesConfig.getServicesConfig();
+        return servicesConfig;
     }
 
 	public GraniteConfig getGraniteConfig() {
-        return graniteConfig.getGraniteConfig();
+        return graniteConfig;
     }
 
 	public boolean isStarted() {
@@ -147,7 +143,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
         	if (!started) {
 	            //adapterFactory = new AdapterFactory(this);
 	            internalStart();
-	            serverChannel = new ServerChannel(this, gravityConfig.getGravityConfig(), ServerChannel.class.getName());
+	            serverChannel = new ServerChannel(this, gravityConfig, ServerChannel.class.getName());
 	            started = true;
         	}
         }
@@ -155,34 +151,26 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     }
     
     protected void internalStart() {
-        gravityPool = new GravityPool(gravityConfig.getGravityConfig());
+        gravityPool = new GravityPool(gravityConfig);
         channelsTimer = new Timer();
         
-        if (graniteConfig.getGraniteConfig().isRegisterMBeans()) {
+        if (graniteConfig.isRegisterMBeans()) {
 	        try {
-	            ObjectName name = new ObjectName("org.granite:type=Gravity,context=" + graniteConfig.getGraniteConfig().getMBeanContextName());
+	            ObjectName name = new ObjectName("org.granite:type=Gravity,context=" + graniteConfig.getMBeanContextName());
 		        log.info("Registering MBean: %s", name);
 	            OpenMBean mBean = OpenMBean.createMBean(this);
 	        	MBeanServerLocator.getInstance().register(mBean, name, true);
 	        }
 	        catch (Exception e) {
-	        	log.error(e, "Could not register Gravity MBean for context: %s", graniteConfig.getGraniteConfig().getMBeanContextName());
+	        	log.error(e, "Could not register Gravity MBean for context: %s", graniteConfig.getMBeanContextName());
 	        }
         }
     }
     
     public void restart() throws Exception {
-    	synchronized (this) {
-    		stop();
-    		start();
-    	}
 	}
 
 	public void reconfigure(GravityConfig gravityConfig, GraniteConfig graniteConfig) {
-    	/*this.gravityConfig = gravityConfig;
-    	this.graniteConfig = graniteConfig;
-    	if (gravityPool != null)
-    		gravityPool.reconfigure(gravityConfig);   */
     }
 
     @Invalidate
@@ -193,15 +181,6 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     public void stop(boolean now) throws Exception {
     	log.info("Starting Gravity (now=%s)...", now);
         synchronized (this) {
-        	/*if (adapterFactory != null) {
-	            try {
-					adapterFactory.stopAll();
-				} catch (Exception e) {
-        			log.error(e, "Error while stopping adapter factory");
-				}
-	            adapterFactory = null;
-        	}*/
-
         	if (serverChannel != null) {
 	            try {
 					removeChannel(serverChannel.getId());
@@ -242,59 +221,59 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     // GravityMBean attributes implementation.
 
 	public String getGravityFactoryName() {
-		return gravityConfig.getGravityConfig().getGravityFactory();
+		return gravityConfig.getGravityFactory();
 	}
 
     public String getChannelFactoryName() {
-    	if (gravityConfig.getGravityConfig().getChannelFactory() != null)
-    		return gravityConfig.getGravityConfig().getChannelFactory().getClass().getName();
+    	if (gravityConfig.getChannelFactory() != null)
+    		return gravityConfig.getChannelFactory().getClass().getName();
     	return null;
 	}
 
 	public long getChannelIdleTimeoutMillis() {
-		return gravityConfig.getGravityConfig().getChannelIdleTimeoutMillis();
+		return gravityConfig.getChannelIdleTimeoutMillis();
 	}
 	public void setChannelIdleTimeoutMillis(long channelIdleTimeoutMillis) {
-		gravityConfig.getGravityConfig().setChannelIdleTimeoutMillis(channelIdleTimeoutMillis);
+		gravityConfig.setChannelIdleTimeoutMillis(channelIdleTimeoutMillis);
 	}
 
 	public boolean isRetryOnError() {
-		return gravityConfig.getGravityConfig().isRetryOnError();
+		return gravityConfig.isRetryOnError();
 	}
 	public void setRetryOnError(boolean retryOnError) {
-		gravityConfig.getGravityConfig().setRetryOnError(retryOnError);
+		gravityConfig.setRetryOnError(retryOnError);
 	}
 
 	public long getLongPollingTimeoutMillis() {
-		return gravityConfig.getGravityConfig().getLongPollingTimeoutMillis();
+		return gravityConfig.getLongPollingTimeoutMillis();
 	}
 	public void setLongPollingTimeoutMillis(long longPollingTimeoutMillis) {
-		gravityConfig.getGravityConfig().setLongPollingTimeoutMillis(longPollingTimeoutMillis);
+		gravityConfig.setLongPollingTimeoutMillis(longPollingTimeoutMillis);
 	}
 
 	public int getMaxMessagesQueuedPerChannel() {
-		return gravityConfig.getGravityConfig().getMaxMessagesQueuedPerChannel();
+		return gravityConfig.getMaxMessagesQueuedPerChannel();
 	}
 	public void setMaxMessagesQueuedPerChannel(int maxMessagesQueuedPerChannel) {
-		gravityConfig.getGravityConfig().setMaxMessagesQueuedPerChannel(maxMessagesQueuedPerChannel);
+		gravityConfig.setMaxMessagesQueuedPerChannel(maxMessagesQueuedPerChannel);
 	}
 
 	public long getReconnectIntervalMillis() {
-		return gravityConfig.getGravityConfig().getReconnectIntervalMillis();
+		return gravityConfig.getReconnectIntervalMillis();
 	}
 
 	public int getReconnectMaxAttempts() {
-		return gravityConfig.getGravityConfig().getReconnectMaxAttempts();
+		return gravityConfig.getReconnectMaxAttempts();
 	}
 
     public int getCorePoolSize() {
     	if (gravityPool != null)
     		return gravityPool.getCorePoolSize();
-    	return gravityConfig.getGravityConfig().getCorePoolSize();
+    	return gravityConfig.getCorePoolSize();
 	}
 
 	public void setCorePoolSize(int corePoolSize) {
-		gravityConfig.getGravityConfig().setCorePoolSize(corePoolSize);
+		gravityConfig.setCorePoolSize(corePoolSize);
 		if (gravityPool != null)
     		gravityPool.setCorePoolSize(corePoolSize);
 	}
@@ -302,10 +281,10 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 	public long getKeepAliveTimeMillis() {
     	if (gravityPool != null)
     		return gravityPool.getKeepAliveTimeMillis();
-    	return gravityConfig.getGravityConfig().getKeepAliveTimeMillis();
+    	return gravityConfig.getKeepAliveTimeMillis();
 	}
 	public void setKeepAliveTimeMillis(long keepAliveTimeMillis) {
-		gravityConfig.getGravityConfig().setKeepAliveTimeMillis(keepAliveTimeMillis);
+		gravityConfig.setKeepAliveTimeMillis(keepAliveTimeMillis);
 		if (gravityPool != null)
     		gravityPool.setKeepAliveTimeMillis(keepAliveTimeMillis);
 	}
@@ -313,10 +292,10 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 	public int getMaximumPoolSize() {
     	if (gravityPool != null)
     		return gravityPool.getMaximumPoolSize();
-    	return gravityConfig.getGravityConfig().getMaximumPoolSize();
+    	return gravityConfig.getMaximumPoolSize();
 	}
 	public void setMaximumPoolSize(int maximumPoolSize) {
-		gravityConfig.getGravityConfig().setMaximumPoolSize(maximumPoolSize);
+		gravityConfig.setMaximumPoolSize(maximumPoolSize);
 		if (gravityPool != null)
     		gravityPool.setMaximumPoolSize(maximumPoolSize);
 	}
@@ -324,13 +303,13 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 	public int getQueueCapacity() {
     	if (gravityPool != null)
     		return gravityPool.getQueueCapacity();
-    	return gravityConfig.getGravityConfig().getQueueCapacity();
+    	return gravityConfig.getQueueCapacity();
 	}
 
 	public int getQueueRemainingCapacity() {
     	if (gravityPool != null)
     		return gravityPool.getQueueRemainingCapacity();
-    	return gravityConfig.getGravityConfig().getQueueCapacity();
+    	return gravityConfig.getQueueCapacity();
 	}
 
 	public int getQueueSize() {
@@ -343,13 +322,13 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     // Channel's operations.
     
     protected Channel createChannel() {
-    	Channel channel = gravityConfig.getGravityConfig().getChannelFactory().newChannel(UUIDUtil.randomUUID());
+    	Channel channel = gravityConfig.getChannelFactory().newChannel(UUIDUtil.randomUUID());
     	TimeChannel timeChannel = new TimeChannel(channel);
         for (int i = 0; channels.putIfAbsent(channel.getId(), timeChannel) != null; i++) {
             if (i >= 10)
                 throw new RuntimeException("Could not find random new clientId after 10 iterations");
             channel.destroy();
-            channel = gravityConfig.getGravityConfig().getChannelFactory().newChannel(UUIDUtil.randomUUID());
+            channel = gravityConfig.getChannelFactory().newChannel(UUIDUtil.randomUUID());
             timeChannel = new TimeChannel(channel);
         }
         
@@ -426,7 +405,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 		    		timerTask = new ChannelTimerTask(this, channelId);
 		            timeChannel.setTimerTask(timerTask);
 		            
-		            long timeout = gravityConfig.getGravityConfig().getChannelIdleTimeoutMillis();
+		            long timeout = gravityConfig.getChannelIdleTimeoutMillis();
 		            log.debug("Scheduling TimerTask: %s for %s ms.", timerTask, timeout);
 		            channelsTimer.schedule(timerTask, timeout);
 		            return true;
@@ -463,7 +442,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 
         AMF3MessageInterceptor interceptor = null;
         if (!skipInterceptor)
-        	interceptor = GraniteContext.getCurrentInstance().getGraniteConfig().getAmf3MessageInterceptor();
+        	interceptor = GraniteManager.getCurrentInstance().getGraniteConfig().getAmf3MessageInterceptor();
         
         Message reply = null;
         
@@ -504,7 +483,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
         }
         
         if (reply != null) {
-	        GraniteContext context = GraniteContext.getCurrentInstance();
+	        GraniteContext context = GraniteManager.getCurrentInstance();
 	        if (context instanceof HttpGraniteContext) {
 	            HttpSession session = ((HttpGraniteContext)context).getRequest().getSession(false);
 	            if (session != null)
@@ -519,14 +498,10 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     // Other Public API methods.
 
     public GraniteContext initThread() {
-        GraniteContext context = GraniteContext.getCurrentInstance();
-        if (context == null)
-            context = SimpleGraniteContext.createThreadIntance(graniteConfig.getGraniteConfig(), servicesConfig.getServicesConfig(), applicationMap);
-        return context;
+        return null;
     }
     
     public void releaseThread() {
-    	GraniteContext.release();
 	}
 
 	public Message publishMessage(AsyncMessage message) {
@@ -546,8 +521,8 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
         AsyncMessage reply = new AcknowledgeMessage(message);
         reply.setClientId(channel.getId());
         Map<String, Object> advice = new HashMap<String, Object>();
-        advice.put(RECONNECT_INTERVAL_MS_KEY, Long.valueOf(gravityConfig.getGravityConfig().getReconnectIntervalMillis()));
-        advice.put(RECONNECT_MAX_ATTEMPTS_KEY, Long.valueOf(gravityConfig.getGravityConfig().getReconnectMaxAttempts()));
+        advice.put(RECONNECT_INTERVAL_MS_KEY, Long.valueOf(gravityConfig.getReconnectIntervalMillis()));
+        advice.put(RECONNECT_MAX_ATTEMPTS_KEY, Long.valueOf(gravityConfig.getReconnectMaxAttempts()));
         reply.setBody(advice);
         reply.setDestination(message.getDestination());
 
@@ -557,7 +532,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     }
 
     private Message handleSecurityMessage(CommandMessage message) {
-        GraniteConfig config = GraniteContext.getCurrentInstance().getGraniteConfig();
+        GraniteConfig config = GraniteManager.getCurrentInstance().getGraniteConfig();
 
         Message response = null;
 
@@ -614,7 +589,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 
     private Message handleSubscribeMessage(CommandMessage message) {
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
 
         // Get and check destination.
         Destination destination = context.getServicesConfig().findDestinationById(
@@ -716,7 +691,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     
     private Message handlePublishMessage(AsyncMessage message, Channel channel) {
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
 
         // Get and check destination.
         Destination destination = context.getServicesConfig().findDestinationById(

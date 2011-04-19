@@ -3,6 +3,7 @@ package org.granite.gravity.osgi.impl;
 import flex.messaging.messages.AsyncMessage;
 import org.granite.context.AMFContextImpl;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.gravity.AsyncHttpContext;
 import org.granite.gravity.Gravity;
 import org.granite.gravity.GravityConfig;
@@ -70,8 +71,8 @@ public class OSGiChannel extends GenericChannel {
 
             // Setup serialization context (thread local)
             Gravity gravity = getGravity();
-            GraniteContext context = new HttpGraniteContext(granitecontext,request, response);
-            GraniteContext.setCurrentInstance(context);
+            GraniteContext context = new HttpGraniteContext(granitecontext, request, response);
+            GraniteManager.setCurrentInstance(context);
             ((AMFContextImpl) context.getAMFContext()).setCurrentAmf3Message(asyncHttpContext.getConnectMessage());
 
             // Write messages to response output stream.
@@ -118,7 +119,7 @@ public class OSGiChannel extends GenericChannel {
 
             // Cleanup serialization context (thread local)
             try {
-                GraniteContext.release();
+                GraniteManager.release();
             } catch (Exception e) {
                 // should never happen...
             }

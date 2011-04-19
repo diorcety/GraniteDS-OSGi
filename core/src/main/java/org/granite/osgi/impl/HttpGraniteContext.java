@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class HttpGraniteContext extends GraniteContext {
+public class HttpGraniteContext implements GraniteContext {
 
     private static final String SESSION_LOCK_KEY = HttpGraniteContext.class.getName() + ".LOCK";
 
@@ -34,7 +34,6 @@ public class HttpGraniteContext extends GraniteContext {
             GraniteContext context,
             HttpServletRequest request,
             HttpServletResponse response) {
-        super(null, null);
         this.graniteContext = context;
         this.request = request;
         this.response = response;

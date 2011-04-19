@@ -14,22 +14,20 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.flex.Destination;
 import org.granite.config.flex.Factory;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.*;
-import org.granite.osgi.impl.config.IDestination;
-import org.granite.osgi.impl.config.IFactory;
 import org.granite.osgi.service.GraniteFactory;
 
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 @Provides
 @Instantiate
-public class OSGiMainFactory extends MainFactory implements IMainFactory {
+public class OSGiMainFactory implements MainFactory {
 
     private static final Logger log = Logger.getLogger(OSGiMainFactory.class);
 
@@ -38,7 +36,7 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
     private Map<String, GraniteFactory> osgiServices = new Hashtable<String, GraniteFactory>();
 
     @Requires
-    IServiceFactory osgiServiceFactory;
+    ServiceFactory osgiServiceFactory;
 
     @Validate
     private void starting() {
@@ -67,7 +65,7 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
     ///////////////////////////////////////////////////////////////////////////
     public ServiceFactory getFactoryInstance(RemotingMessage request) throws ServiceException {
 
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
 
         String messageType = request.getClass().getName();
         String destinationId = request.getDestination();
@@ -107,7 +105,7 @@ public class OSGiMainFactory extends MainFactory implements IMainFactory {
                 log.debug(">> No cached factory for: %s", factoryId);
 
                 if (config == null) {
-                    factory = osgiServiceFactory.getServiceFactory();
+                    factory = osgiServiceFactory;
                 } else {
                     GraniteFactory graniteFactory;
                     synchronized (osgiServices) {

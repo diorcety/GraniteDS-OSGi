@@ -8,18 +8,17 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.Destination;
+import org.granite.config.flex.*;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Destination")
 @Provides
-public class OSGiDestination extends Destination implements IDestination {
+public class OSGiDestination extends SimpleDestination {
 
     private static final Logger log = Logger.getLogger(OSGiDestination.class);
 
@@ -37,7 +36,7 @@ public class OSGiDestination extends Destination implements IDestination {
 
     private boolean started = false;
 
-    private IService service;
+    private Service service;
 
     protected OSGiDestination() {
         super(null, new ArrayList<String>(), XMap.EMPTY_XMAP,
@@ -71,49 +70,49 @@ public class OSGiDestination extends Destination implements IDestination {
 
 
     @Bind(aggregate = true, optional = true)
-    private void bindService(IService service) {
-        if (service.getService().getId() == this.SERVICE) {
+    private void bindService(Service service) {
+        if (service.getId() == this.SERVICE) {
             this.service = service;
             checkState();
         }
     }
 
     @Unbind
-    private void unbindService(IService service) {
-        if (service.getService().getId() == this.SERVICE) {
+    private void unbindService(Service service) {
+        if (service.getId() == this.SERVICE) {
             this.service = null;
             checkState();
         }
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindAdapter(IAdapter adapter) {
-        if (adapter.getAdapter().getId() == this.ADAPTER) {
-            this.adapter = adapter.getAdapter();
+    private void bindAdapter(Adapter adapter) {
+        if (adapter.getId() == this.ADAPTER) {
+            this.adapter = adapter;
             checkState();
         }
     }
 
     @Unbind
-    private void unbindAdapter(IAdapter adapter) {
-        if (adapter.getAdapter().getId() == this.ADAPTER) {
+    private void unbindAdapter(Adapter adapter) {
+        if (adapter.getId() == this.ADAPTER) {
             this.adapter = null;
             checkState();
         }
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindChannel(IChannel channel) {
-        if (this.CHANNEL_LIST.contains(channel.getChannel().getId())) {
-            this.channelRefs.add(channel.getChannel().getId());
+    private void bindChannel(Channel channel) {
+        if (this.CHANNEL_LIST.contains(channel.getId())) {
+            this.channelRefs.add(channel.getId());
             checkState();
         }
     }
 
     @Unbind
-    private void unbindChannel(IChannel channel) {
-        if (this.CHANNEL_LIST.contains(channel.getChannel().getId())) {
-            this.channelRefs.remove(channel.getChannel().getId());
+    private void unbindChannel(Channel channel) {
+        if (this.CHANNEL_LIST.contains(channel.getId())) {
+            this.channelRefs.remove(channel.getId());
             checkState();
         }
     }
@@ -138,14 +137,14 @@ public class OSGiDestination extends Destination implements IDestination {
     public void start() {
         log.debug("Start Destination: " + this.id);
         if (this.adapter == null)
-            this.adapter = service.getService().getDefaultAdapter();
-        service.getService().addDestination(this);
+            this.adapter = service.getDefaultAdapter();
+        service.addDestination(this);
     }
 
     public void stop() {
         log.debug("Stop Destination: " + this.id);
         if (service != null) {
-            service.getService().removeDestination(this.id);
+            service.removeDestination(this.id);
         }
     }
 

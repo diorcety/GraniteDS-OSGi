@@ -15,6 +15,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.flex.Adapter;
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.gravity.Gravity;
 import org.granite.gravity.adapters.AdapterFactory;
 import org.granite.gravity.adapters.ServiceAdapter;
@@ -71,7 +72,7 @@ public class OSGiAdapterFactory extends AdapterFactory implements IAdapterFactor
     }
 
     public ServiceAdapter getServiceAdapter(String messageType, String destinationId) throws ServiceException {
-        GraniteContext context = GraniteContext.getCurrentInstance();
+        GraniteContext context = GraniteManager.getCurrentInstance();
 
         log.debug(">> Finding serviceAdapter for messageType: %s and destinationId: %s", messageType, destinationId);
 

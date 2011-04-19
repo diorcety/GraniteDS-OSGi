@@ -10,9 +10,7 @@ import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.Adapter;
-import org.granite.config.flex.Destination;
-import org.granite.config.flex.Service;
+import org.granite.config.flex.*;
 import org.granite.logging.Logger;
 
 import java.util.Collection;
@@ -20,12 +18,12 @@ import java.util.HashMap;
 
 @Component(name = "org.granite.config.flex.Service")
 @Provides
-public class OSGiService extends Service implements IService {
+public class OSGiService extends SimpleService {
 
     private static final Logger LOG = Logger.getLogger(OSGiService.class);
 
     @Requires
-    private IServicesConfig servicesConfig;
+    private ServicesConfig servicesConfig;
 
     @Property
     public Collection<String> ADAPTER_LIST;
@@ -76,23 +74,23 @@ public class OSGiService extends Service implements IService {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindAdapter(IAdapter adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getAdapter().getId())) {
-            this.adapters.put(adapter.getAdapter().getId(), adapter.getAdapter());
+    private void bindAdapter(Adapter adapter) {
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
+            this.adapters.put(adapter.getId(), adapter);
 
-            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getAdapter().getId())) {
-                this.defaultAdapter = adapter.getAdapter();
+            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+                this.defaultAdapter = adapter;
             }
             checkState();
         }
     }
 
     @Unbind
-    private void unbindAdapter(IAdapter adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getAdapter().getId())) {
-            this.adapters.remove(adapter.getAdapter().getId());
+    private void unbindAdapter(Adapter adapter) {
+        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
+            this.adapters.remove(adapter.getId());
 
-            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getAdapter().getId())) {
+            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
                 this.defaultAdapter = null;
             }
             checkState();
@@ -119,13 +117,13 @@ public class OSGiService extends Service implements IService {
     public void start() {
         LOG.debug("Start Service: " + this.id);
         destinations.clear();
-        servicesConfig.getServicesConfig().addService(this);
+        servicesConfig.addService(this);
     }
 
     public void stop() {
         LOG.debug("Stop Service: " + this.id);
         if (servicesConfig != null) {
-            servicesConfig.getServicesConfig().removeService(this.id);
+            servicesConfig.removeService(this.id);
         }
     }
 

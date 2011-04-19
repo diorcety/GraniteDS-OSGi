@@ -43,12 +43,12 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
 
     @Validate
     public void starting() {
-        log.debug("Start OSGiServiceAdapter \"" + ID + "\"");
+        log.debug("Start OSGiEventAdminAdapter \"" + ID + "\"");
     }
 
     @Invalidate
     public void stopping() {
-        log.debug("Stop OSGiServiceAdapter \"" + ID + "\"");
+        log.debug("Stop OSGiEventAdminAdapter \"" + ID + "\"");
     }
 
     public OSGiTopic getTopic(TopicId id) {
@@ -103,7 +103,7 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
             prop.put("message.data", message.getBody());
             prop.put("message.destination", message.getDestination());
             publisher.send(prop);
-            log.info("AMF -> EA: " + topicId);
+            log.debug("AMF -> EA: " + topicId);
 
             reply = new AcknowledgeMessage(message);
             reply.setMessageId(message.getMessageId());
@@ -178,7 +178,7 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
             String topicId = (String) event.getProperty("message.topic");
             String destination = (String) event.getProperty("message.destination");
             Object data = event.getProperty("message.data");
-            log.info("EA -> AMF: " + topicId);
+            log.debug("EA -> AMF: " + topicId);
             Channel channel = topicChannels.get(topicId);
             if (channel != null) {
                 TopicId tid = getTopicId(topicId);
@@ -188,7 +188,7 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
                 rootTopic.publish(tid, channel, message);
             }
         } catch (Exception e) {
-            log.warn(e, "Error during transmit to topic");
+            log.warn(e, "Error during transmission to topic");
         }
     }
 
