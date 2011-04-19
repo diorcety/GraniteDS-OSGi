@@ -14,7 +14,6 @@ import org.granite.context.AMFContextImpl;
 import org.granite.context.GraniteContext;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.MainFactory;
-import org.granite.osgi.GraniteClassRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +39,7 @@ public class OSGiGraniteContext implements GraniteContext {
     private MainFactory mainFactory;
 
     @Requires
-    private GraniteClassRegistry classRegistry;
+    private OSGiGraniteClassLoader classLoader;
 
     private OSGiGraniteContext() {
         this.amfContext = new AMFContextImpl();
@@ -105,7 +104,7 @@ public class OSGiGraniteContext implements GraniteContext {
 
     @Override
     public Class<?> forName(String type) throws ClassNotFoundException {
-        return classRegistry.forName(type);
+        return classLoader.forName(type);
     }
 
     @Override

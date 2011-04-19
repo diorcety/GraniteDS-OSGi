@@ -2,7 +2,7 @@ package org.granite.osgi.impl.io;
 
 import flex.messaging.messages.AbstractMessage;
 import org.granite.messaging.amf.io.AMF3Serializer;
-import org.granite.osgi.impl.OSGiGraniteClassLoader;
+import org.granite.osgi.impl.OSGiGraniteClassUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,7 +20,7 @@ public class OSGiAMF3Serializer extends AMF3Serializer {
     public void writeObject(Object o) throws IOException {
         if (o instanceof AbstractMessage) {
             AbstractMessage abstractMessage = (AbstractMessage) o;
-            OSGiGraniteClassLoader.setDestination(abstractMessage.getDestination());
+            OSGiGraniteClassUtil.setDestination(abstractMessage.getDestination());
             abstractMessage.setDestination(null);
         }
         super.writeObject(o);

@@ -3,7 +3,7 @@ package org.granite.osgi.impl.io;
 import flex.messaging.messages.AbstractMessage;
 import org.granite.gravity.Gravity;
 import org.granite.messaging.amf.io.AMF3Deserializer;
-import org.granite.osgi.impl.OSGiGraniteClassLoader;
+import org.granite.osgi.impl.OSGiGraniteClassUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class OSGiAMF3Deserializer extends AMF3Deserializer {
     public Object resolve(Object obj) {
         if (obj instanceof AbstractMessage) {
             AbstractMessage abstractMessage = (AbstractMessage) obj;
-            OSGiGraniteClassLoader.setDestination(abstractMessage.getDestination());
+            OSGiGraniteClassUtil.setDestination(abstractMessage.getDestination());
             abstractMessage.setBody(resolve(abstractMessage.getBody()));
 
         } else if (obj instanceof OSGiDelayedObject) {
