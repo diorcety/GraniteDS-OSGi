@@ -37,9 +37,6 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
 
-/**
- * @author Franck WOLFF
- */
 @Component
 @Provides
 @Instantiate
