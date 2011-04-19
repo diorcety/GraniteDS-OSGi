@@ -29,15 +29,12 @@ public class HttpGraniteContext extends GraniteContext {
     private SessionMap sessionMap = null;
     private RequestMap requestMap = null;
     private GraniteContext graniteContext = null;
-    private GraniteClassRegistry classRegistry = null;
 
     public HttpGraniteContext(
             GraniteContext context,
-            GraniteClassRegistry classRegistry,
             HttpServletRequest request,
             HttpServletResponse response) {
         super(null, null);
-        this.classRegistry = classRegistry;
         this.graniteContext = context;
         this.request = request;
         this.response = response;
@@ -96,7 +93,7 @@ public class HttpGraniteContext extends GraniteContext {
 
 
     public Class<?> forName(String type) throws ClassNotFoundException {
-        return classRegistry.forName((String) getRequestMap().get("destination"), type);
+        return graniteContext.forName(type);
     }
 
     @Override
