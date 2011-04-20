@@ -9,11 +9,8 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.graniteds-osgi</groupId>
     <artifactId>granite-core</artifactId>
-
     <name>GraniteDS - OSGi :: Core</name>
-
     <packaging>bundle</packaging>
 
     <dependencies>
@@ -23,46 +20,32 @@
             <version>2.2.0.SP1</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <version>${osgi.compendium.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>${osgi.core.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
             <version>${ipojo.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.api</artifactId>
-            <version>1.6.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>${ipojo.version}</version>
-            <scope>provided</scope>
-        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>${servlet.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.16</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -78,17 +61,13 @@
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Export-Package>
+                            !org.granite.gravity.*,
                             flex.messaging.*,
-                            org.granite.context.*;version=${project.version},
-                            org.granite.config.*;version=${project.version},
-                            org.granite.messaging.*;version=${project.version},
-                            org.granite.jmx.*;version=${project.version},
-                            org.granite.scan.*;version=${project.version},
-                            org.granite.util.*;version=${project.version},
-                            org.granite.logging.*;version=${project.version},
-                            org.granite.osgi.*;version=${project.version};-split-package:=merge-first
+                            org.granite.*;version=${project.version},
                         </Export-Package>
                         <Import-Package>
+                            !org.granite.gravity.*,
+                            javax.jdo;resolution:=optional,
                             org.apache.log4j;resolution:=optional,
                             javax.xml*;resolution:=optional,
                             javax.servlet.*;version="2.4.0",
@@ -128,10 +107,19 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>graniteds-debug</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

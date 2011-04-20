@@ -9,11 +9,8 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.graniteds-osgi</groupId>
     <artifactId>granite-gravity</artifactId>
-
     <name>GraniteDS - OSGi :: Gravity</name>
-
     <packaging>bundle</packaging>
 
     <dependencies>
@@ -50,13 +47,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.handler.eventadmin</artifactId>
-            <version>1.6.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>${ipojo.version}</version>
+            <version>${ipojo.ea.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -92,10 +83,10 @@
                             *
                         </Import-Package>
                         <Export-Package>
-                            org.granite.gravity.*;version=${project.version};-split-package:=merge-first,
+                            org.granite.*;version=${project.version},
                         </Export-Package>
                         <Private-Package>
-                            org.granite.gravity.osgi.*
+                            org.granite.gravity.osgi.impl
                         </Private-Package>
                         <_nouses>true</_nouses>
                     </instructions>
@@ -112,10 +103,19 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>graniteds-debug</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
