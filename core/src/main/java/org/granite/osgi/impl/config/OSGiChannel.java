@@ -20,14 +20,11 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.*;
+import org.granite.config.flex.ServicesConfig;
+import org.granite.config.flex.SimpleChannel;
+import org.granite.config.flex.SimpleEndPoint;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -42,22 +39,39 @@ public class OSGiChannel extends SimpleChannel {
     @Requires
     private ServicesConfig servicesConfig;
 
+    //
     public String ENDPOINT_URI;
 
     public String ENDPOINT_CLASS;
 
+    private int version = 0;
+
+    private boolean started = false;
+
+    //
     protected OSGiChannel() {
         super(null, null, null, XMap.EMPTY_XMAP);
     }
 
     @Validate
     public void starting() {
+        started = true;
         start();
     }
 
     @Invalidate
     public void stopping() {
+        started = false;
         stop();
+    }
+
+    @Updated
+    public void updated() {
+        if (started) {
+            stop();
+            version++;
+            start();
+        }
     }
 
     @Property(name = "ID", mandatory = true)
@@ -102,7 +116,15 @@ public class OSGiChannel extends SimpleChannel {
         }
     }
 
-    public Channel getChannel() {
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OSGiChannel that = (OSGiChannel) o;
+
+        if (this != that || version != that.version) return false;
+
+        return true;
     }
 }

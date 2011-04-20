@@ -20,17 +20,12 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.*;
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Destination;
+import org.granite.config.flex.ServicesConfig;
+import org.granite.config.flex.SimpleService;
 import org.granite.logging.Logger;
 
 import java.util.Collection;
@@ -57,6 +52,9 @@ public class OSGiService extends SimpleService {
 
     private boolean started = false;
 
+    private int version = 0;
+
+    //
     public OSGiService() {
         super(null, null, null, null, new HashMap<String, Adapter>(), new HashMap<String, Destination>());
     }
@@ -69,12 +67,21 @@ public class OSGiService extends SimpleService {
 
     @Invalidate
     public void stopping() {
-        if (this.state) {
-            stop();
-            this.state = false;
-        }
         started = false;
+        checkState();
     }
+
+    @Updated
+    public void updated() {
+        if (started) {
+            started = false;
+            checkState();
+            version++;
+            started = true;
+            checkState();
+        }
+    }
+
 
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
@@ -82,13 +89,13 @@ public class OSGiService extends SimpleService {
     }
 
     @Property(name = "MESSAGETYPES", mandatory = false,
-              value = "flex.messaging.messages.RemotingMessage")
+            value = "flex.messaging.messages.RemotingMessage")
     private void setMessageTypes(String messageTypes) {
         this.messageTypes = messageTypes;
     }
 
     @Property(name = "CLASS", mandatory = false,
-              value = "flex.messaging.services.RemotingService")
+            value = "flex.messaging.services.RemotingService")
     private void setClass(String className) {
         this.className = className;
     }
@@ -147,8 +154,15 @@ public class OSGiService extends SimpleService {
         }
     }
 
-    public Service getService()
-    {
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OSGiService that = (OSGiService) o;
+
+        if (this != that || version != that.version) return false;
+
+        return true;
     }
 }

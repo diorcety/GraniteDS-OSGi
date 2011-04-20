@@ -20,14 +20,8 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.Factory;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
@@ -44,19 +38,35 @@ public class OSGiFactory extends SimpleFactory {
     @Requires
     private ServicesConfig servicesConfig;
 
+    //
+    private boolean started = false;
 
+    private int version = 0;
+
+    //
     protected OSGiFactory() {
         super(null, null, XMap.EMPTY_XMAP);
     }
 
     @Validate
     public void starting() {
+        started = true;
         start();
     }
 
     @Invalidate
     public void stopping() {
+        started = false;
         stop();
+    }
+
+    @Updated
+    public void updated() {
+        if (started) {
+            stop();
+            version++;
+            start();
+        }
     }
 
     @Property(name = "ID", mandatory = true)
@@ -86,7 +96,15 @@ public class OSGiFactory extends SimpleFactory {
         }
     }
 
-    public Factory getFactory() {
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OSGiFactory that = (OSGiFactory) o;
+
+        if (this != that || version != that.version) return false;
+
+        return true;
     }
 }

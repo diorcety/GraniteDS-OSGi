@@ -20,13 +20,8 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.Adapter;
 import org.granite.config.flex.SimpleAdapter;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
@@ -39,21 +34,34 @@ public class OSGiAdapter extends SimpleAdapter {
 
     private static final Logger log = Logger.getLogger(OSGiAdapter.class);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // OSGi
+    private int version = 0;
 
+    private boolean started = false;
+
+    //
     protected OSGiAdapter() {
         super(null, null, XMap.EMPTY_XMAP);
     }
 
     @Validate
     public void starting() {
+        started = true;
         start();
     }
 
     @Invalidate
     public void stopping() {
+        started = false;
         stop();
+    }
+
+    @Updated
+    public void updated() {
+        if (started) {
+            stop();
+            version++;
+            start();
+        }
     }
 
     @Property(name = "ID", mandatory = true)
@@ -80,7 +88,15 @@ public class OSGiAdapter extends SimpleAdapter {
         log.debug("Stop Adapter: " + this.id);
     }
 
-    public Adapter getAdapter() {
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OSGiAdapter that = (OSGiAdapter) o;
+
+        if (this != that || version != that.version) return false;
+
+        return true;
     }
 }

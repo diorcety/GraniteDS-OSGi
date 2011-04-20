@@ -21,7 +21,15 @@
 package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
-import org.apache.felix.ipojo.annotations.*;
+
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+
 import org.granite.config.flex.Destination;
 import org.granite.context.GraniteContext;
 import org.granite.context.GraniteManager;
@@ -31,6 +39,7 @@ import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceExceptionHandler;
 import org.granite.messaging.service.ServiceFactory;
 import org.granite.osgi.service.GraniteDestination;
+import org.granite.osgi.service.GraniteFactory;
 import org.granite.util.XMap;
 
 import java.util.Collections;
@@ -46,7 +55,9 @@ public class OSGiServiceFactory implements ServiceFactory {
 
     private static final Logger log = Logger.getLogger(OSGiServiceFactory.class);
 
-    private Map<String, GraniteDestination> osgiServices = new Hashtable<String, GraniteDestination>();
+    private Map<String, GraniteDestination> destinationServices = new Hashtable<String, GraniteDestination>();
+
+    private Map<String, GraniteFactory> factoryServices = new Hashtable<String, GraniteFactory>();
 
     private ServiceExceptionHandler serviceExceptionHandler;
 
@@ -66,17 +77,32 @@ public class OSGiServiceFactory implements ServiceFactory {
 
     @Bind(aggregate = true, optional = true)
     public final void bindDestination(final GraniteDestination destination) {
-        synchronized (osgiServices) {
-            osgiServices.put(destination.getId(), destination);
+        synchronized (destinationServices) {
+            destinationServices.put(destination.getId(), destination);
         }
     }
 
     @Unbind
     public final void unbindDestination(final GraniteDestination destination) {
-        synchronized (osgiServices) {
-            osgiServices.remove(destination.getId());
+        synchronized (destinationServices) {
+            destinationServices.remove(destination.getId());
         }
     }
+
+    @Bind(aggregate = true, optional = true)
+    public final void bindFactory(final GraniteFactory factory) {
+        synchronized (factoryServices) {
+            factoryServices.put(factory.getId(), factory);
+        }
+    }
+
+    @Unbind
+    public final void unbindFactory(final GraniteFactory factory) {
+        synchronized (factoryServices) {
+            factoryServices.remove(factory.getId());
+        }
+    }
+
 
     @Override
     public void configure(XMap properties) throws ServiceException {
@@ -92,26 +118,42 @@ public class OSGiServiceFactory implements ServiceFactory {
         if (destination == null)
             throw new ServiceException("No matching destination: " + destinationId);
 
-        Map<String, Object> cache = Collections.synchronizedMap(context.getApplicationMap());
+        Map<String, Object> cache = getCache(destination);
 
         String key = OSGiServiceFactory.class.getName() + '.' + destination.getId();
 
         ObjectServiceInvoker service = (ObjectServiceInvoker) cache.get(key);
+
         // Check update in configuration
-        if (service != null && service.getDestination() != destination) {
+        if (service != null && !service.getDestination().equals(destination)) {
             service = null;
             log.info("Flush \"" + key + "\" from cache");
         }
 
         if (service == null) {
-            GraniteDestination gd;
-            synchronized (osgiServices) {
-                gd = osgiServices.get(destination.getId());
-            }
-            if (gd == null)
-                throw new ServiceException("Could not get OSGi destination: " + destination.getId());
+            Object obj;
 
-            service = new ObjectServiceInvoker<OSGiServiceFactory>(destination, this, gd);
+            // Check for a destination's factory
+            String factoryId = destination.getProperties().get("factory");
+            if (factoryId == null) {
+                GraniteDestination gd;
+                synchronized (destinationServices) {
+                    gd = destinationServices.get(destination.getId());
+                }
+                if (gd == null)
+                    throw new ServiceException("Could not get OSGi destination: " + destination.getId());
+                obj = gd;
+            } else {
+                GraniteFactory gf;
+                synchronized (destinationServices) {
+                    gf = factoryServices.get(factoryId);
+                }
+                if (gf == null)
+                    throw new ServiceException("Could not get OSGi factory: " + factoryId);
+                obj = gf.newInstance();
+            }
+
+            service = new ObjectServiceInvoker<OSGiServiceFactory>(destination, this, obj);
             cache.put(key, service);
         }
         return service;
@@ -119,5 +161,22 @@ public class OSGiServiceFactory implements ServiceFactory {
 
     public ServiceExceptionHandler getServiceExceptionHandler() {
         return serviceExceptionHandler;
+    }
+
+    private Map<String, Object> getCache(Destination destination) throws ServiceException {
+        GraniteContext context = GraniteManager.getCurrentInstance();
+        String scope = destination.getProperties().get("scope");
+
+        Map<String, Object> cache = null;
+        if (scope == null || "request".equals(scope))
+            cache = context.getRequestMap();
+        else if ("session".equals(scope))
+            cache = context.getSessionMap();
+        else if ("application".equals(scope))
+            cache = Collections.synchronizedMap(context.getApplicationMap());
+        else
+            throw new ServiceException("Illegal scope in destination: " + destination);
+
+        return cache;
     }
 }

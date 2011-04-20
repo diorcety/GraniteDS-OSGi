@@ -20,8 +20,12 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.*;
-import org.granite.config.GraniteConfig;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Validate;
+
 import org.granite.config.SimpleGraniteConfig;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.io.util.ActionScriptClassDescriptor;
@@ -32,7 +36,11 @@ import org.granite.osgi.impl.io.OSGiAMF3Serializer;
 import org.granite.osgi.impl.io.OSGiActionScriptClassDescriptor;
 import org.xml.sax.SAXException;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.OutputStream;
 
 @Component
 @Instantiate
@@ -43,6 +51,7 @@ public class OSGiGraniteConfig extends SimpleGraniteConfig {
 
     private OSGiAMF3MessageInterceptor interceptor = new OSGiAMF3MessageInterceptor();
 
+    //
     OSGiGraniteConfig() throws IOException, SAXException {
         super(null, null, null, null);
     }
@@ -68,10 +77,6 @@ public class OSGiGraniteConfig extends SimpleGraniteConfig {
     @Override
     public ObjectOutput newAMF3Serializer(OutputStream out) {
         return new OSGiAMF3Serializer(out);
-    }
-
-    public GraniteConfig getGraniteConfig() {
-        return this;
     }
 
     @Validate

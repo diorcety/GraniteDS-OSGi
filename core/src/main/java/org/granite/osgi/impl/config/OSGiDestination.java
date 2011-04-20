@@ -20,15 +20,12 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.*;
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Channel;
+import org.granite.config.flex.Service;
+import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
@@ -56,8 +53,11 @@ public class OSGiDestination extends SimpleDestination {
 
     private boolean started = false;
 
+    private int version = 0;
+
     private Service service;
 
+    //
     protected OSGiDestination() {
         super(null, new ArrayList<String>(), XMap.EMPTY_XMAP,
                 new ArrayList<String>(), null, null);
@@ -71,11 +71,19 @@ public class OSGiDestination extends SimpleDestination {
 
     @Invalidate
     public void stopping() {
-        if (this.state) {
-            stop();
-            this.state = false;
-        }
         started = false;
+        checkState();
+    }
+
+    @Updated
+    public void updated() {
+        if (started) {
+            started = false;
+            checkState();
+            version++;
+            started = true;
+            checkState();
+        }
     }
 
     @Property(name = "ID", mandatory = true)
@@ -168,7 +176,15 @@ public class OSGiDestination extends SimpleDestination {
         }
     }
 
-    public Destination getDestination() {
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OSGiDestination that = (OSGiDestination) o;
+
+        if (this != that || version != that.version) return false;
+
+        return true;
     }
 }
