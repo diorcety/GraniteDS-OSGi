@@ -37,24 +37,29 @@ public class OSGiDelayedObject extends HashMap<String, Object> {
         this.type = type;
     }
 
-    public String getType()
-    {
-         return type;
+    public String getType() {
+        return type;
     }
 
-    public Object newInstance() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Object obj = ClassUtil.newInstance(type);
-        Class clazz = obj.getClass();
+    public Object resolve(Object obj, Class clazz) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+
+        if (obj instanceof OSGiDelayedObject)
+            obj = ((OSGiDelayedObject) obj).fill(clazz.newInstance(), clazz);
+        return obj;
+    }
+
+    public Object fill(Object instance, Class clazz) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         try {
             for (String name : this.keySet()) {
                 boolean find = false;
+
 
                 // Try to find public getter/setter.
                 BeanInfo info = Introspector.getBeanInfo(clazz);
                 PropertyDescriptor[] props = info.getPropertyDescriptors();
                 for (PropertyDescriptor prop : props) {
                     if (name.equals(prop.getName()) && prop.getWriteMethod() != null && prop.getReadMethod() != null) {
-                        prop.getWriteMethod().invoke(obj, this.get(name));
+                        prop.getWriteMethod().invoke(instance, resolve(this.get(name), prop.getClass()));
                         find = true;
                     }
                 }
@@ -63,13 +68,19 @@ public class OSGiDelayedObject extends HashMap<String, Object> {
                     Field field = clazz.getField(name);
                     if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
                         field.setAccessible(true);
-                        field.set(obj, this.get(name));
+                        field.set(instance, resolve(this.get(name), field.getClass()));
                     }
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return obj;
+        return instance;
+    }
+
+    public Object newInstance() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        Object instance = ClassUtil.newInstance(type);
+        Class clazz = instance.getClass();
+        return fill(instance, clazz);
     }
 }
