@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.graniteds-osgi</groupId>
         <artifactId>granite</artifactId>
-        <version>2.2.0.GA</version>
+        <version>2.2.0.SP1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>org.graniteds-osgi</groupId>
             <artifactId>granite-core</artifactId>
-            <version>2.2.0.GA</version>
+            <version>2.2.0.SP1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -83,7 +83,7 @@
                             *
                         </Import-Package>
                         <Export-Package>
-                            org.granite.*;version=${project.version},
+                            org.granite.gravity.*;version=${project.version},
                         </Export-Package>
                         <Private-Package>
                             org.granite.gravity.osgi.impl

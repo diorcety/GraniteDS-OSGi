@@ -5,7 +5,7 @@
     <groupId>org.graniteds-osgi</groupId>
     <artifactId>granite</artifactId>
 
-    <version>2.2.0.GA</version>
+    <version>2.2.0.SP1</version>
 
     <name>GraniteDS - OSGi</name>
 
