@@ -56,22 +56,20 @@ public class OSGiChannel extends SimpleChannel {
     @Validate
     public void starting() {
         started = true;
-        start();
     }
 
     @Invalidate
     public void stopping() {
         started = false;
-        stop();
     }
 
     @Updated
     public void updated() {
         if (started) {
             stop();
-            version++;
-            start();
         }
+        version++;
+        start();
     }
 
     @Property(name = "ID", mandatory = true)
@@ -80,7 +78,7 @@ public class OSGiChannel extends SimpleChannel {
     }
 
     @Property(name = "CLASS", mandatory = false,
-              value = "mx.messaging.channels.AMFChannel")
+            value = "mx.messaging.channels.AMFChannel")
     private void setClass(String className) {
         this.className = className;
     }
@@ -92,16 +90,10 @@ public class OSGiChannel extends SimpleChannel {
     }
 
     @Property(name = "ENDPOINT_CLASS", mandatory = false,
-              value = "flex.messaging.endpoints.AMFEndpoint")
+            value = "flex.messaging.endpoints.AMFEndpoint")
     private void setEndPointClass(String epClass) {
         this.ENDPOINT_CLASS = epClass;
         this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
-
-    @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Map<String, String> properties) {
-        this.properties = new XMap(properties);
     }
 
     public void start() {

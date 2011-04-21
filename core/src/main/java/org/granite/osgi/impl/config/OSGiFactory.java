@@ -51,37 +51,25 @@ public class OSGiFactory extends SimpleFactory {
     @Validate
     public void starting() {
         started = true;
-        start();
     }
 
     @Invalidate
     public void stopping() {
         started = false;
-        stop();
     }
 
     @Updated
     public void updated() {
         if (started) {
             stop();
-            version++;
-            start();
         }
+        version++;
+        start();
     }
 
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
-    }
-
-    @Property(name = "CLASS", mandatory = false)
-    private void setClass(String className) {
-        this.className = className;
-    }
-
-    @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Map<String, String> properties) {
-        this.properties = new XMap(properties);
     }
 
     public void start() {

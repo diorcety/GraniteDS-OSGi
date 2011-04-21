@@ -59,20 +59,17 @@ public class OSGiDestination extends SimpleDestination {
 
     //
     protected OSGiDestination() {
-        super(null, new ArrayList<String>(), XMap.EMPTY_XMAP,
-                new ArrayList<String>(), null, null);
+        super(null, new ArrayList<String>(), new XMap(), new ArrayList<String>(), null, null);
     }
 
     @Validate
     public void starting() {
         started = true;
-        checkState();
     }
 
     @Invalidate
     public void stopping() {
         started = false;
-        checkState();
     }
 
     @Updated
@@ -80,10 +77,10 @@ public class OSGiDestination extends SimpleDestination {
         if (started) {
             started = false;
             checkState();
-            version++;
-            started = true;
-            checkState();
         }
+        version++;
+        started = true;
+        checkState();
     }
 
     @Property(name = "ID", mandatory = true)
@@ -91,11 +88,15 @@ public class OSGiDestination extends SimpleDestination {
         this.id = id;
     }
 
-    @Property(name = "PROPERTIES", mandatory = false)
-    private void setProperties(Map<String, String> properties) {
-        this.properties = new XMap(properties);
+    @Property(name = "FACTORY", mandatory = false)
+    private void setFactory(String factory) {
+        this.properties.put("factory", factory);
     }
 
+    @Property(name = "SCOPE", mandatory = false)
+    private void setScope(String scope) {
+        this.properties.put("scope", scope);
+    }
 
     @Bind(aggregate = true, optional = true)
     private void bindService(Service service) {

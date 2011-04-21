@@ -147,13 +147,17 @@ public class AMFMessageServlet extends AbstractGravityServlet {
                                 final HttpServletResponse response) throws
             ServletException, IOException {
 
-
         log.debug("doPost: from %s:%d", request.getRemoteAddr(), request.getRemotePort());
 
-        GravityManager.setGravity(gravity, getServletContext());
-        gravity.getGravityConfig().getChannelFactory().init(gravity.getGravityConfig(), getServletConfig());
-
+        if (graniteContext == null) {
+            log.error("Could not handle AMF request: GraniteContext uninitialized");
+            return;
+        }
         try {
+            /* Set Gravity context */
+            GravityManager.setGravity(gravity, getServletContext());
+            gravity.getGravityConfig().getChannelFactory().init(gravity.getGravityConfig(), getServletConfig());
+
             GraniteContext context = new HttpGraniteContext(graniteContext, request, response);
             if (context == null) {
                 throw new ServletException("GraniteContext not Initialized!!");

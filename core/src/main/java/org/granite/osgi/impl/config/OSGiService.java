@@ -76,10 +76,10 @@ public class OSGiService extends SimpleService {
         if (started) {
             started = false;
             checkState();
+        }
             version++;
             started = true;
             checkState();
-        }
     }
 
 
@@ -88,14 +88,12 @@ public class OSGiService extends SimpleService {
         this.id = id;
     }
 
-    @Property(name = "MESSAGETYPES", mandatory = false,
-            value = "flex.messaging.messages.RemotingMessage")
+    @Property(name = "MESSAGETYPES", mandatory = false, value = "flex.messaging.messages.RemotingMessage")
     private void setMessageTypes(String messageTypes) {
         this.messageTypes = messageTypes;
     }
 
-    @Property(name = "CLASS", mandatory = false,
-            value = "flex.messaging.services.RemotingService")
+    @Property(name = "CLASS", mandatory = false, value = "flex.messaging.services.RemotingService")
     private void setClass(String className) {
         this.className = className;
     }
