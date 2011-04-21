@@ -30,8 +30,6 @@ import org.granite.logging.Logger;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Service")
 @Provides
@@ -42,19 +40,14 @@ public class OSGiService extends SimpleService {
     @Requires
     private ServicesConfig servicesConfig;
 
-    @Property
-    public Collection<String> ADAPTERS;
-
-    @Property
+    @Property(name = "DEFAULT_ADAPTER", mandatory = false)
     public String DEFAULT_ADAPTER;
 
     //
     @ServiceController
     private boolean state = false;
-    private boolean started = false;
-    private int version = 0;
 
-    private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
+    private boolean started = false;
 
     //
     public OSGiService() {
@@ -70,17 +63,6 @@ public class OSGiService extends SimpleService {
     @Invalidate
     public void stopping() {
         started = false;
-        checkState();
-    }
-
-    @Updated
-    public void updated() {
-        if (started) {
-            started = false;
-            checkState();
-        }
-        version++;
-        started = true;
         checkState();
     }
 
@@ -102,36 +84,30 @@ public class OSGiService extends SimpleService {
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(Adapter adapter) {
-        _adapters.put(adapter.getId(), adapter);
-        if (!state) {
+        if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+            this.defaultAdapter = adapter;
             checkState();
         }
     }
 
     @Unbind
     private void unbindAdapter(Adapter adapter) {
-        _adapters.remove(adapter.getId());
-        if (state) {
+        if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
+            this.defaultAdapter = null;
             checkState();
         }
     }
 
     private void checkState() {
         boolean new_state = false;
-        if (started) {
-            if (DEFAULT_ADAPTER == null || ADAPTERS.contains(DEFAULT_ADAPTER)) {
-                new_state = true;
-                if (ADAPTERS != null) {
-                    for (String adapterId : ADAPTERS) {
-                        if (!_adapters.containsKey(adapterId)) {
-                            new_state = false;
-                            break;
-                        }
 
-                    }
-                }
-            }
+        // Check state
+        if (started) {
+            if (DEFAULT_ADAPTER == null || defaultAdapter != null)
+                new_state = true;
         }
+
+        // Update state
         if (new_state != this.state) {
             if (new_state)
                 start();
@@ -144,23 +120,7 @@ public class OSGiService extends SimpleService {
 
     public void start() {
         LOG.debug("Start Service: " + toString());
-
-        // Clear destinations
         destinations.clear();
-
-        // ADAPTERS
-        adapters.clear();
-        if (ADAPTERS != null) {
-            for (String adapterId : ADAPTERS) {
-                adapters.put(adapterId, _adapters.get(adapterId));
-            }
-        }
-
-        // DEFAULT ADAPTER
-        this.defaultAdapter = null;
-        if (DEFAULT_ADAPTER != null)
-            this.defaultAdapter = adapters.get(DEFAULT_ADAPTER);
-
         servicesConfig.addService(this);
     }
 
@@ -178,7 +138,7 @@ public class OSGiService extends SimpleService {
 
         OSGiService that = (OSGiService) o;
 
-        if (this != that || version != that.version) return false;
+        if (this != that) return false;
 
         return true;
     }
@@ -189,7 +149,6 @@ public class OSGiService extends SimpleService {
                 "ID=" + id +
                 ", CLASS=" + className +
                 ", MESSAGETYPES=" + messageTypes +
-                ", ADAPTERS=" + ADAPTERS +
                 ", DEFAULT_ADAPTER='" + DEFAULT_ADAPTER + '\'' +
                 '}';
     }

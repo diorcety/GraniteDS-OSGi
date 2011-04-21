@@ -1,6 +1,7 @@
 package org.granite.osgi.test;
 
 
+import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.log4j.Logger;
 import org.granite.config.flex.ServicesConfig;
 import org.junit.Test;
@@ -12,14 +13,17 @@ import org.ops4j.pax.exam.junit.ExamReactorStrategy;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.exam.spi.reactors.AllConfinedStagedReactorFactory;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.ow2.chameleon.testing.helpers.IPOJOHelper;
 import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
 import java.io.*;
+import java.util.*;
 
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsNull.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.LibraryOptions.*;
 
 
@@ -27,6 +31,8 @@ import static org.ops4j.pax.exam.LibraryOptions.*;
 @ExamReactorStrategy(AllConfinedStagedReactorFactory.class)
 public class ConfigurationTest {
     private final static Logger logger = Logger.getLogger(ConfigurationTest.class);
+
+    private boolean started = false;
 
     OSGiHelper osgi;
     IPOJOHelper ipojo;
@@ -54,6 +60,9 @@ public class ConfigurationTest {
     }
 
     public void setup(BundleContext context) throws IOException {
+        if (started)
+            return;
+
         try {
             Thread.sleep(500);
             Logging.load(context);
@@ -65,25 +74,267 @@ public class ConfigurationTest {
         ipojo = new IPOJOHelper(context);
 
         try {
-            Thread.sleep(4000);
-
+            Thread.sleep(2000);
         } catch (Exception ex) {
-
         }
 
         logger.debug("Start!");
+        started = true;
     }
 
-    public void tearDown() {
+    void unsetup() {
         osgi.dispose();
         ipojo.dispose();
     }
 
     @Test
-    public void withBC(BundleContext context) throws IOException {
+    public void service(BundleContext context) throws IOException {
+        assertThat("Context invalid", context, is(notNullValue()));
+        setup(context);
+
+        ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
+        ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
+        assertThat("ServicesConfig unavailable", sc, is(notNullValue()));
+
+        ComponentInstance adapter1, adapter2, service1;
+
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "service1");
+
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
+
+        // Correct start
+        assertThat("Start failed!", sc.findServiceById("service1"), is(notNullValue()));
+
+        service1.dispose();
+
+        // Correct stop
+        assertThat("Stop failed!", sc.findServiceById("service1"), is(nullValue()));
+
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "adapter1");
+            adapter1 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "adapter2");
+            adapter2 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            Collection<String> adapters = new LinkedList<String>();
+            properties.put("ID", "service1");
+            properties.put("MESSAGETYPES", "flex.messaging.messages.AsyncMessage");
+            properties.put("DEFAULT_ADAPTER", "adapter1");
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
+
+        // Complex test
+        assertThat("Service unavailable", sc.findServiceById("service1"), is(notNullValue()));
+        assertTrue("Misconfiguration of messagetypes", sc.findServiceById("service1").getMessageTypes().equals("flex.messaging.messages.AsyncMessage"));
+        assertTrue("Invalid default adapter configuration", sc.findServiceById("service1").getDefaultAdapter().getId().equals("adapter1"));
+
+        adapter1.dispose();
+
+        // Test if the service stop it self (adapter dependency)
+        assertThat("Invalid service state", sc.findServiceById("service1"), is(nullValue()));
+
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "service2");
+            properties.put("DEFAULT_ADAPTER", "adapter2");
+            service1.dispose();
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
+
+        // Correct behaviour on stop & start
+        assertThat("Invalid restart state", sc.findServiceById("service2"), is(notNullValue()));
+
+        service1.dispose();
+
+        adapter2.dispose();
+
+        unsetup();
+    }
+
+    @Test
+    public void channel(BundleContext context) throws IOException {
         assertThat(context, is(notNullValue()));
 
         setup(context);
-        tearDown();
+
+        ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
+        ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
+        assertThat(sc, is(notNullValue()));
+
+        ComponentInstance channel;
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "channel1");
+            properties.put("ENDPOINT_CLASS", "class1");
+            properties.put("ENDPOINT_URI", "/uri1");
+            channel = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
+        }
+
+        assertThat("Start failed!", sc.findChannelById("channel1"), is(notNullValue()));
+        assertTrue("Misconfiguration of ep uri", sc.findChannelById("channel1").getEndPoint().getUri().equals("/uri1"));
+        assertTrue("Misconfiguration of ep class", sc.findChannelById("channel1").getEndPoint().getClassName().equals("class1"));
+
+        channel.dispose();
+
+        assertThat("Stop failed!", sc.findChannelById("channel1"), is(nullValue()));
+
+        unsetup();
     }
+
+    @Test
+    public void factory(BundleContext context) throws IOException {
+        assertThat(context, is(notNullValue()));
+
+        setup(context);
+
+        ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
+        ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
+        assertThat(sc, is(notNullValue()));
+
+        ComponentInstance factory;
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "factory1");
+            factory = ipojo.createComponentInstance("org.granite.config.flex.Factory", properties);
+        }
+
+        assertThat("Start failed!", sc.findFactoryById("factory1"), is(notNullValue()));
+
+        factory.dispose();
+
+        assertThat("Stop failed!", sc.findFactoryById("factory1"), is(nullValue()));
+
+        unsetup();
+    }
+
+    @Test
+    public void destination(BundleContext context) throws IOException {
+        assertThat("Context invalid", context, is(notNullValue()));
+        setup(context);
+
+        ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
+        ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
+        assertThat("ServicesConfig unavailable", sc, is(notNullValue()));
+
+        ComponentInstance destination1, channel1, service1, adapter1, adapter2;
+
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "adapter1");
+            adapter1 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "adapter2");
+            adapter2 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "service1");
+            properties.put("MESSAGETYPES", "MS1");
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "channel1");
+            properties.put("CLASS", "org.granite.gravity.channels.GravityChannel");
+            properties.put("ENDPOINT_URI", "/uri");
+            channel1 = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
+        }
+        {
+            Collection<String> channels = new LinkedList<String>();
+            channels.add("channel1");
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "destination1");
+            properties.put("SERVICE", "service1");
+            properties.put("CHANNELS", channels);
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
+
+        // Correct start
+        assertThat("Start failed!", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
+
+        destination1.dispose();
+
+        // Correct stop
+        assertThat("Stop failed!", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+
+        {
+            Collection<String> channels = new LinkedList<String>();
+            channels.add("channel1");
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "destination1");
+            properties.put("SERVICE", "service1");
+            properties.put("CHANNELS", channels);
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
+
+        // Invalid find following messagetype
+        assertThat("Invalid configuration messagetypes ignored", sc.findDestinationById("MS2", "service1"), is(nullValue()));
+
+        service1.dispose();
+
+        // Check stop of destination (service dependency)
+        assertThat("Invalid destination state 1", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "service1");
+            properties.put("DEFAULT_ADAPTER", "adapter1");
+            properties.put("MESSAGETYPES", "MS1");
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
+
+        // Check adapter of destination (service default adapter)
+        assertThat("no adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
+        assertTrue("Invalid adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter1"));
+
+        channel1.dispose();
+
+        // Check stop of destination (channel dependency)
+        assertThat("Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "channel1");
+            properties.put("CLASS", "org.granite.gravity.channels.GravityChannel");
+            properties.put("ENDPOINT_URI", "/uri");
+            channel1 = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
+        }
+        {
+            Collection<String> channels = new LinkedList<String>();
+            channels.add("channel1");
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "destination1");
+            properties.put("ADAPTER", "adapter2");
+            properties.put("SERVICE", "service1");
+            properties.put("CHANNELS", channels);
+            destination1.dispose();
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
+
+        // Check if destination's adapter overload default service adapter
+        assertThat("no adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
+        assertTrue("Invalid adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter2"));
+
+        adapter2.dispose();
+
+        // Check stop of destination (adapter dependency)
+        assertThat("Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+
+        destination1.dispose();
+        service1.dispose();
+        channel1.dispose();
+        adapter1.dispose();
+
+    }
+
 }

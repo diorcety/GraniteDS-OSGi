@@ -34,7 +34,6 @@ public class OSGiAdapter extends SimpleAdapter {
 
     private static final Logger log = Logger.getLogger(OSGiAdapter.class);
 
-    private int version = 0;
     private boolean started = false;
 
     //
@@ -45,21 +44,13 @@ public class OSGiAdapter extends SimpleAdapter {
     @Validate
     public void starting() {
         started = true;
+        start();
     }
 
     @Invalidate
     public void stopping() {
         started = false;
-    }
-
-    @Updated
-    public void updated() {
-        if (started) {
-            stop();
-        }
-        version++;
-        start();
-
+        stop();
     }
 
     @Property(name = "ID", mandatory = true)
@@ -83,7 +74,7 @@ public class OSGiAdapter extends SimpleAdapter {
 
         OSGiAdapter that = (OSGiAdapter) o;
 
-        if (this != that || version != that.version) return false;
+        if (this != that) return false;
 
         return true;
     }

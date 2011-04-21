@@ -44,8 +44,6 @@ public class OSGiChannel extends SimpleChannel {
 
     public String ENDPOINT_CLASS;
 
-    private int version = 0;
-
     private boolean started = false;
 
     //
@@ -56,20 +54,13 @@ public class OSGiChannel extends SimpleChannel {
     @Validate
     public void starting() {
         started = true;
+        start();
     }
 
     @Invalidate
     public void stopping() {
         started = false;
-    }
-
-    @Updated
-    public void updated() {
-        if (started) {
-            stop();
-        }
-        version++;
-        start();
+        stop();
     }
 
     @Property(name = "ID", mandatory = true)
@@ -113,7 +104,7 @@ public class OSGiChannel extends SimpleChannel {
 
         OSGiChannel that = (OSGiChannel) o;
 
-        if (this != that || version != that.version) return false;
+        if (this != that) return false;
 
         return true;
     }
