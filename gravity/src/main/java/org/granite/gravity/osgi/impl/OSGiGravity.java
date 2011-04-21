@@ -94,10 +94,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     private GravityConfig gravityConfig;
 
     @Requires
-    private ServicesConfig servicesConfig;
-
-    @Requires
-    private GraniteConfig graniteConfig;
+    private GraniteContext graniteContext;
 
     private Channel serverChannel = null;
 
@@ -123,11 +120,11 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
 	}
 
     public ServicesConfig getServicesConfig() {
-        return servicesConfig;
+        return graniteContext.getServicesConfig();
     }
 
 	public GraniteConfig getGraniteConfig() {
-        return graniteConfig;
+        return graniteContext.getGraniteConfig();
     }
 
 	public boolean isStarted() {
@@ -159,15 +156,15 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
         gravityPool = new GravityPool(gravityConfig);
         channelsTimer = new Timer();
         
-        if (graniteConfig.isRegisterMBeans()) {
+        if (graniteContext.getGraniteConfig().isRegisterMBeans()) {
 	        try {
-	            ObjectName name = new ObjectName("org.granite:type=Gravity,context=" + graniteConfig.getMBeanContextName());
+	            ObjectName name = new ObjectName("org.granite:type=Gravity,context=" + graniteContext.getGraniteConfig().getMBeanContextName());
 		        log.info("Registering MBean: %s", name);
 	            OpenMBean mBean = OpenMBean.createMBean(this);
 	        	MBeanServerLocator.getInstance().register(mBean, name, true);
 	        }
 	        catch (Exception e) {
-	        	log.error(e, "Could not register Gravity MBean for context: %s", graniteConfig.getMBeanContextName());
+	        	log.error(e, "Could not register Gravity MBean for context: %s", graniteContext.getGraniteConfig().getMBeanContextName());
 	        }
         }
     }
@@ -503,7 +500,7 @@ public class OSGiGravity implements Gravity, DefaultGravityMBean {
     // Other Public API methods.
 
     public GraniteContext initThread() {
-        return null;
+        return graniteContext;
     }
     
     public void releaseThread() {
