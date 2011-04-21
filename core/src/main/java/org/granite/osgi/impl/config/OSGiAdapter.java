@@ -20,7 +20,11 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.*;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.SimpleAdapter;
 import org.granite.logging.Logger;

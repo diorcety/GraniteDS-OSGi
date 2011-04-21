@@ -139,8 +139,7 @@ public class AMFMessageServlet extends HttpServlet {
     }
 
     @Override
-    protected final void doPost(final HttpServletRequest request,
-                                final HttpServletResponse response) throws
+    protected final void doPost(final HttpServletRequest request, final HttpServletResponse response) throws
             ServletException, IOException {
 
         if (graniteContext == null) {

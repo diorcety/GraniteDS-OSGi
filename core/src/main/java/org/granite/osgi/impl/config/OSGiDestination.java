@@ -20,13 +20,20 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.*;
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Adapter;
 import org.granite.config.flex.Channel;
 import org.granite.config.flex.Service;
 import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
+import org.granite.osgi.service.GraniteDestination;
 import org.granite.util.XMap;
 
 import java.util.ArrayList;
@@ -83,8 +90,8 @@ public class OSGiDestination extends SimpleDestination {
     }
 
     @Property(name = "SCOPE", mandatory = false)
-    private void setScope(String scope) {
-        this.properties.put("scope", scope);
+    private void setScope(GraniteDestination.SCOPE scope) {
+        this.properties.put("scope", scope.toString());
     }
 
     @Bind(aggregate = true, optional = true)

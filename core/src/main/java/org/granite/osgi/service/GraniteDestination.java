@@ -21,5 +21,22 @@
 package org.granite.osgi.service;
 
 public interface GraniteDestination {
+
+    public enum SCOPE {
+        REQUEST("request"),
+        SESSION("session"),
+        APPLICATION("application");
+        private final String value;
+
+        SCOPE(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
+
     public String getId();
 }
