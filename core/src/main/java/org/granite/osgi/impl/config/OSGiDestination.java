@@ -22,15 +22,13 @@ package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.Adapter;
-import org.granite.config.flex.Channel;
-import org.granite.config.flex.Service;
-import org.granite.config.flex.SimpleDestination;
+import org.granite.config.flex.*;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Destination")
@@ -43,18 +41,20 @@ public class OSGiDestination extends SimpleDestination {
     public String SERVICE;
 
     @Property(mandatory = true)
-    public Collection<String> CHANNEL_LIST;
+    public Collection<String> CHANNELS;
 
     @Property(mandatory = false)
     public String ADAPTER;
 
     //
     private boolean state = false;
-
     private boolean started = false;
-
     private int version = 0;
 
+    private Map<String, Service> _services = new Hashtable<String, Service>();
+    private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
+    private Map<String, Factory> _factories = new Hashtable<String, Factory>();
+    private Map<String, Channel> _channels = new Hashtable<String, Channel>();
     private Service service;
 
     //
@@ -100,58 +100,82 @@ public class OSGiDestination extends SimpleDestination {
 
     @Bind(aggregate = true, optional = true)
     private void bindService(Service service) {
-        if (service.getId() == this.SERVICE) {
-            this.service = service;
+        _services.put(service.getId(), service);
+        if (!state) {
             checkState();
         }
     }
 
     @Unbind
     private void unbindService(Service service) {
-        if (service.getId() == this.SERVICE) {
-            this.service = null;
+        _services.remove(service.getId());
+        if (state) {
             checkState();
         }
     }
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(Adapter adapter) {
-        if (adapter.getId() == this.ADAPTER) {
-            this.adapter = adapter;
+        _adapters.put(adapter.getId(), adapter);
+        if (!state) {
             checkState();
         }
     }
 
     @Unbind
     private void unbindAdapter(Adapter adapter) {
-        if (adapter.getId() == this.ADAPTER) {
-            this.adapter = null;
+        _adapters.remove(adapter.getId());
+        if (state) {
             checkState();
         }
     }
 
     @Bind(aggregate = true, optional = true)
     private void bindChannel(Channel channel) {
-        if (this.CHANNEL_LIST.contains(channel.getId())) {
-            this.channelRefs.add(channel.getId());
+        _channels.put(channel.getId(), channel);
+        if (!state) {
             checkState();
         }
     }
 
     @Unbind
     private void unbindChannel(Channel channel) {
-        if (this.CHANNEL_LIST.contains(channel.getId())) {
-            this.channelRefs.remove(channel.getId());
+        _channels.remove(channel.getId());
+        if (state) {
+            checkState();
+        }
+    }
+
+    @Bind(aggregate = true, optional = true)
+    private void bindFactory(Factory factory) {
+        _factories.put(factory.getId(), factory);
+        if (!state) {
+            checkState();
+        }
+    }
+
+    @Unbind
+    private void unbindFactory(Factory factory) {
+        _factories.remove(factory.getId());
+        if (state) {
             checkState();
         }
     }
 
     private void checkState() {
-        boolean new_state;
-        if (started && service != null && this.channelRefs.size() > 0) {
-            new_state = true;
-        } else {
-            new_state = false;
+        boolean new_state = false;
+        if (started) {
+            if ((_services.containsKey(SERVICE)) &&
+                    (ADAPTER == null || _adapters.containsKey(ADAPTER)) &&
+                    (properties.get("factory") == null || _factories.containsKey(properties.get("factory")))) {
+                for (String channelId : CHANNELS) {
+                    if (_channels.containsKey(channelId)) {
+                        new_state = true;
+                        break;
+                    }
+                }
+
+            }
         }
         if (new_state != this.state) {
             if (new_state)
@@ -164,14 +188,30 @@ public class OSGiDestination extends SimpleDestination {
     }
 
     public void start() {
-        log.debug("Start Destination: " + this.id);
+        log.debug("Start Destination: " + toString());
+
+        // CHANNELS
+        this.channelRefs.clear();
+        for (String channelId : CHANNELS) {
+            Channel channel = _channels.get(channelId);
+            if (channel != null)
+                this.channelRefs.add(channelId);
+        }
+
+        // SERVICE
+        this.service = _services.get(SERVICE);
+
+        // ADAPTER
+        this.adapter = null;
+        if (ADAPTER != null)
+            this.adapter = _adapters.get(ADAPTER);
         if (this.adapter == null)
             this.adapter = service.getDefaultAdapter();
         service.addDestination(this);
     }
 
     public void stop() {
-        log.debug("Stop Destination: " + this.id);
+        log.debug("Stop Destination: " + toString());
         if (service != null) {
             service.removeDestination(this.id);
         }
@@ -187,5 +227,15 @@ public class OSGiDestination extends SimpleDestination {
         if (this != that || version != that.version) return false;
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "OSGiDestination{" +
+                "ID='" + id + '\'' +
+                ", ADAPTER='" + ADAPTER + '\'' +
+                ", CHANNELS=" + CHANNELS +
+                ", SERVICE='" + SERVICE + '\'' +
+                '}';
     }
 }

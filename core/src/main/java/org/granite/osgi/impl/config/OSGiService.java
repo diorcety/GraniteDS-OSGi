@@ -30,6 +30,8 @@ import org.granite.logging.Logger;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Service")
 @Provides
@@ -41,7 +43,7 @@ public class OSGiService extends SimpleService {
     private ServicesConfig servicesConfig;
 
     @Property
-    public Collection<String> ADAPTER_LIST;
+    public Collection<String> ADAPTERS;
 
     @Property
     public String DEFAULT_ADAPTER;
@@ -49,10 +51,10 @@ public class OSGiService extends SimpleService {
     //
     @ServiceController
     private boolean state = false;
-
     private boolean started = false;
-
     private int version = 0;
+
+    private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
 
     //
     public OSGiService() {
@@ -77,9 +79,9 @@ public class OSGiService extends SimpleService {
             started = false;
             checkState();
         }
-            version++;
-            started = true;
-            checkState();
+        version++;
+        started = true;
+        checkState();
     }
 
 
@@ -100,34 +102,35 @@ public class OSGiService extends SimpleService {
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(Adapter adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
-            this.adapters.put(adapter.getId(), adapter);
-
-            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-                this.defaultAdapter = adapter;
-            }
+        _adapters.put(adapter.getId(), adapter);
+        if (!state) {
             checkState();
         }
     }
 
     @Unbind
     private void unbindAdapter(Adapter adapter) {
-        if (this.ADAPTER_LIST != null && this.ADAPTER_LIST.contains(adapter.getId())) {
-            this.adapters.remove(adapter.getId());
-
-            if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-                this.defaultAdapter = null;
-            }
+        _adapters.remove(adapter.getId());
+        if (state) {
             checkState();
         }
     }
 
     private void checkState() {
-        boolean new_state;
-        if (started && (adapters == null || ADAPTER_LIST == null || adapters.size() == ADAPTER_LIST.size())) {
-            new_state = true;
-        } else {
-            new_state = false;
+        boolean new_state = false;
+        if (started) {
+            if (DEFAULT_ADAPTER == null || ADAPTERS.contains(DEFAULT_ADAPTER)) {
+                new_state = true;
+                if (ADAPTERS != null) {
+                    for (String adapterId : ADAPTERS) {
+                        if (!_adapters.containsKey(adapterId)) {
+                            new_state = false;
+                            break;
+                        }
+
+                    }
+                }
+            }
         }
         if (new_state != this.state) {
             if (new_state)
@@ -140,13 +143,29 @@ public class OSGiService extends SimpleService {
     }
 
     public void start() {
-        LOG.debug("Start Service: " + this.id);
+        LOG.debug("Start Service: " + toString());
+
+        // Clear destinations
         destinations.clear();
+
+        // ADAPTERS
+        adapters.clear();
+        if (ADAPTERS != null) {
+            for (String adapterId : ADAPTERS) {
+                adapters.put(adapterId, _adapters.get(adapterId));
+            }
+        }
+
+        // DEFAULT ADAPTER
+        this.defaultAdapter = null;
+        if (DEFAULT_ADAPTER != null)
+            this.defaultAdapter = adapters.get(DEFAULT_ADAPTER);
+
         servicesConfig.addService(this);
     }
 
     public void stop() {
-        LOG.debug("Stop Service: " + this.id);
+        LOG.debug("Stop Service: " + toString());
         if (servicesConfig != null) {
             servicesConfig.removeService(this.id);
         }
@@ -162,5 +181,16 @@ public class OSGiService extends SimpleService {
         if (this != that || version != that.version) return false;
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "OSGiService{" +
+                "ID=" + id +
+                ", CLASS=" + className +
+                ", MESSAGETYPES=" + messageTypes +
+                ", ADAPTERS=" + ADAPTERS +
+                ", DEFAULT_ADAPTER='" + DEFAULT_ADAPTER + '\'' +
+                '}';
     }
 }

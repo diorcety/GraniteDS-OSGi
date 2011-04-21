@@ -77,8 +77,7 @@ public class OSGiChannel extends SimpleChannel {
         this.id = id;
     }
 
-    @Property(name = "CLASS", mandatory = false,
-            value = "mx.messaging.channels.AMFChannel")
+    @Property(name = "CLASS", mandatory = false, value = "mx.messaging.channels.AMFChannel")
     private void setClass(String className) {
         this.className = className;
     }
@@ -89,20 +88,19 @@ public class OSGiChannel extends SimpleChannel {
         this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
     }
 
-    @Property(name = "ENDPOINT_CLASS", mandatory = false,
-            value = "flex.messaging.endpoints.AMFEndpoint")
+    @Property(name = "ENDPOINT_CLASS", mandatory = false, value = "flex.messaging.endpoints.AMFEndpoint")
     private void setEndPointClass(String epClass) {
         this.ENDPOINT_CLASS = epClass;
         this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
     }
 
     public void start() {
-        log.debug("Start Channel: " + this.id);
+        log.debug("Start Channel: " + toString());
         servicesConfig.addChannel(this);
     }
 
     public void stop() {
-        log.debug("Stop Channel: " + this.id);
+        log.debug("Stop Channel: " + toString());
         if (servicesConfig != null) {
             servicesConfig.removeChannel(this.id);
         }
@@ -118,5 +116,15 @@ public class OSGiChannel extends SimpleChannel {
         if (this != that || version != that.version) return false;
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "OSGiChannel{" +
+                "ID=" + id +
+                ", CLASS='" + className + '\'' +
+                ", ENDPOINT_CLASS='" + ENDPOINT_CLASS + '\'' +
+                ", ENDPOINT_URI='" + ENDPOINT_URI + '\'' +
+                '}';
     }
 }

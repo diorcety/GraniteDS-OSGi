@@ -68,12 +68,12 @@ public class OSGiAdapter extends SimpleAdapter {
     }
 
     public void start() {
-        log.debug("Start Adapter: " + this.id);
+        log.debug("Start Adapter: " + toString());
     }
 
 
     public void stop() {
-        log.debug("Stop Adapter: " + this.id);
+        log.debug("Stop Adapter: " + toString());
     }
 
     @Override
@@ -86,5 +86,12 @@ public class OSGiAdapter extends SimpleAdapter {
         if (this != that || version != that.version) return false;
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "OSGiAdapter{" +
+                "ID=" + id +
+                '}';
     }
 }

@@ -40,7 +40,6 @@ public class OSGiFactory extends SimpleFactory {
 
     //
     private boolean started = false;
-
     private int version = 0;
 
     //
@@ -73,12 +72,12 @@ public class OSGiFactory extends SimpleFactory {
     }
 
     public void start() {
-        log.debug("Start Factory: " + this.id);
+        log.debug("Start Factory: " + toString());
         servicesConfig.addFactory(this);
     }
 
     public void stop() {
-        log.debug("Stop Factory: " + this.id);
+        log.debug("Stop Factory: " + toString());
         if (servicesConfig != null) {
             servicesConfig.removeFactory(this.id);
         }
@@ -94,5 +93,12 @@ public class OSGiFactory extends SimpleFactory {
         if (this != that || version != that.version) return false;
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "OSGiFactory{" +
+                "ID=" + id +
+                '}';
     }
 }
