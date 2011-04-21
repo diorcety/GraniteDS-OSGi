@@ -32,7 +32,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 
-@Component
+@Component(name = "org.granite.config.flex.ServicesConfig")
 @Instantiate
 @Provides
 public class OSGiServicesConfig extends SimpleServicesConfig {

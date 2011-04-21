@@ -155,9 +155,6 @@ public class AMFMessageServlet extends AbstractGravityServlet {
             GravityManager.setGravity(gravity, getServletContext());
             gravity.getGravityConfig().getChannelFactory().init(gravity.getGravityConfig(), getServletConfig());
             GraniteContext context = new HttpGraniteContext(gravity.initThread(), request, response);
-            if (context == null) {
-                throw new ServletException("GraniteContext not Initialized!!");
-            }
             GraniteManager.setCurrentInstance(context);
 
             AsyncMessage connect = getConnectMessage(request);

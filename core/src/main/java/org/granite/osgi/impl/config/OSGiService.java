@@ -38,6 +38,8 @@ import org.granite.logging.Logger;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Service")
 @Provides
@@ -50,6 +52,8 @@ public class OSGiService extends SimpleService {
 
     @Property(name = "DEFAULT_ADAPTER", mandatory = false)
     public String DEFAULT_ADAPTER;
+
+    private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
 
     //
     @ServiceController
@@ -92,18 +96,14 @@ public class OSGiService extends SimpleService {
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(Adapter adapter) {
-        if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-            this.defaultAdapter = adapter;
-            checkState();
-        }
+        _adapters.put(adapter.getId(), adapter);
+        checkState();
     }
 
     @Unbind
     private void unbindAdapter(Adapter adapter) {
-        if (this.DEFAULT_ADAPTER != null && this.DEFAULT_ADAPTER.equals(adapter.getId())) {
-            this.defaultAdapter = null;
-            checkState();
-        }
+        _adapters.remove(adapter.getId());
+        checkState();
     }
 
     private void checkState() {
@@ -111,7 +111,7 @@ public class OSGiService extends SimpleService {
 
         // Check state
         if (started) {
-            if (DEFAULT_ADAPTER == null || defaultAdapter != null)
+            if (DEFAULT_ADAPTER == null || _adapters.containsKey(DEFAULT_ADAPTER))
                 new_state = true;
         }
 
@@ -128,7 +128,15 @@ public class OSGiService extends SimpleService {
 
     public void start() {
         LOG.debug("Start Service: " + toString());
+
+        // Clear destinations
         destinations.clear();
+
+        // DEFAULT ADAPTER
+        this.defaultAdapter = null;
+        if (DEFAULT_ADAPTER != null)
+            this.defaultAdapter = _adapters.get(DEFAULT_ADAPTER);
+
         servicesConfig.addService(this);
     }
 

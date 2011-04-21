@@ -20,24 +20,16 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
-import org.granite.config.flex.Adapter;
-import org.granite.config.flex.Channel;
-import org.granite.config.flex.Service;
-import org.granite.config.flex.SimpleDestination;
+import org.granite.config.flex.*;
 import org.granite.logging.Logger;
 import org.granite.osgi.service.GraniteDestination;
 import org.granite.util.XMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Map;
 
 @Component(name = "org.granite.config.flex.Destination")
@@ -56,11 +48,19 @@ public class OSGiDestination extends SimpleDestination {
     public String ADAPTER;
 
     //
+    @ServiceController
     private boolean state = false;
 
     private boolean started = false;
 
     private Service service;
+
+    private Factory factory;
+
+    private Map<String, Service> _services = new Hashtable<String, Service>();
+    private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
+    private Map<String, Factory> _factories = new Hashtable<String, Factory>();
+    private Map<String, Channel> _channels = new Hashtable<String, Channel>();
 
     //
     protected OSGiDestination() {
@@ -96,60 +96,75 @@ public class OSGiDestination extends SimpleDestination {
 
     @Bind(aggregate = true, optional = true)
     private void bindService(Service service) {
-        if (this.SERVICE.equals(service.getId())) {
-            this.service = service;
-            checkState();
-        }
+        _services.put(service.getId(), service);
+        checkState();
+
     }
 
     @Unbind
     private void unbindService(Service service) {
-        if (this.SERVICE.equals(service.getId())) {
-            this.service = null;
-            checkState();
-        }
+        _services.remove(service.getId());
+        checkState();
+
     }
 
     @Bind(aggregate = true, optional = true)
     private void bindAdapter(Adapter adapter) {
-        if (this.ADAPTER != null && this.ADAPTER.equals(adapter.getId())) {
-            this.adapter = adapter;
-            checkState();
-        }
+        _adapters.put(adapter.getId(), adapter);
+        checkState();
+
     }
 
     @Unbind
     private void unbindAdapter(Adapter adapter) {
-        if (this.ADAPTER != null && this.ADAPTER.equals(adapter.getId())) {
-            this.adapter = null;
-            checkState();
-        }
+        _adapters.remove(adapter.getId());
+        checkState();
+
     }
 
     @Bind(aggregate = true, optional = true)
     private void bindChannel(Channel channel) {
-        if (this.CHANNELS.contains(channel.getId())) {
-            this.channelRefs.add(channel.getId());
-            checkState();
-        }
+        _channels.put(channel.getId(), channel);
+        checkState();
+
     }
 
     @Unbind
     private void unbindChannel(Channel channel) {
-        if (this.CHANNELS.contains(channel.getId())) {
-            this.channelRefs.remove(channel.getId());
-            checkState();
-        }
+        _channels.remove(channel.getId());
+        checkState();
+    }
+
+    @Bind(aggregate = true, optional = true)
+    private void bindFactory(Factory factory) {
+        _factories.put(factory.getId(), factory);
+        checkState();
+
+    }
+
+    @Unbind
+    private void unbindFactory(Factory factory) {
+        _factories.remove(factory.getId());
+        checkState();
+
     }
 
     private void checkState() {
         boolean new_state = false;
+        if (started) {
+            if ((_services.containsKey(SERVICE)) &&
+                    (ADAPTER == null || _adapters.containsKey(ADAPTER)) &&
+                    (!properties.containsKey("factory") || _factories.containsKey(properties.get("factory")))) {
+                for (String channelId : CHANNELS) {
+                    if (_channels.containsKey(channelId)) {
+                        new_state = true;
+                        break;
+                    }
+                }
 
-        // Check state
-        if (started && service != null && this.channelRefs.size() > 0) {
-            if (ADAPTER == null || adapter != null)
-                new_state = true;
+            }
         }
+
         // Update sate
         if (new_state != this.state) {
             if (new_state)
@@ -163,8 +178,25 @@ public class OSGiDestination extends SimpleDestination {
 
     public void start() {
         log.debug("Start Destination: " + toString());
+
+        // CHANNELS
+        this.channelRefs.clear();
+        for (String channelId : CHANNELS) {
+            Channel channel = _channels.get(channelId);
+            if (channel != null)
+                this.channelRefs.add(channelId);
+        }
+
+        // SERVICE
+        this.service = _services.get(SERVICE);
+
+        // ADAPTER
+        this.adapter = null;
+        if (ADAPTER != null)
+            this.adapter = _adapters.get(ADAPTER);
         if (this.adapter == null)
             this.adapter = service.getDefaultAdapter();
+
         service.addDestination(this);
     }
 

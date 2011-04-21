@@ -89,12 +89,12 @@ public class ConfigurationTest {
 
     @Test
     public void service(BundleContext context) throws IOException {
-        assertThat("Context invalid", context, is(notNullValue()));
+        assertThat("Service: Context invalid", context, is(notNullValue()));
         setup(context);
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        assertThat("ServicesConfig unavailable", sc, is(notNullValue()));
+        assertThat("Service: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance adapter1, adapter2, service1;
 
@@ -106,12 +106,12 @@ public class ConfigurationTest {
         }
 
         // Correct start
-        assertThat("Start failed!", sc.findServiceById("service1"), is(notNullValue()));
+        assertThat("Service: Start failed!", sc.findServiceById("service1"), is(notNullValue()));
 
         service1.dispose();
 
         // Correct stop
-        assertThat("Stop failed!", sc.findServiceById("service1"), is(nullValue()));
+        assertThat("Service: Stop failed!", sc.findServiceById("service1"), is(nullValue()));
 
         {
             Dictionary properties = new Hashtable();
@@ -133,14 +133,14 @@ public class ConfigurationTest {
         }
 
         // Complex test
-        assertThat("Service unavailable", sc.findServiceById("service1"), is(notNullValue()));
-        assertTrue("Misconfiguration of messagetypes", sc.findServiceById("service1").getMessageTypes().equals("flex.messaging.messages.AsyncMessage"));
-        assertTrue("Invalid default adapter configuration", sc.findServiceById("service1").getDefaultAdapter().getId().equals("adapter1"));
+        assertThat("Service: Service unavailable", sc.findServiceById("service1"), is(notNullValue()));
+        assertTrue("Service: Misconfiguration of messagetypes", sc.findServiceById("service1").getMessageTypes().equals("flex.messaging.messages.AsyncMessage"));
+        assertTrue("Service: Invalid default adapter configuration", sc.findServiceById("service1").getDefaultAdapter().getId().equals("adapter1"));
 
         adapter1.dispose();
 
         // Test if the service stop it self (adapter dependency)
-        assertThat("Invalid service state", sc.findServiceById("service1"), is(nullValue()));
+        assertThat("Service: Invalid service state", sc.findServiceById("service1"), is(nullValue()));
 
         {
             Dictionary properties = new Hashtable();
@@ -151,7 +151,7 @@ public class ConfigurationTest {
         }
 
         // Correct behaviour on stop & start
-        assertThat("Invalid restart state", sc.findServiceById("service2"), is(notNullValue()));
+        assertThat("Service: Invalid restart state", sc.findServiceById("service2"), is(notNullValue()));
 
         service1.dispose();
 
@@ -162,13 +162,13 @@ public class ConfigurationTest {
 
     @Test
     public void channel(BundleContext context) throws IOException {
-        assertThat(context, is(notNullValue()));
+        assertThat("Channel: Context invalid", context, is(notNullValue()));
 
         setup(context);
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        assertThat(sc, is(notNullValue()));
+        assertThat("Channel: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance channel;
         {
@@ -179,26 +179,26 @@ public class ConfigurationTest {
             channel = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
         }
 
-        assertThat("Start failed!", sc.findChannelById("channel1"), is(notNullValue()));
-        assertTrue("Misconfiguration of ep uri", sc.findChannelById("channel1").getEndPoint().getUri().equals("/uri1"));
-        assertTrue("Misconfiguration of ep class", sc.findChannelById("channel1").getEndPoint().getClassName().equals("class1"));
+        assertThat("Channel: Start failed!", sc.findChannelById("channel1"), is(notNullValue()));
+        assertTrue("Channel: Misconfiguration of ep uri", sc.findChannelById("channel1").getEndPoint().getUri().equals("/uri1"));
+        assertTrue("Channel: Misconfiguration of ep class", sc.findChannelById("channel1").getEndPoint().getClassName().equals("class1"));
 
         channel.dispose();
 
-        assertThat("Stop failed!", sc.findChannelById("channel1"), is(nullValue()));
+        assertThat("Channel: Stop failed!", sc.findChannelById("channel1"), is(nullValue()));
 
         unsetup();
     }
 
     @Test
     public void factory(BundleContext context) throws IOException {
-        assertThat(context, is(notNullValue()));
+        assertThat("Factory: Context invalid", context, is(notNullValue()));
 
         setup(context);
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        assertThat(sc, is(notNullValue()));
+        assertThat("Factory: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance factory;
         {
@@ -207,25 +207,25 @@ public class ConfigurationTest {
             factory = ipojo.createComponentInstance("org.granite.config.flex.Factory", properties);
         }
 
-        assertThat("Start failed!", sc.findFactoryById("factory1"), is(notNullValue()));
+        assertThat("Factory: Start failed!", sc.findFactoryById("factory1"), is(notNullValue()));
 
         factory.dispose();
 
-        assertThat("Stop failed!", sc.findFactoryById("factory1"), is(nullValue()));
+        assertThat("Factory: Stop failed!", sc.findFactoryById("factory1"), is(nullValue()));
 
         unsetup();
     }
 
     @Test
     public void destination(BundleContext context) throws IOException {
-        assertThat("Context invalid", context, is(notNullValue()));
+        assertThat("Destination: Context invalid", context, is(notNullValue()));
         setup(context);
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        assertThat("ServicesConfig unavailable", sc, is(notNullValue()));
+        assertThat("Destination: ServicesConfig unavailable", sc, is(notNullValue()));
 
-        ComponentInstance destination1, channel1, service1, adapter1, adapter2;
+        ComponentInstance destination1, channel1, service1, adapter1, adapter2, factory;
 
         {
             Dictionary properties = new Hashtable();
@@ -261,12 +261,12 @@ public class ConfigurationTest {
         }
 
         // Correct start
-        assertThat("Start failed!", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
+        assertThat("Destination: Start failed!", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
 
         destination1.dispose();
 
         // Correct stop
-        assertThat("Stop failed!", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+        assertThat("Destination: Stop failed!", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
         {
             Collection<String> channels = new LinkedList<String>();
@@ -279,12 +279,12 @@ public class ConfigurationTest {
         }
 
         // Invalid find following messagetype
-        assertThat("Invalid configuration messagetypes ignored", sc.findDestinationById("MS2", "service1"), is(nullValue()));
+        assertThat("Destination: Invalid configuration messagetypes ignored", sc.findDestinationById("MS2", "service1"), is(nullValue()));
 
         service1.dispose();
 
         // Check stop of destination (service dependency)
-        assertThat("Invalid destination state 1", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+        assertThat("Destination: Invalid destination state 1", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
         {
             Dictionary properties = new Hashtable();
@@ -295,13 +295,13 @@ public class ConfigurationTest {
         }
 
         // Check adapter of destination (service default adapter)
-        assertThat("no adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
-        assertTrue("Invalid adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter1"));
+        assertThat("Destination: no adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
+        assertTrue("Destination: Invalid adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter1"));
 
         channel1.dispose();
 
         // Check stop of destination (channel dependency)
-        assertThat("Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+        assertThat("Destination: Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
         {
             Dictionary properties = new Hashtable();
             properties.put("ID", "channel1");
@@ -322,15 +322,39 @@ public class ConfigurationTest {
         }
 
         // Check if destination's adapter overload default service adapter
-        assertThat("no adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
-        assertTrue("Invalid adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter2"));
+        assertThat("Destination: no adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
+        assertTrue("Destination: Invalid adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter2"));
 
         adapter2.dispose();
 
         // Check stop of destination (adapter dependency)
-        assertThat("Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+        assertThat("Destination: Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
-        destination1.dispose();
+
+        {
+            Collection<String> channels = new LinkedList<String>();
+            channels.add("channel1");
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "destination1");
+            properties.put("FACTORY", "factory1");
+            properties.put("SERVICE", "service1");
+            properties.put("CHANNELS", channels);
+            destination1.dispose();
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
+
+        // Check stop of destination (adapter dependency)
+        assertThat("Invalid destination state 3", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("ID", "factory1");
+            factory = ipojo.createComponentInstance("org.granite.config.flex.Factory", properties);
+        }
+
+        // Check stop of destination (adapter dependency)
+        assertThat("Invalid destination state 4", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
+
         service1.dispose();
         channel1.dispose();
         adapter1.dispose();

@@ -42,7 +42,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
-@Component
+@Component(name = "org.granite.config.GraniteConfig")
 @Instantiate
 @Provides
 public class OSGiGraniteConfig extends SimpleGraniteConfig {
