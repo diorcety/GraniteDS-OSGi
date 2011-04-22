@@ -356,6 +356,7 @@ public class ConfigurationTest {
         // Check stop of destination (adapter dependency)
         assertThat("Destination: Invalid destination state 4", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
 
+        factory.dispose();
         service1.dispose();
         channel1.dispose();
         adapter1.dispose();
