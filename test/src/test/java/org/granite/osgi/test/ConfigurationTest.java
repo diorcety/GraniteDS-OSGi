@@ -152,6 +152,7 @@ public class ConfigurationTest {
 
         // Correct behaviour on stop & start
         assertThat("Service: Invalid restart state", sc.findServiceById("service2"), is(notNullValue()));
+        assertTrue("Service: Invalid default adapter", sc.findServiceById("service2").getDefaultAdapter().getId().equals("adapter2"));
 
         service1.dispose();
 
@@ -344,7 +345,7 @@ public class ConfigurationTest {
         }
 
         // Check stop of destination (adapter dependency)
-        assertThat("Invalid destination state 3", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
+        assertThat("Destination: Invalid destination state 3", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
         {
             Dictionary properties = new Hashtable();
@@ -353,7 +354,7 @@ public class ConfigurationTest {
         }
 
         // Check stop of destination (adapter dependency)
-        assertThat("Invalid destination state 4", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
+        assertThat("Destination: Invalid destination state 4", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
 
         service1.dispose();
         channel1.dispose();
