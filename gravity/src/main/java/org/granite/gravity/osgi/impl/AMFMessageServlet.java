@@ -79,32 +79,34 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     @Invalidate
     private void stopping() {
         log.debug("Gravity's AMFMessageServlet stopped");
+
         // Remove all aliases
-        for (Iterator<String> it = aliases.keySet().iterator(); it.hasNext();) {
-            String uri = it.next();
-            httpService.unregister(uri);
-            it.remove();
-            log.info("Remove alias: " + uri);
+        synchronized (aliases) {
+            for (String uri : aliases.values()) {
+                httpService.unregister(uri);
+                log.info("Remove alias: " + uri);
+            }
+            aliases.clear();
         }
     }
 
     @Bind(aggregate = true, optional = true)
-    private synchronized void bindChannel(final Channel channel) {
+    private void bindChannel(final Channel channel) {
         try {
             if (channel.getClassName().equals("org.granite.gravity.channels.GravityChannel")) {
+                synchronized (aliases) {
+                    String uri = aliases.get(channel.getId());
+                    if (uri == null) {
+                        uri = channel.getEndPoint().getUri();
 
-                String uri = aliases.get(channel.getId());
 
-                if (uri == null) {
-                    uri = channel.getEndPoint().getUri();
-
-                    synchronized (aliases) {
                         httpService.registerServlet(uri, this, null, httpContext);
                         aliases.put(channel.getId(), uri);
+
+                        log.info("Add alias: " + uri);
+                    } else {
+                        log.warn("Try to add a existing channel: " + channel.getId());
                     }
-                    log.info("Add alias: " + uri);
-                } else {
-                    log.warn("Try to add a existing channel: " + channel.getId());
                 }
             } else {
                 log.debug("Ignored channel : " + channel.getId());
@@ -116,20 +118,21 @@ public class AMFMessageServlet extends AbstractGravityServlet {
     }
 
     @Unbind
-    private synchronized void unbindChannel(final Channel channel) {
+    private void unbindChannel(final Channel channel) {
         try {
             if (channel.getClassName().equals("org.granite.gravity.channels.GravityChannel")) {
+                synchronized (aliases) {
+                    String uri = aliases.get(channel.getId());
 
-                String uri = aliases.get(channel.getId());
+                    if (uri != null) {
 
-                if (uri != null) {
-                    synchronized (aliases) {
                         aliases.remove(channel.getId());
                         httpService.unregister(uri);
+
+                        log.info("Remove alias: " + uri);
+                    } else {
+                        log.warn("Try to remove an unnregistred channel: " + channel.getId());
                     }
-                    log.info("Remove alias: " + uri);
-                } else {
-                    log.warn("Try to remove an unnregistred channel: " + channel.getId());
                 }
             } else {
                 log.debug("Ignore remove channel: " + channel.getId());
