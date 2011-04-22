@@ -42,7 +42,6 @@ public class OSGiDelayedObject extends HashMap<String, Object> {
     }
 
     public Object resolve(Object obj, Class clazz) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-
         if (obj instanceof OSGiDelayedObject)
             obj = ((OSGiDelayedObject) obj).fill(clazz.newInstance(), clazz);
         return obj;
@@ -53,7 +52,6 @@ public class OSGiDelayedObject extends HashMap<String, Object> {
             for (String name : this.keySet()) {
                 boolean find = false;
 
-
                 // Try to find public getter/setter.
                 BeanInfo info = Introspector.getBeanInfo(clazz);
                 PropertyDescriptor[] props = info.getPropertyDescriptors();
@@ -63,6 +61,7 @@ public class OSGiDelayedObject extends HashMap<String, Object> {
                         find = true;
                     }
                 }
+
                 if (!find) {
                     // Try to find public field.
                     Field field = clazz.getField(name);

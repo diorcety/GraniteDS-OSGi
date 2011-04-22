@@ -25,7 +25,6 @@ import org.granite.config.flex.ServicesConfig;
 import org.granite.context.AMFContext;
 import org.granite.context.GraniteContext;
 import org.granite.messaging.service.MainFactory;
-import org.granite.osgi.GraniteClassRegistry;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -207,46 +206,6 @@ abstract class BaseContextMap<T, U> extends AbstractMap<T, U> {
             }
             return false;
         }
-    }
-}
-
-class InitialisationMap extends BaseContextMap<String, String> {
-
-    private ServletContext servletContext = null;
-
-    InitialisationMap(ServletContext servletContext) {
-        if (servletContext == null)
-            throw new NullPointerException("servletContext is null");
-        this.servletContext = servletContext;
-    }
-
-    @Override
-    public String get(Object key) {
-        if (!(key instanceof String))
-            return null;
-        return servletContext.getInitParameter(key.toString());
-    }
-
-    @Override
-    public String put(String key, String value) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<Map.Entry<String, String>> entrySet() {
-        Set<Map.Entry<String, String>> entries = new HashSet<Map.Entry<String, String>>();
-        for (Enumeration<?> e = servletContext.getInitParameterNames(); e.hasMoreElements();) {
-            String key = (String) e.nextElement();
-            entries.add(new Entry<String, String>(key, servletContext.getInitParameter(key)));
-        }
-        return entries;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof InitialisationMap))
-            return false;
-        return super.equals(obj);
     }
 }
 
