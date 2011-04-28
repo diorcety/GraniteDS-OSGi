@@ -111,9 +111,9 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
             }
             for (Class cls : toAddClasses) {
                 classes.put(cls.getName(), cls);
+                log.info("Register class: " + cls.getName() + " to " + destination);
             }
         }
-        log.info("Register class: " + clazz.getName() + " to " + destination);
     }
 
     private void removeClass(String destination, Class clazz, boolean analyse) {
@@ -130,12 +130,12 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
             if (classes != null) {
                 for (Class cls : toRemoveClasses) {
                     classes.remove(cls.getName());
+                    log.info("Unregister class: " + cls.getName() + " to " + destination);
                 }
                 if (classes.size() == 0)
                     destinationClasses.remove(destination);
             }
         }
-        log.info("Unregister class: " + clazz.getName() + " to " + destination);
     }
 
     public final List<Class> analyseClass(Class cls) {
