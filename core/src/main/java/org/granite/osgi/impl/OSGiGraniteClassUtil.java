@@ -162,14 +162,6 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
             }
         }
 
-        // Filter already existing classes
-        for (Iterator<Class> it = list.iterator(); it.hasNext();) {
-            Class clazz = it.next();
-            if (global_list.contains(clazz)) {
-                it.remove();
-            }
-        }
-
         // Add to the global list
         global_list.addAll(list);
 
@@ -182,32 +174,39 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
     }
 
     private void getClasses(List<Class> list, Class cls) {
-        if (isUsefull(cls))
+        if (isUsefull(cls, list))
             list.add(cls);
     }
 
     private void getClasses(List<Class> list, Type type) {
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
+            if (pt.getRawType() instanceof Class) {
+                Class clazz = (Class) pt.getRawType();
+                if (isUsefull(clazz, list)) {
+                    list.add(clazz);
+                }
+            }
             Type[] parameters = pt.getActualTypeArguments();
             for (Type ptype : parameters) {
                 if (ptype instanceof Class) {
                     Class clazz = (Class) ptype;
-                    if (isUsefull(clazz)) {
+                    if (isUsefull(clazz, list)) {
                         list.add(clazz);
                     }
+                } else {
+                    getClasses(list, ptype);
                 }
             }
 
         }
     }
 
-    private boolean isUsefull(Class cls) {
-        ClassLoader clsloader = cls.getClassLoader();
-
-        // No Runtime classes
-        if (clsloader == null)
+    private boolean isUsefull(Class cls, List<Class> list) {
+        // No already registred class
+        if (list.contains(cls)) {
             return false;
+        }
 
         // Only class
         if (cls.isInterface())
@@ -222,6 +221,15 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
         }
         if (!serializable)
             return false;
+
+        // Can be loaded?
+        try {
+            this.getClass().getClassLoader().loadClass(cls.getName());
+            return false;
+        } catch (ClassNotFoundException e) {
+
+        }
+
         return true;
     }
 }
