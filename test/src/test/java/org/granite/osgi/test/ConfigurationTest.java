@@ -14,6 +14,7 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.exam.spi.reactors.AllConfinedStagedReactorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.ow2.chameleon.testing.helpers.IPOJOHelper;
 import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
@@ -31,8 +32,6 @@ import static org.ops4j.pax.exam.LibraryOptions.*;
 @ExamReactorStrategy(AllConfinedStagedReactorFactory.class)
 public class ConfigurationTest {
     private final static Logger logger = Logger.getLogger(ConfigurationTest.class);
-
-    private boolean started = false;
 
     OSGiHelper osgi;
     IPOJOHelper ipojo;
@@ -60,26 +59,22 @@ public class ConfigurationTest {
     }
 
     public void setup(BundleContext context) throws IOException {
-        if (started)
-            return;
+        osgi = new OSGiHelper(context);
+        ipojo = new IPOJOHelper(context);
+
+        // ConfigurationAdmin for logging
+        osgi.waitForService(ConfigurationAdmin.class.getName(), null, 60000);
 
         try {
-            Thread.sleep(500);
             Logging.load(context);
         } catch (Exception ex) {
             System.out.println(ex);
         }
 
-        osgi = new OSGiHelper(context);
-        ipojo = new IPOJOHelper(context);
-
-        try {
-            Thread.sleep(2000);
-        } catch (Exception ex) {
-        }
+        // Needed for all the tests
+        osgi.waitForService(ServicesConfig.class.getName(), null, 60000);
 
         logger.debug("Start!");
-        started = true;
     }
 
     void unsetup() {

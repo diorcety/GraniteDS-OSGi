@@ -63,15 +63,11 @@ public class AMFMessageServlet extends HttpServlet {
     @Requires
     private GraniteContext graniteContext;
 
-    private HttpContext httpContext;
-
     private Map<String, String> aliases = new HashMap<String, String>();
 
     @Validate
     private void starting() {
         log.debug("GraniteDS's AMFMessageServlet started");
-
-        httpContext = httpService.createDefaultHttpContext();
     }
 
     @Invalidate
@@ -99,7 +95,7 @@ public class AMFMessageServlet extends HttpServlet {
                         uri = channel.getEndPoint().getUri();
 
 
-                        httpService.registerServlet(uri, this, null, httpContext);
+                        httpService.registerServlet(uri, this, null, null);
                         aliases.put(channel.getId(), uri);
 
                         log.info("Add alias: " + uri);

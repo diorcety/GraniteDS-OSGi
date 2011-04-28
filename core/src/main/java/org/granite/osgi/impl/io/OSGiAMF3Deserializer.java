@@ -38,6 +38,7 @@ public class OSGiAMF3Deserializer extends AMF3Deserializer {
 
     @Override
     public Object readObject() throws IOException {
+        OSGiGraniteClassUtil.setDestination(null);
         Object obj = super.readObject();
         if (obj instanceof AbstractMessage) {
             AbstractMessage message = (AbstractMessage) obj;
@@ -47,6 +48,7 @@ public class OSGiAMF3Deserializer extends AMF3Deserializer {
                 AMF3Deserializer deser = new AMF3Deserializer(bais);
                 message.setBody(deser.readObject());
             }
+            OSGiGraniteClassUtil.setDestination(message.getDestination());
             return resolve(obj);
         }
         return obj;
@@ -56,7 +58,6 @@ public class OSGiAMF3Deserializer extends AMF3Deserializer {
     public Object resolve(Object obj) {
         if (obj instanceof AbstractMessage) {
             AbstractMessage abstractMessage = (AbstractMessage) obj;
-            OSGiGraniteClassUtil.setDestination(abstractMessage.getDestination());
             abstractMessage.setBody(resolve(abstractMessage.getBody()));
 
         } else if (obj instanceof OSGiDelayedObject) {

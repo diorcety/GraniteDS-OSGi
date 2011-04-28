@@ -226,6 +226,8 @@ public class OSGiDestination extends SimpleDestination {
                 ", ADAPTER='" + ADAPTER + '\'' +
                 ", CHANNELS=" + CHANNELS +
                 ", SERVICE='" + SERVICE + '\'' +
+                ", FACTORY='" + properties.get("factory")  + '\'' +
+                ", SCOPE='" + properties.get("scope")  + '\'' +
                 '}';
     }
 }

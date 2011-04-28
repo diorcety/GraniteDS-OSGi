@@ -35,7 +35,8 @@ import java.util.*;
 @Instantiate
 public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteClassLoader {
 
-    private static final Logger log = Logger.getLogger(OSGiGraniteClassUtil.class);
+    private static final Logger log = Logger.getLogger(
+            OSGiGraniteClassUtil.class);
 
     private static ThreadLocal<String> destination_instance = new ThreadLocal<String>() {
         @Override
@@ -67,55 +68,69 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
             Map<String, Class> classMap;
             synchronized (destinationClasses) {
                 classMap = destinationClasses.get(destination_instance.get());
+                if (classMap != null && classMap.containsKey(type))
+                    return classMap.get(type);
             }
-            if (classMap != null && classMap.containsKey(type))
-                return classMap.get(type);
         }
         throw new ClassNotFoundException(type);
     }
 
-    public final void registerClass(String destination, Class clazz) {
-        addClass(destination, clazz);
+    public final void registerClass(String destination, Class clazz, boolean analyze) {
+        addClass(destination, clazz, analyze);
     }
 
-    public final void unregisterClass(String destination, Class clazz) {
-        removeClass(destination, clazz);
+    public final void unregisterClass(String destination, Class clazz, boolean analyze) {
+        removeClass(destination, clazz, analyze);
     }
 
     @Bind(aggregate = true, optional = true)
     public final void bindDestination(final GraniteDestination destination) {
-        List<Class> list = analyseClass(destination.getClass());
-        for (Class clazz : list) {
-            addClass(destination.getId(), clazz);
-        }
+        addClass(destination.getId(), destination.getClass(), true);
+
     }
 
     @Unbind
     public final void unbindDestination(final GraniteDestination destination) {
-        List<Class> list = analyseClass(destination.getClass());
-        for (Class clazz : list) {
-            removeClass(destination.getId(), clazz);
-        }
+        removeClass(destination.getId(), destination.getClass(), true);
     }
 
-    private void addClass(String destination, Class clazz) {
+    private void addClass(String destination, Class clazz, boolean analyse) {
+        List<Class> toAddClasses = null;
+        if (analyse) {
+            toAddClasses = analyseClass(clazz);
+        } else {
+            toAddClasses = new LinkedList<Class>();
+            toAddClasses.add(clazz);
+        }
+
         synchronized (destinationClasses) {
             Map<String, Class> classes = destinationClasses.get(destination);
             if (classes == null) {
                 classes = new Hashtable<String, Class>();
                 destinationClasses.put(destination, classes);
             }
-
-            classes.put(clazz.getName(), clazz);
+            for (Class cls : toAddClasses) {
+                classes.put(cls.getName(), cls);
+            }
         }
         log.info("Register class: " + clazz.getName() + " to " + destination);
     }
 
-    private void removeClass(String destination, Class clazz) {
+    private void removeClass(String destination, Class clazz, boolean analyse) {
+        List<Class> toRemoveClasses = null;
+        if (analyse) {
+            toRemoveClasses = analyseClass(clazz);
+        } else {
+            toRemoveClasses = new LinkedList<Class>();
+            toRemoveClasses.add(clazz);
+        }
+
         synchronized (destinationClasses) {
             Map<String, Class> classes = destinationClasses.get(destination);
             if (classes != null) {
-                classes.remove(clazz.getName());
+                for (Class cls : toRemoveClasses) {
+                    classes.remove(cls.getName());
+                }
                 if (classes.size() == 0)
                     destinationClasses.remove(destination);
             }
@@ -123,7 +138,11 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
         log.info("Unregister class: " + clazz.getName() + " to " + destination);
     }
 
-    private List<Class> analyseClass(Class cls) {
+    public final List<Class> analyseClass(Class cls) {
+        return analyseClass(cls, new LinkedList<Class>());
+    }
+
+    private List<Class> analyseClass(Class cls, List<Class> global_list) {
         List<Class> list = new LinkedList<Class>();
 
         // Get Methods
@@ -143,30 +162,23 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
             }
         }
 
-        // Filters
+        // Filter already existing classes
         for (Iterator<Class> it = list.iterator(); it.hasNext();) {
             Class clazz = it.next();
-
-            // Only class
-            if (clazz.isInterface()) {
+            if (global_list.contains(clazz)) {
                 it.remove();
-                continue;
-            }
-
-            // Only serizalizable
-            boolean serializable = false;
-            for (Class<?> icls : clazz.getInterfaces()) {
-                if (icls == Serializable.class) {
-                    serializable = true;
-                }
-            }
-            if (!serializable) {
-                it.remove();
-                continue;
             }
         }
 
-        return list;
+        // Add to the global list
+        global_list.addAll(list);
+
+        // Recursive class discovery
+        for (Class clazz : list) {
+            analyseClass(clazz, global_list);
+        }
+
+        return global_list;
     }
 
     private void getClasses(List<Class> list, Class cls) {
@@ -192,8 +204,24 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
 
     private boolean isUsefull(Class cls) {
         ClassLoader clsloader = cls.getClassLoader();
-        if (clsloader != null)
-            return true;
-        return false;
+
+        // No Runtime classes
+        if (clsloader == null)
+            return false;
+
+        // Only class
+        if (cls.isInterface())
+            return false;
+
+        // Only serializable
+        boolean serializable = false;
+        for (Class<?> icls : cls.getInterfaces()) {
+            if (icls == Serializable.class) {
+                serializable = true;
+            }
+        }
+        if (!serializable)
+            return false;
+        return true;
     }
 }
