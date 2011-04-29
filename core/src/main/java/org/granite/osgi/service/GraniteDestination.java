@@ -20,6 +20,9 @@
 
 package org.granite.osgi.service;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 public interface GraniteDestination {
 
     public enum SCOPE {
@@ -36,6 +39,13 @@ public interface GraniteDestination {
         public String toString() {
             return value;
         }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface UsedClasses {
+        boolean analyze() default true;
+
+        Class[] classes() default {};
     }
 
     public String getId();

@@ -50,7 +50,7 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
     }
 
 
-    private Map<String, Map<String, Class>> destinationClasses = new Hashtable<String, Map<String, Class>>();
+    private Map<String, Class[]> destinationClasses = new Hashtable<String, Class[]>();
 
 
     @Validate
@@ -63,173 +63,27 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
         log.debug("Stop OSGiGraniteClassUtil");
     }
 
-    public Class<?> forName(String type) throws ClassNotFoundException {
+    public synchronized final Class<?> forName(String clazz) throws ClassNotFoundException {
         if (destination_instance.get() != null) {
-            Map<String, Class> classMap;
-            synchronized (destinationClasses) {
-                classMap = destinationClasses.get(destination_instance.get());
-                if (classMap != null && classMap.containsKey(type))
-                    return classMap.get(type);
-            }
-        }
-        throw new ClassNotFoundException(type);
-    }
-
-    public final void registerClass(String destination, Class clazz, boolean analyze) {
-        addClass(destination, clazz, analyze);
-    }
-
-    public final void unregisterClass(String destination, Class clazz, boolean analyze) {
-        removeClass(destination, clazz, analyze);
-    }
-
-    @Bind(aggregate = true, optional = true)
-    public final void bindDestination(final GraniteDestination destination) {
-        addClass(destination.getId(), destination.getClass(), true);
-
-    }
-
-    @Unbind
-    public final void unbindDestination(final GraniteDestination destination) {
-        removeClass(destination.getId(), destination.getClass(), true);
-    }
-
-    private void addClass(String destination, Class clazz, boolean analyse) {
-        List<Class> toAddClasses = null;
-        if (analyse) {
-            toAddClasses = analyseClass(clazz);
-        } else {
-            toAddClasses = new LinkedList<Class>();
-            toAddClasses.add(clazz);
-        }
-
-        synchronized (destinationClasses) {
-            Map<String, Class> classes = destinationClasses.get(destination);
-            if (classes == null) {
-                classes = new Hashtable<String, Class>();
-                destinationClasses.put(destination, classes);
-            }
-            for (Class cls : toAddClasses) {
-                classes.put(cls.getName(), cls);
-                log.info("Register class: " + cls.getName() + " to " + destination);
-            }
-        }
-    }
-
-    private void removeClass(String destination, Class clazz, boolean analyse) {
-        List<Class> toRemoveClasses = null;
-        if (analyse) {
-            toRemoveClasses = analyseClass(clazz);
-        } else {
-            toRemoveClasses = new LinkedList<Class>();
-            toRemoveClasses.add(clazz);
-        }
-
-        synchronized (destinationClasses) {
-            Map<String, Class> classes = destinationClasses.get(destination);
+            Class[] classes;
+            classes = destinationClasses.get(destination_instance.get());
             if (classes != null) {
-                for (Class cls : toRemoveClasses) {
-                    classes.remove(cls.getName());
-                    log.info("Unregister class: " + cls.getName() + " to " + destination);
-                }
-                if (classes.size() == 0)
-                    destinationClasses.remove(destination);
-            }
-        }
-    }
-
-    public final List<Class> analyseClass(Class cls) {
-        return analyseClass(cls, new LinkedList<Class>());
-    }
-
-    private List<Class> analyseClass(Class cls, List<Class> global_list) {
-        List<Class> list = new LinkedList<Class>();
-
-        // Get Methods
-        for (Method method : cls.getMethods()) {
-            if ((method.getModifiers() & Modifier.PUBLIC) != 0) {
-                // Get Parameters
-                for (Class mcls : method.getParameterTypes()) {
-                    getClasses(list, mcls);
-                }
-                for (Type type : method.getGenericParameterTypes()) {
-                    getClasses(list, type);
-                }
-
-                // Get Return Type
-                getClasses(list, method.getReturnType());
-                getClasses(list, method.getGenericReturnType());
-            }
-        }
-
-        // Add to the global list
-        global_list.addAll(list);
-
-        // Recursive class discovery
-        for (Class clazz : list) {
-            analyseClass(clazz, global_list);
-        }
-
-        return global_list;
-    }
-
-    private void getClasses(List<Class> list, Class cls) {
-        if (isUsefull(cls, list))
-            list.add(cls);
-    }
-
-    private void getClasses(List<Class> list, Type type) {
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-            if (pt.getRawType() instanceof Class) {
-                Class clazz = (Class) pt.getRawType();
-                if (isUsefull(clazz, list)) {
-                    list.add(clazz);
+                for (Class cls : classes) {
+                    if (cls.getName().equals(clazz))
+                        return cls;
                 }
             }
-            Type[] parameters = pt.getActualTypeArguments();
-            for (Type ptype : parameters) {
-                if (ptype instanceof Class) {
-                    Class clazz = (Class) ptype;
-                    if (isUsefull(clazz, list)) {
-                        list.add(clazz);
-                    }
-                } else {
-                    getClasses(list, ptype);
-                }
-            }
-
         }
+        throw new ClassNotFoundException(clazz);
     }
 
-    private boolean isUsefull(Class cls, List<Class> list) {
-        // No already registred class
-        if (list.contains(cls)) {
-            return false;
-        }
+    public synchronized final void registerClass(String destination, Class[] classes) {
+        log.debug("Register classes to \"" + destination + "\": " + Arrays.toString(classes));
+        destinationClasses.put(destination, classes);
+    }
 
-        // Only class
-        if (cls.isInterface())
-            return false;
-
-        // Only serializable
-        boolean serializable = false;
-        for (Class<?> icls : cls.getInterfaces()) {
-            if (icls == Serializable.class) {
-                serializable = true;
-            }
-        }
-        if (!serializable)
-            return false;
-
-        // Can be loaded?
-        try {
-            this.getClass().getClassLoader().loadClass(cls.getName());
-            return false;
-        } catch (ClassNotFoundException e) {
-
-        }
-
-        return true;
+    public synchronized final void unregisterClass(String destination) {
+        log.debug("Unregister classes to \"" + destination + "\"");
+        destinationClasses.remove(destination);
     }
 }
