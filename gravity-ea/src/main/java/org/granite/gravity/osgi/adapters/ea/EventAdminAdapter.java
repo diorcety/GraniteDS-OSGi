@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity.osgi.service;
+package org.granite.gravity.osgi.adapters.ea;
 
 import flex.messaging.messages.AcknowledgeMessage;
 import flex.messaging.messages.AsyncMessage;
@@ -44,13 +44,13 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component(name = "org.granite.gravity.osgi.OSGiEventAdminAdapter")
+@Component(name = "org.granite.gravity.osgi.adapters.EventAdmin")
 @Provides
-public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdapter {
+public class EventAdminAdapter extends ServiceAdapter implements GraniteAdapter {
 
-    private static final Logger log = Logger.getLogger(OSGiEventAdminAdapter.class);
+    private static final Logger log = Logger.getLogger(EventAdminAdapter.class);
 
-    private final OSGiTopic rootTopic = new OSGiTopic("/", this);
+    private final EventAdminTopic rootTopic = new EventAdminTopic("/", this);
     private transient ConcurrentHashMap<String, TopicId> _topicIdCache = new ConcurrentHashMap<String, TopicId>();
     private transient ConcurrentHashMap<String, Channel> topicChannels = new ConcurrentHashMap<String, Channel>();
 
@@ -67,31 +67,31 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
 
     @Validate
     public void starting() {
-        log.debug("Start OSGiEventAdminAdapter \"" + ID + "\"");
+        log.debug("Start EventAdminAdapter \"" + ID + "\"");
     }
 
     @Invalidate
     public void stopping() {
-        log.debug("Stop OSGiEventAdminAdapter \"" + ID + "\"");
+        log.debug("Stop EventAdminAdapter \"" + ID + "\"");
     }
 
-    public OSGiTopic getTopic(TopicId id) {
+    public EventAdminTopic getTopic(TopicId id) {
         return rootTopic.getChild(id);
     }
 
-    public OSGiTopic getTopic(String id) {
+    public EventAdminTopic getTopic(String id) {
         TopicId cid = getTopicId(id);
         if (cid.depth() == 0)
             return null;
         return rootTopic.getChild(cid);
     }
 
-    public OSGiTopic getTopic(String id, boolean create) {
+    public EventAdminTopic getTopic(String id, boolean create) {
         synchronized (this) {
-            OSGiTopic topic = getTopic(id);
+            EventAdminTopic topic = getTopic(id);
 
             if (topic == null && create) {
-                topic = new OSGiTopic(id, this);
+                topic = new EventAdminTopic(id, this);
                 rootTopic.addChild(topic);
                 log.debug("New Topic: %s", topic);
             }
@@ -148,7 +148,7 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
             String subscribeTopicId = TopicId.normalize(((String) message.getHeader(AsyncMessage.SUBTOPIC_HEADER)));
 
             if (getSecurityPolicy().canSubscribe(fromChannel, subscribeTopicId, message)) {
-                OSGiTopic topic = getTopic(subscribeTopicId);
+                EventAdminTopic topic = getTopic(subscribeTopicId);
                 if (topic == null && getSecurityPolicy().canCreate(fromChannel, subscribeTopicId, message))
                     topic = getTopic(subscribeTopicId, true);
 
@@ -173,7 +173,7 @@ public class OSGiEventAdminAdapter extends ServiceAdapter implements GraniteAdap
         } else if (message.getOperation() == CommandMessage.UNSUBSCRIBE_OPERATION) {
             String unsubscribeTopicId = TopicId.normalize(((String) message.getHeader(AsyncMessage.SUBTOPIC_HEADER)));
 
-            OSGiTopic topic = getTopic(unsubscribeTopicId);
+            EventAdminTopic topic = getTopic(unsubscribeTopicId);
             String subscriptionId = null;
             if (topic != null) {
                 subscriptionId = (String) message.getHeader(AsyncMessage.DESTINATION_CLIENT_ID_HEADER);

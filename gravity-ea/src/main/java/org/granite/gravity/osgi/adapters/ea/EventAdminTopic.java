@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity.osgi.service;
+package org.granite.gravity.osgi.adapters.ea;
 
 import flex.messaging.messages.AsyncMessage;
 import org.granite.gravity.Channel;
@@ -28,18 +28,18 @@ import org.granite.gravity.adapters.TopicId;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class OSGiTopic {
+public class EventAdminTopic {
 
     private final TopicId id;
-    private final OSGiEventAdminAdapter serviceAdapter;
+    private final EventAdminAdapter serviceAdapter;
 
     private ConcurrentMap<String, Subscription> subscriptions = new ConcurrentHashMap<String, Subscription>();
-    private ConcurrentMap<String, OSGiTopic> children = new ConcurrentHashMap<String, OSGiTopic>();
-    private OSGiTopic wild;
-    private OSGiTopic wildWild;
+    private ConcurrentMap<String, EventAdminTopic> children = new ConcurrentHashMap<String, EventAdminTopic>();
+    private EventAdminTopic wild;
+    private EventAdminTopic wildWild;
 
 
-    public OSGiTopic(String topicId, OSGiEventAdminAdapter serviceAdapter) {
+    public EventAdminTopic(String topicId, EventAdminAdapter serviceAdapter) {
         this.id = new TopicId(topicId);
         this.serviceAdapter = serviceAdapter;
     }
@@ -52,12 +52,12 @@ public class OSGiTopic {
         return id;
     }
 
-    public OSGiTopic getChild(TopicId topicId) {
+    public EventAdminTopic getChild(TopicId topicId) {
         String next = topicId.getSegment(id.depth());
         if (next == null)
             return null;
 
-        OSGiTopic topic = children.get(next);
+        EventAdminTopic topic = children.get(next);
 
         if (topic == null || topic.getTopicId().depth() == topicId.depth()) {
             return topic;
@@ -65,7 +65,7 @@ public class OSGiTopic {
         return topic.getChild(topicId);
     }
 
-    public void addChild(OSGiTopic topic) {
+    public void addChild(EventAdminTopic topic) {
         TopicId child = topic.getTopicId();
         if (!id.isParentOf(child))
             throw new IllegalArgumentException(id + " not parent of " + child);
@@ -74,7 +74,7 @@ public class OSGiTopic {
 
         if ((child.depth() - id.depth()) == 1) {
             // add the topic to this topics
-            OSGiTopic old = children.putIfAbsent(next, topic);
+            EventAdminTopic old = children.putIfAbsent(next, topic);
 
             if (old != null)
                 throw new IllegalArgumentException("Already Exists");
@@ -85,7 +85,7 @@ public class OSGiTopic {
                 wildWild = topic;
         }
         else {
-            OSGiTopic branch = serviceAdapter.getTopic((id.depth() == 0 ? "/" : (id.toString() + "/")) + next, true);
+            EventAdminTopic branch = serviceAdapter.getTopic((id.depth() == 0 ? "/" : (id.toString() + "/")) + next, true);
             branch.addChild(topic);
         }
     }
@@ -134,7 +134,7 @@ public class OSGiTopic {
                     }
                 }
                 String next = to.getSegment(id.depth());
-                OSGiTopic topic = children.get(next);
+                EventAdminTopic topic = children.get(next);
                 if (topic != null)
                     topic.publish(to, fromChannel, msg);
             }

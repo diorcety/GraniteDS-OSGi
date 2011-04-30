@@ -58,8 +58,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}
-                        </Bundle-SymbolicName>
                         <Export-Package>
                             !org.granite.gravity.*,
                             flex.messaging.*,

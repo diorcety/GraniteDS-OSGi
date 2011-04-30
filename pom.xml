@@ -26,6 +26,7 @@
     <modules>
         <module>core</module>
         <module>gravity</module>
+        <module>gravity-ea</module>
         <module>test</module>
     </modules>
 
