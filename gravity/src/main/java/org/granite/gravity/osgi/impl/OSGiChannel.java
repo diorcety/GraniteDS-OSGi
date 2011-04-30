@@ -21,6 +21,7 @@
 package org.granite.gravity.osgi.impl;
 
 import flex.messaging.messages.AsyncMessage;
+
 import org.granite.context.AMFContextImpl;
 import org.granite.context.GraniteContext;
 import org.granite.context.GraniteManager;
@@ -32,13 +33,14 @@ import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
 import org.granite.osgi.impl.HttpGraniteContext;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.util.LinkedList;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class OSGiChannel extends GenericChannel {
     private static final Logger log = Logger.getLogger(OSGiChannel.class);

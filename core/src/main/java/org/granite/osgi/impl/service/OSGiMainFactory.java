@@ -22,27 +22,15 @@ package org.granite.osgi.impl.service;
 
 import flex.messaging.messages.RemotingMessage;
 
-import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.Destination;
-import org.granite.config.flex.Factory;
-import org.granite.context.GraniteContext;
-import org.granite.context.GraniteManager;
 import org.granite.logging.Logger;
-import org.granite.messaging.service.*;
-import org.granite.osgi.service.GraniteFactory;
-
-import java.util.Collections;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+import org.granite.messaging.service.MainFactory;
+import org.granite.messaging.service.ServiceException;
+import org.granite.messaging.service.ServiceFactory;
 
 @Component
 @Provides

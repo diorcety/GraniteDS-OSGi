@@ -36,7 +36,6 @@ import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.SimpleService;
 import org.granite.logging.Logger;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;

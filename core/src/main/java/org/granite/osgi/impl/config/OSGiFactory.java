@@ -32,8 +32,6 @@ import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-import java.util.Map;
-
 @Component(name = "org.granite.config.flex.Factory")
 @Provides
 public class OSGiFactory extends SimpleFactory {

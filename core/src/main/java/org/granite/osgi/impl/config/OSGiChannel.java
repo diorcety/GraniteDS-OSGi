@@ -33,8 +33,6 @@ import org.granite.config.flex.SimpleEndPoint;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-import java.util.Map;
-
 @Component(name = "org.granite.config.flex.Channel")
 @Provides
 public class OSGiChannel extends SimpleChannel {

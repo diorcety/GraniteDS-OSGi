@@ -37,20 +37,18 @@ import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
-import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @Component
 @Instantiate

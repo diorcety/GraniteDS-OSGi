@@ -23,9 +23,6 @@ package org.granite.osgi.impl.io;
 import org.granite.messaging.amf.io.util.ActionScriptClassDescriptor;
 import org.granite.messaging.amf.io.util.MapProperty;
 
-/**
- * @author Franck WOLFF
- */
 public class OSGiActionScriptClassDescriptor extends ActionScriptClassDescriptor {
 
     public OSGiActionScriptClassDescriptor(String type, byte encoding) {

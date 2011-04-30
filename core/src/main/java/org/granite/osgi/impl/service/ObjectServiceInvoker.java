@@ -26,9 +26,6 @@ import org.granite.messaging.service.ServiceException;
 import org.granite.messaging.service.ServiceFactory;
 import org.granite.messaging.service.ServiceInvoker;
 
-/**
- * @author Franck WOLFF
- */
 public class ObjectServiceInvoker<T extends ServiceFactory> extends ServiceInvoker<T> {
 
     private static final long serialVersionUID = 1L;

@@ -33,7 +33,6 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Channel;
 import org.granite.context.GraniteContext;
-import org.granite.context.GraniteManager;
 import org.granite.gravity.AbstractGravityServlet;
 import org.granite.gravity.AsyncHttpContext;
 import org.granite.gravity.Gravity;
@@ -41,7 +40,7 @@ import org.granite.gravity.GravityManager;
 import org.granite.gravity.generic.GenericChannel;
 import org.granite.gravity.generic.WaitingContinuation;
 import org.granite.logging.Logger;
-import org.granite.osgi.impl.*;
+import org.granite.osgi.impl.HttpGraniteContext;
 
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
@@ -49,9 +48,9 @@ import org.osgi.service.http.HttpService;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 @Component

@@ -29,7 +29,6 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.granite.context.GraniteContext;
 import org.granite.gravity.AbstractChannelFactory;
 import org.granite.gravity.Channel;
-import org.granite.gravity.generic.GenericChannelFactory;
 
 @Component
 @Instantiate

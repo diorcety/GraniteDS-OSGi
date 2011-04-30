@@ -30,7 +30,6 @@ import org.granite.gravity.adapters.ServiceAdapter;
 import org.granite.logging.Logger;
 import org.granite.osgi.service.GraniteAdapter;
 
-
 public class OSGiAdapterAbstraction extends ServiceAdapter {
 
     private static final Logger log = Logger.getLogger(OSGiAdapterAbstraction.class);

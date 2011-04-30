@@ -20,9 +20,20 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.*;
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.ServiceController;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
 
-import org.granite.config.flex.*;
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Channel;
+import org.granite.config.flex.Factory;
+import org.granite.config.flex.Service;
+import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
 import org.granite.osgi.service.GraniteDestination;
 import org.granite.util.XMap;

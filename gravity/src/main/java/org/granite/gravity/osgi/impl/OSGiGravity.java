@@ -73,10 +73,6 @@ import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.ErrorMessage;
 import flex.messaging.messages.Message;
 
-/**
- * @author William DRAI
- * @author Franck WOLFF
- */
 @Component
 @Instantiate
 @Provides

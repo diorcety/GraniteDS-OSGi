@@ -26,7 +26,6 @@ import org.granite.context.AMFContext;
 import org.granite.context.GraniteContext;
 import org.granite.messaging.service.MainFactory;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;

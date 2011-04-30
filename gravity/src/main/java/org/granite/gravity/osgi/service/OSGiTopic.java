@@ -28,11 +28,6 @@ import org.granite.gravity.adapters.TopicId;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- * Adapted from Greg Wilkins code (Jetty).
- * 
- * @author William DRAI
- */
 public class OSGiTopic {
 
     private final TopicId id;
