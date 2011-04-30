@@ -24,6 +24,7 @@ import flex.messaging.messages.AcknowledgeMessage;
 import flex.messaging.messages.AsyncMessage;
 import flex.messaging.messages.CommandMessage;
 import flex.messaging.messages.ErrorMessage;
+import flex.messaging.messages.Message;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -33,7 +34,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.handlers.event.publisher.Publisher;
 
 import org.granite.gravity.Channel;
-import org.granite.gravity.adapters.ServiceAdapter;
+import org.granite.gravity.adapters.SecurityPolicy;
 import org.granite.gravity.adapters.TopicId;
 import org.granite.logging.Logger;
 import org.granite.osgi.service.GraniteAdapter;
@@ -46,13 +47,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component(name = "org.granite.gravity.osgi.adapters.EventAdmin")
 @Provides
-public class EventAdminAdapter extends ServiceAdapter implements GraniteAdapter {
+public class EventAdminAdapter implements GraniteAdapter {
 
     private static final Logger log = Logger.getLogger(EventAdminAdapter.class);
 
     private final EventAdminTopic rootTopic = new EventAdminTopic("/", this);
     private transient ConcurrentHashMap<String, TopicId> _topicIdCache = new ConcurrentHashMap<String, TopicId>();
     private transient ConcurrentHashMap<String, Channel> topicChannels = new ConcurrentHashMap<String, Channel>();
+    private SecurityPolicy securityPolicy = new DefaultPolicy();
 
     @Property(name = "ID", mandatory = true)
     private String ID;
@@ -73,6 +75,14 @@ public class EventAdminAdapter extends ServiceAdapter implements GraniteAdapter 
     @Invalidate
     public void stopping() {
         log.debug("Stop EventAdminAdapter \"" + ID + "\"");
+    }
+
+    public SecurityPolicy getSecurityPolicy() {
+        return securityPolicy;
+    }
+
+    public void setSecurityPolicy(SecurityPolicy securityPolicy) {
+        this.securityPolicy = securityPolicy;
     }
 
     public EventAdminTopic getTopic(TopicId id) {
@@ -218,5 +228,20 @@ public class EventAdminAdapter extends ServiceAdapter implements GraniteAdapter 
 
     public String getId() {
         return ID;
+    }
+
+    private static class DefaultPolicy implements SecurityPolicy {
+
+        public boolean canCreate(Channel client, String channel, Message message) {
+            return client != null;
+        }
+
+        public boolean canSubscribe(Channel client, String channel, Message message) {
+            return client != null;
+        }
+
+        public boolean canPublish(Channel client, String channel, Message message) {
+            return client != null;
+        }
     }
 }

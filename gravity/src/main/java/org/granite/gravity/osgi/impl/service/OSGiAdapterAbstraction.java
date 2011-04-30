@@ -32,8 +32,6 @@ import org.granite.osgi.service.GraniteAdapter;
 
 public class OSGiAdapterAbstraction extends ServiceAdapter {
 
-    private static final Logger log = Logger.getLogger(OSGiAdapterAbstraction.class);
-
     private final GraniteAdapter graniteAdapter;
     private Adapter adapter;
 
