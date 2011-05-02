@@ -5,7 +5,7 @@
     <parent>
         <artifactId>granite</artifactId>
         <groupId>org.graniteds-osgi</groupId>
-        <version>2.2.0.SP1</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,12 +18,12 @@
         <dependency>
             <groupId>org.graniteds-osgi</groupId>
             <artifactId>granite-core</artifactId>
-            <version>2.2.0.SP1</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.graniteds-osgi</groupId>
             <artifactId>granite-gravity</artifactId>
-            <version>2.2.0.SP1</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
