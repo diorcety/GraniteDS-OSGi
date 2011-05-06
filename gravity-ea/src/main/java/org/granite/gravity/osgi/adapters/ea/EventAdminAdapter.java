@@ -210,9 +210,10 @@ public class EventAdminAdapter implements GraniteAdapter {
     public final void receive(final Event event) {
         try {
             String topicId = (String) event.getProperty("message.topic");
+            topicId = TopicId.normalize(topicId);
             String destination = (String) event.getProperty("message.destination");
             Object data = event.getProperty("message.data");
-            log.debug("EA -> AMF: " + topicId);
+            log.debug("EA -> AMF: " + topicId + " Destination: " + destination);
             Channel channel = topicChannels.get(topicId);
             if (channel != null) {
                 TopicId tid = getTopicId(topicId);
@@ -220,6 +221,8 @@ public class EventAdminAdapter implements GraniteAdapter {
                 message.setDestination(destination);
                 message.setBody(data);
                 rootTopic.publish(tid, channel, message);
+            } else {
+                log.debug("No channel to topic : " + topicId);
             }
         } catch (Exception e) {
             log.warn(e, "Error during transmission to topic");
