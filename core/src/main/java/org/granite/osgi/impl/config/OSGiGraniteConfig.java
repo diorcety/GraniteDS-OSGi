@@ -33,7 +33,6 @@ import org.granite.messaging.amf.process.AMF3MessageInterceptor;
 import org.granite.osgi.impl.io.OSGiAMF3Deserializer;
 import org.granite.osgi.impl.io.OSGiAMF3MessageInterceptor;
 import org.granite.osgi.impl.io.OSGiAMF3Serializer;
-import org.granite.osgi.impl.io.OSGiActionScriptClassDescriptor;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -54,14 +53,6 @@ public class OSGiGraniteConfig extends SimpleGraniteConfig {
     //
     OSGiGraniteConfig() throws IOException, SAXException {
         super(null, null, null, null);
-    }
-
-    public Class<? extends ActionScriptClassDescriptor> getActionScriptDescriptor(String type) {
-        try {
-            return super.getActionScriptDescriptor(type);
-        } catch (Exception e) {
-            return OSGiActionScriptClassDescriptor.class;
-        }
     }
 
     @Override

@@ -21,6 +21,8 @@
 package org.granite.osgi.impl.io;
 
 import flex.messaging.messages.AbstractMessage;
+import flex.messaging.messages.AcknowledgeMessage;
+import flex.messaging.messages.CommandMessage;
 import org.granite.gravity.Gravity;
 import org.granite.messaging.amf.io.AMF3Deserializer;
 import org.granite.osgi.impl.OSGiGraniteClassUtil;
@@ -40,49 +42,14 @@ public class OSGiAMF3Deserializer extends AMF3Deserializer {
     public Object readObject() throws IOException {
         OSGiGraniteClassUtil.setDestination(null);
         Object obj = super.readObject();
-        if (obj instanceof AbstractMessage) {
+        if (obj instanceof AbstractMessage  && ! (obj instanceof CommandMessage)) {
             AbstractMessage message = (AbstractMessage) obj;
+            OSGiGraniteClassUtil.setDestination(message.getDestination());
             if (Boolean.TRUE.equals(message.getHeader(Gravity.BYTEARRAY_BODY_HEADER))) {
                 byte[] byteArray = (byte[]) message.getBody();
                 ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
                 AMF3Deserializer deser = new AMF3Deserializer(bais);
                 message.setBody(deser.readObject());
-            }
-            OSGiGraniteClassUtil.setDestination(message.getDestination());
-            return resolve(obj);
-        }
-        return obj;
-    }
-
-
-    public Object resolve(Object obj) {
-        if (obj instanceof AbstractMessage) {
-            AbstractMessage abstractMessage = (AbstractMessage) obj;
-            abstractMessage.setBody(resolve(abstractMessage.getBody()));
-
-        } else if (obj instanceof OSGiDelayedObject) {
-            OSGiDelayedObject oi = (OSGiDelayedObject) obj;
-            for (String key : oi.keySet()) {
-                Object so = oi.get(key);
-                so = resolve(so);
-                oi.put(key, so);
-            }
-
-            try {
-                return oi.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException("Could not instantiate object: " + obj, e);
-            }
-
-        } else if (obj instanceof List) {
-            List list = (List) obj;
-            for (int i = 0; i < list.size(); i++) {
-                list.set(i, resolve(list.get(i)));
-            }
-        } else if (obj != null && obj.getClass() != null && obj.getClass().isArray()) {
-            Object objects[] = (Object[]) obj;
-            for (int i = 0; i < objects.length; i++) {
-                objects[i] = resolve(objects[i]);
             }
         }
         return obj;

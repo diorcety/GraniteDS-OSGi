@@ -77,12 +77,12 @@ public class OSGiGraniteClassUtil implements GraniteClassRegistry, OSGiGraniteCl
         throw new ClassNotFoundException(clazz);
     }
 
-    public synchronized final void registerClass(String destination, Class[] classes) {
+    public synchronized final void registerClasses(String destination, Class[] classes) {
         log.debug("Register classes to \"" + destination + "\": " + Arrays.toString(classes));
         destinationClasses.put(destination, classes);
     }
 
-    public synchronized final void unregisterClass(String destination) {
+    public synchronized final void unregisterClasses(String destination) {
         log.debug("Unregister classes to \"" + destination + "\"");
         destinationClasses.remove(destination);
     }

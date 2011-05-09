@@ -21,7 +21,7 @@
 package org.granite.osgi;
 
 public interface GraniteClassRegistry {
-    public void registerClass(String destination, Class[] classes);
+    public void registerClasses(String destination, Class[] classes);
 
-    public void unregisterClass(String destination);
+    public void unregisterClasses(String destination);
 }
