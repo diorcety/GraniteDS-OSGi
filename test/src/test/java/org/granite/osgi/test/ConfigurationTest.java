@@ -247,12 +247,10 @@ public class ConfigurationTest {
             channel1 = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
         }
         {
-            Collection<String> channels = new LinkedList<String>();
-            channels.add("channel1");
             Dictionary properties = new Hashtable();
             properties.put("ID", "destination1");
             properties.put("SERVICE", "service1");
-            properties.put("CHANNELS", channels);
+            properties.put("CHANNELS", new String[]{"channel1"});
             destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
         }
 
@@ -265,12 +263,10 @@ public class ConfigurationTest {
         assertThat("Destination: Stop failed!", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
         {
-            Collection<String> channels = new LinkedList<String>();
-            channels.add("channel1");
             Dictionary properties = new Hashtable();
             properties.put("ID", "destination1");
             properties.put("SERVICE", "service1");
-            properties.put("CHANNELS", channels);
+            properties.put("CHANNELS", new String[]{"channel1"});
             destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
         }
 
@@ -306,13 +302,11 @@ public class ConfigurationTest {
             channel1 = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
         }
         {
-            Collection<String> channels = new LinkedList<String>();
-            channels.add("channel1");
             Dictionary properties = new Hashtable();
             properties.put("ID", "destination1");
             properties.put("ADAPTER", "adapter2");
             properties.put("SERVICE", "service1");
-            properties.put("CHANNELS", channels);
+            properties.put("CHANNELS", new String[]{"channel1"});
             destination1.dispose();
             destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
         }
@@ -328,13 +322,12 @@ public class ConfigurationTest {
 
 
         {
-            Collection<String> channels = new LinkedList<String>();
-            channels.add("channel1");
+
             Dictionary properties = new Hashtable();
             properties.put("ID", "destination1");
             properties.put("FACTORY", "factory1");
             properties.put("SERVICE", "service1");
-            properties.put("CHANNELS", channels);
+            properties.put("CHANNELS", new String[] {"channel1"});
             destination1.dispose();
             destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
         }
