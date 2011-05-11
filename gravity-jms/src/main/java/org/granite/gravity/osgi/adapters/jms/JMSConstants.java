@@ -18,24 +18,12 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.io;
+package org.granite.gravity.osgi.adapters.jms;
 
-import org.granite.messaging.amf.io.util.ActionScriptClassDescriptor;
-import org.granite.messaging.amf.io.util.MapProperty;
+public final class JMSConstants {
 
-public class OSGiActionScriptClassDescriptor extends ActionScriptClassDescriptor {
-
-    public OSGiActionScriptClassDescriptor(String type, byte encoding) {
-        super(type, encoding);
+    private JMSConstants() {
     }
 
-    @Override
-    public void defineProperty(String name) {
-        properties.add(new MapProperty(converters, name));
-    }
-
-    @Override
-    public Object newJavaInstance() {
-        return new OSGiDelayedObject(type);
-    }
+    public final static String ADAPTER_ID = "gravity-jms";
 }

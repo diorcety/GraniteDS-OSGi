@@ -39,6 +39,7 @@ import org.granite.osgi.service.GraniteDestination;
 import org.granite.util.XMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -234,7 +235,7 @@ public class OSGiDestination extends SimpleDestination {
         return "OSGiDestination{" +
                 "ID='" + id + '\'' +
                 ", ADAPTER='" + ADAPTER + '\'' +
-                ", CHANNELS=" + CHANNELS +
+                ", CHANNELS=" + Arrays.toString(CHANNELS) +
                 ", SERVICE='" + SERVICE + '\'' +
                 ", FACTORY='" + properties.get("factory")  + '\'' +
                 ", SCOPE='" + properties.get("scope")  + '\'' +

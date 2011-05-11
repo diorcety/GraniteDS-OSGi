@@ -47,7 +47,12 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <_nouses>true</_nouses>
+                        <Export-Package>
+                            org.granite.gravity.osgi.adapters.ea;version=${project.version}
+                        </Export-Package>
+                        <Private-Package>
+                            org.granite.gravity.osgi.adapters.ea.impl
+                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>

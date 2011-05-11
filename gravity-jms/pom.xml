@@ -1,42 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>org.graniteds-osgi</groupId>
         <artifactId>granite</artifactId>
+        <groupId>org.graniteds-osgi</groupId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
-
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>granite-gravity</artifactId>
-    <name>GraniteDS - OSGi :: Gravity</name>
+    <artifactId>granite-gravity-jms</artifactId>
+    <name>GraniteDS - OSGi :: Gravity :: JMS</name>
     <packaging>bundle</packaging>
 
+
     <dependencies>
-        <dependency>
-            <groupId>org.graniteds</groupId>
-            <artifactId>granite-core</artifactId>
-            <version>2.2.0.SP2</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.graniteds-osgi</groupId>
             <artifactId>granite-core</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>${osgi.compendium.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>${osgi.core.version}</version>
-            <scope>provided</scope>
+            <groupId>org.graniteds-osgi</groupId>
+            <artifactId>granite-gravity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -45,10 +32,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>${servlet.version}</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.api</artifactId>
+            <version>1.6.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-jms</artifactId>
+            <version>1.1-rc4</version>
         </dependency>
     </dependencies>
 
@@ -60,25 +52,16 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            weblogic.servlet.http;resolution:=optional,
-                            org.apache.log4j;resolution:=optional,
-                            org.mortbay.jetty.*;resolution:=optional,
-                            org.apache.activemq.*;resolution:=optional,
-                            javax.jms.*;resolution:=optional,
-                            com.google.apphosting.*;resolution:=optional,
-                            com.google.appengine.*;resolution:=optional,
-                            org.jboss.*;resolution:=optional,
-                            org.mortbay.*;resolution:=optional,
-                            org.apache.catalina.*;resolution:=optional,
-                            *
-                        </Import-Package>
                         <Export-Package>
-                            org.granite.gravity.*;version=${project.version},
+                            org.granite.gravity.osgi.adapters.jms;version=${project.version}
                         </Export-Package>
                         <Private-Package>
-                            org.granite.gravity.osgi.impl
+                            org.granite.gravity.osgi.adapters.jms.impl
                         </Private-Package>
+                        <!-- /!\ JMS dependencies issues-->
+                        <DynamicImport-Package>
+                            *
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>

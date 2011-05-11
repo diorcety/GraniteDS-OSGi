@@ -91,7 +91,6 @@
                             org.granite.messaging.amf.io.convert.impl,
                             org.granite.osgi.impl,
                         </Private-Package>
-                        <_nouses>true</_nouses>
                     </instructions>
                 </configuration>
             </plugin>

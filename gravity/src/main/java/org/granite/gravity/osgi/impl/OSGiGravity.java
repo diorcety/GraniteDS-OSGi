@@ -76,7 +76,7 @@ import flex.messaging.messages.Message;
 @Component
 @Instantiate
 @Provides
-public class OSGiGravity implements Gravity, DefaultGravityMBean {
+public class OSGiGravity implements Gravity{
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields.
