@@ -6,6 +6,7 @@
         <artifactId>granite</artifactId>
         <groupId>org.graniteds-osgi</groupId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,11 +20,13 @@
             <groupId>org.graniteds-osgi</groupId>
             <artifactId>granite-core</artifactId>
             <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.graniteds-osgi</groupId>
             <artifactId>granite-gravity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

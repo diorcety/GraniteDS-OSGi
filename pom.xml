@@ -15,16 +15,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.source>1.6</project.build.source>
         <project.build.target>1.6</project.build.target>
+
         <osgi.core.version>4.2.0</osgi.core.version>
         <osgi.compendium.version>4.2.0</osgi.compendium.version>
         <ipojo.version>1.8.0</ipojo.version>
         <ipojo.ea.version>1.6.0</ipojo.ea.version>
+
         <servlet.version>2.5</servlet.version>
+
         <paxexamversion>2.0.0-RC3</paxexamversion>
+
+        <flexmojos.version>3.6.1</flexmojos.version>
+        <flex.version>4.0.0.14159</flex.version>
+        <player.version>10.0</player.version>
     </properties>
 
     <modules>
         <module>core</module>
+        <module>swc</module>
         <module>gravity</module>
         <module>gravity-ea</module>
         <module>gravity-jms</module>
@@ -50,6 +58,20 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-ipojo-plugin</artifactId>
                     <version>${ipojo.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.flexmojos</groupId>
+                    <artifactId>flexmojos-maven-plugin</artifactId>
+                    <version>${flexmojos.version}</version>
+                    <extensions>true</extensions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.adobe.flex</groupId>
+                            <artifactId>compiler</artifactId>
+                            <version>${flex.version}</version>
+                            <type>pom</type>
+                        </dependency>
+                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>
