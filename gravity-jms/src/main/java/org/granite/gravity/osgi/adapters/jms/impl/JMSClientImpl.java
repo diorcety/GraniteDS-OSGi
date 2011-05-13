@@ -61,9 +61,6 @@ public class JMSClientImpl implements JMSClient {
     @Property(name = "destination", mandatory = true)
     private String destination;
 
-    @Property(name = "destination-name", mandatory = true)
-    private String destinationName;
-
     private boolean transactedSessions = false;
 
     @Property(name = "transacted-sessions", mandatory = false)
@@ -387,7 +384,6 @@ public class JMSClientImpl implements JMSClient {
                 ", no-local=" + noLocal +
                 ", initial-context-environment=" + initialContextEnvironment +
                 ", connection-factory='" + cfJndiName + '\'' +
-                ", destination-name=" + destinationName +
                 ", destination-jndi-name='" + dsJndiName + '\'' +
                 '}';
     }
