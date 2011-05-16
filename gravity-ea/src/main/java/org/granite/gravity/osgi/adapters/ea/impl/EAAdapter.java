@@ -31,12 +31,7 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
 import org.granite.gravity.Channel;
 import org.granite.gravity.osgi.adapters.ea.EAClient;
@@ -50,7 +45,7 @@ import java.util.Hashtable;
 
 @Component
 @Instantiate
-@Provides
+@Provides(properties = @StaticServiceProperty(name = "ID", value = EAConstants.ADAPTER_ID, type = "string"))
 public class EAAdapter implements GraniteAdapter {
     private static final Logger log = Logger.getLogger(EAAdapter.class);
 

@@ -29,12 +29,7 @@ import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 
 import org.granite.gravity.Channel;
 import org.granite.gravity.osgi.adapters.jms.JMSClient;
@@ -49,7 +44,7 @@ import flex.messaging.messages.ErrorMessage;
 
 @Component
 @Instantiate
-@Provides
+@Provides(properties = @StaticServiceProperty(name = "ID", value = JMSConstants.ADAPTER_ID, type = "string"))
 public class JMSAdapter implements GraniteAdapter {
 
     private static final Logger log = Logger.getLogger(JMSAdapter.class);

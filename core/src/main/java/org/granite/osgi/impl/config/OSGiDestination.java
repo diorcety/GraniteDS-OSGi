@@ -52,9 +52,6 @@ public class OSGiDestination extends SimpleDestination {
     @Property(name = "SERVICE", mandatory = true)
     public String SERVICE;
 
-    @Property(name = "CHANNELS", mandatory = true)
-    public String[] CHANNELS;
-
     @Property(name = "ADAPTER", mandatory = false)
     public String ADAPTER;
 
@@ -71,7 +68,6 @@ public class OSGiDestination extends SimpleDestination {
     private Map<String, Service> _services = new Hashtable<String, Service>();
     private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
     private Map<String, Factory> _factories = new Hashtable<String, Factory>();
-    private Map<String, Channel> _channels = new Hashtable<String, Channel>();
 
     //
     protected OSGiDestination() {
@@ -134,19 +130,6 @@ public class OSGiDestination extends SimpleDestination {
     }
 
     @Bind(aggregate = true, optional = true)
-    private void bindChannel(Channel channel) {
-        _channels.put(channel.getId(), channel);
-        checkState();
-
-    }
-
-    @Unbind
-    private void unbindChannel(Channel channel) {
-        _channels.remove(channel.getId());
-        checkState();
-    }
-
-    @Bind(aggregate = true, optional = true)
     private void bindFactory(Factory factory) {
         _factories.put(factory.getId(), factory);
         checkState();
@@ -166,13 +149,7 @@ public class OSGiDestination extends SimpleDestination {
             if ((_services.containsKey(SERVICE)) &&
                     (ADAPTER == null || _adapters.containsKey(ADAPTER)) &&
                     (!properties.containsKey("factory") || _factories.containsKey(properties.get("factory")))) {
-                for (String channelId : CHANNELS) {
-                    if (_channels.containsKey(channelId)) {
-                        new_state = true;
-                        break;
-                    }
-                }
-
+                new_state = true;
             }
         }
 
@@ -189,14 +166,6 @@ public class OSGiDestination extends SimpleDestination {
 
     public void start() {
         log.debug("Start Destination: " + toString());
-
-        // CHANNELS
-        this.channelRefs.clear();
-        for (String channelId : CHANNELS) {
-            Channel channel = _channels.get(channelId);
-            if (channel != null)
-                this.channelRefs.add(channelId);
-        }
 
         // SERVICE
         this.service = _services.get(SERVICE);
@@ -235,10 +204,9 @@ public class OSGiDestination extends SimpleDestination {
         return "OSGiDestination{" +
                 "ID='" + id + '\'' +
                 ", ADAPTER='" + ADAPTER + '\'' +
-                ", CHANNELS=" + Arrays.toString(CHANNELS) +
                 ", SERVICE='" + SERVICE + '\'' +
-                ", FACTORY='" + properties.get("factory")  + '\'' +
-                ", SCOPE='" + properties.get("scope")  + '\'' +
+                ", FACTORY='" + properties.get("factory") + '\'' +
+                ", SCOPE='" + properties.get("scope") + '\'' +
                 '}';
     }
 }
