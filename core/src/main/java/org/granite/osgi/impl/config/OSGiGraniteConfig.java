@@ -24,12 +24,13 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.SimpleGraniteConfig;
 import org.granite.logging.Logger;
-import org.granite.messaging.amf.io.util.ActionScriptClassDescriptor;
 import org.granite.messaging.amf.process.AMF3MessageInterceptor;
+import org.granite.messaging.service.security.SecurityService;
 import org.granite.osgi.impl.io.OSGiAMF3Deserializer;
 import org.granite.osgi.impl.io.OSGiAMF3MessageInterceptor;
 import org.granite.osgi.impl.io.OSGiAMF3Serializer;
@@ -48,11 +49,24 @@ public class OSGiGraniteConfig extends SimpleGraniteConfig {
 
     private static final Logger log = Logger.getLogger(OSGiGraniteConfig.class);
 
+    @Requires
+    private SecurityService securityService;
+
     private OSGiAMF3MessageInterceptor interceptor = new OSGiAMF3MessageInterceptor();
 
     //
     OSGiGraniteConfig() throws IOException, SAXException {
         super(null, null, null, null);
+    }
+
+    @Override
+    public SecurityService getSecurityService() {
+        return securityService;
+    }
+
+    @Override
+    public boolean hasSecurityService() {
+        return true;
     }
 
     @Override
