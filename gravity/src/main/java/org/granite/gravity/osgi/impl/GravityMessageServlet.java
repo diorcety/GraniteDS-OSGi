@@ -27,6 +27,7 @@ import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -45,6 +46,7 @@ import org.granite.osgi.impl.HttpGraniteContext;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,8 +57,8 @@ import java.util.Map;
 
 @Component
 @Instantiate
-public class AMFMessageServlet extends AbstractGravityServlet {
-    private static final Logger log = Logger.getLogger(AMFMessageServlet.class);
+public class GravityMessageServlet extends AbstractGravityServlet {
+    private static final Logger log = Logger.getLogger(GravityMessageServlet.class);
 
     @Requires
     private HttpService httpService;
@@ -70,14 +72,14 @@ public class AMFMessageServlet extends AbstractGravityServlet {
 
     @Validate
     private void starting() throws ServletException {
-        log.debug("Gravity's AMFMessageServlet started");
+        log.debug("GravityMessageServlet started");
 
         httpContext = httpService.createDefaultHttpContext();
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("Gravity's AMFMessageServlet stopped");
+        log.debug("GravityMessageServlet stopped");
 
         // Remove all aliases
         synchronized (aliases) {

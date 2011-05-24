@@ -37,6 +37,7 @@ import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
+import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
 import java.io.DataInputStream;
@@ -52,8 +53,8 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 @Instantiate
-public class AMFMessageServlet extends HttpServlet {
-    private static final Logger log = Logger.getLogger(AMFMessageServlet.class);
+public class GraniteMessageServlet extends HttpServlet {
+    private static final Logger log = Logger.getLogger(GraniteMessageServlet.class);
 
     @Requires
     private HttpService httpService;
@@ -61,16 +62,20 @@ public class AMFMessageServlet extends HttpServlet {
     @Requires
     private GraniteContext graniteContext;
 
+    private HttpContext httpContext;
+
     private Map<String, String> aliases = new HashMap<String, String>();
 
     @Validate
     private void starting() {
-        log.debug("GraniteDS's AMFMessageServlet started");
+        log.debug("GraniteMessageServlet started");
+
+        httpContext = httpService.createDefaultHttpContext();
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("GraniteDS's AMFMessageServlet stopped");
+        log.debug("GraniteMessageServlet stopped");
 
         // Remove all aliases
         synchronized (aliases) {
@@ -93,7 +98,7 @@ public class AMFMessageServlet extends HttpServlet {
                         uri = channel.getEndPoint().getUri();
 
 
-                        httpService.registerServlet(uri, this, null, null);
+                        httpService.registerServlet(uri, this, null, httpContext);
                         aliases.put(channel.getId(), uri);
 
                         log.info("Add alias: " + uri);
