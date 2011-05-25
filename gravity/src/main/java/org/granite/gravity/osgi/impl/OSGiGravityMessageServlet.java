@@ -27,7 +27,6 @@ import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -41,12 +40,11 @@ import org.granite.gravity.GravityManager;
 import org.granite.gravity.generic.GenericChannel;
 import org.granite.gravity.generic.WaitingContinuation;
 import org.granite.logging.Logger;
-import org.granite.osgi.impl.HttpGraniteContext;
+import org.granite.osgi.HttpGraniteContext;
 
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -57,8 +55,8 @@ import java.util.Map;
 
 @Component
 @Instantiate
-public class GravityMessageServlet extends AbstractGravityServlet {
-    private static final Logger log = Logger.getLogger(GravityMessageServlet.class);
+public class OSGiGravityMessageServlet extends AbstractGravityServlet {
+    private static final Logger log = Logger.getLogger(OSGiGravityMessageServlet.class);
 
     @Requires
     private HttpService httpService;
@@ -72,14 +70,14 @@ public class GravityMessageServlet extends AbstractGravityServlet {
 
     @Validate
     private void starting() throws ServletException {
-        log.debug("GravityMessageServlet started");
+        log.debug("OSGiGravityMessageServlet started");
 
         httpContext = httpService.createDefaultHttpContext();
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("GravityMessageServlet stopped");
+        log.debug("OSGiGravityMessageServlet stopped");
 
         // Remove all aliases
         synchronized (aliases) {

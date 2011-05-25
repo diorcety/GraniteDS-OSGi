@@ -31,7 +31,7 @@ import org.granite.gravity.GravityConfig;
 import org.granite.gravity.generic.GenericChannel;
 import org.granite.logging.Logger;
 import org.granite.messaging.amf.AMF0Message;
-import org.granite.osgi.impl.HttpGraniteContext;
+import org.granite.osgi.HttpGraniteContext;
 
 import java.io.IOException;
 import java.io.ObjectOutput;

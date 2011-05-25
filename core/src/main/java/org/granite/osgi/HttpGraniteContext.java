@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl;
+package org.granite.osgi;
 
 import org.granite.config.GraniteConfig;
 import org.granite.config.flex.ServicesConfig;

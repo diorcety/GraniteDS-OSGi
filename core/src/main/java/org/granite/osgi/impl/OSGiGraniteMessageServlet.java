@@ -37,6 +37,7 @@ import org.granite.messaging.amf.io.AMF0Deserializer;
 import org.granite.messaging.amf.io.AMF0Serializer;
 
 import org.granite.messaging.amf.process.AMF0MessageProcessor;
+import org.granite.osgi.HttpGraniteContext;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 
@@ -53,8 +54,8 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 @Instantiate
-public class GraniteMessageServlet extends HttpServlet {
-    private static final Logger log = Logger.getLogger(GraniteMessageServlet.class);
+public class OSGiGraniteMessageServlet extends HttpServlet {
+    private static final Logger log = Logger.getLogger(OSGiGraniteMessageServlet.class);
 
     @Requires
     private HttpService httpService;
@@ -68,14 +69,14 @@ public class GraniteMessageServlet extends HttpServlet {
 
     @Validate
     private void starting() {
-        log.debug("GraniteMessageServlet started");
+        log.debug("OSGiGraniteMessageServlet started");
 
         httpContext = httpService.createDefaultHttpContext();
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("GraniteMessageServlet stopped");
+        log.debug("OSGiGraniteMessageServlet stopped");
 
         // Remove all aliases
         synchronized (aliases) {
