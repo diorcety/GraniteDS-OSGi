@@ -64,7 +64,7 @@ import org.granite.logging.Logger;
 import org.granite.messaging.amf.process.AMF3MessageInterceptor;
 import org.granite.messaging.service.security.SecurityService;
 import org.granite.messaging.service.security.SecurityServiceException;
-import org.granite.messaging.webapp.HttpGraniteContext;
+import org.granite.osgi.HttpGraniteContext;
 import org.granite.util.UUIDUtil;
 
 import flex.messaging.messages.AcknowledgeMessage;

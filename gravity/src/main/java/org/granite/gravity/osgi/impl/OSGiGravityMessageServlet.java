@@ -33,6 +33,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Channel;
 import org.granite.context.GraniteContext;
+import org.granite.context.GraniteManager;
 import org.granite.gravity.AbstractGravityServlet;
 import org.granite.gravity.AsyncHttpContext;
 import org.granite.gravity.Gravity;
@@ -157,6 +158,7 @@ public class OSGiGravityMessageServlet extends AbstractGravityServlet {
             GravityManager.setGravity(gravity, getServletContext());
             gravity.getGravityConfig().getChannelFactory().init(gravity.getGravityConfig(), getServletConfig());
             GraniteContext context = new HttpGraniteContext(gravity.initThread(), request, response);
+            GraniteManager.setCurrentInstance(context);
 
             AsyncMessage connect = getConnectMessage(request);
 
