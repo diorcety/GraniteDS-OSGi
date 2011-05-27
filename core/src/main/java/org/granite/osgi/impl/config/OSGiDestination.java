@@ -26,6 +26,7 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.ServiceController;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -54,6 +55,9 @@ public class OSGiDestination extends SimpleDestination {
 
     @Property(name = "ADAPTER", mandatory = false)
     public String ADAPTER;
+
+    @ServiceProperty(name = "ID")
+    private String ID;
 
     //
     @ServiceController
@@ -89,6 +93,7 @@ public class OSGiDestination extends SimpleDestination {
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
+        this.ID = id;
     }
 
     @Property(name = "FACTORY", mandatory = false)

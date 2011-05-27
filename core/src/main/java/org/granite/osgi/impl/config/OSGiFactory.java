@@ -25,6 +25,7 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.ServicesConfig;
@@ -40,6 +41,9 @@ public class OSGiFactory extends SimpleFactory {
 
     @Requires
     private ServicesConfig servicesConfig;
+
+    @ServiceProperty(name = "ID")
+    private String ID;
 
     //
     private boolean started = false;
@@ -64,6 +68,7 @@ public class OSGiFactory extends SimpleFactory {
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
+        this.ID = id;
     }
 
     public void start() {

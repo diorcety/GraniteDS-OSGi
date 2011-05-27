@@ -27,6 +27,7 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceController;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -53,6 +54,9 @@ public class OSGiService extends SimpleService {
     public String DEFAULT_ADAPTER;
 
     private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
+
+    @ServiceProperty(name = "ID")
+    private String ID;
 
     //
     @ServiceController
@@ -81,6 +85,7 @@ public class OSGiService extends SimpleService {
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
+        this.ID = id;
     }
 
     @Property(name = "MESSAGETYPES", mandatory = false, value = "flex.messaging.messages.RemotingMessage")

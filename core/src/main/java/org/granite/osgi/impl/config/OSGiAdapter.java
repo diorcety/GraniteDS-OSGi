@@ -24,6 +24,7 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.SimpleAdapter;
@@ -37,6 +38,9 @@ public class OSGiAdapter extends SimpleAdapter {
     private static final Logger log = Logger.getLogger(OSGiAdapter.class);
 
     private boolean started = false;
+
+    @ServiceProperty(name = "ID")
+    private String ID;
 
     //
     protected OSGiAdapter() {
@@ -58,6 +62,7 @@ public class OSGiAdapter extends SimpleAdapter {
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
+        this.ID = id;
     }
 
     public void start() {
