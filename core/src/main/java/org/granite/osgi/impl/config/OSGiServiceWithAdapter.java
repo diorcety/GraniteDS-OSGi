@@ -25,37 +25,39 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Destination;
 import org.granite.config.flex.ServicesConfig;
-import org.granite.config.flex.SimpleChannel;
-import org.granite.config.flex.SimpleEndPoint;
+import org.granite.config.flex.SimpleService;
 import org.granite.logging.Logger;
-import org.granite.util.XMap;
+
+import java.util.HashMap;
 
 @Component
 @Provides
-public class OSGiChannel extends SimpleChannel {
+public class OSGiServiceWithAdapter extends SimpleService {
 
-    private static final Logger log = Logger.getLogger(OSGiChannel.class);
+    private static final Logger log = Logger.getLogger(OSGiServiceWithAdapter.class);
 
     @Requires
     private ServicesConfig servicesConfig;
+
+    @Requires(id = "defaultAdapter")
+    private Adapter adapter;
 
     @ServiceProperty(name = "ID")
     private String ID;
 
     //
-    public String ENDPOINT_URI;
-
-    public String ENDPOINT_CLASS;
-
     private boolean started = false;
 
     //
-    protected OSGiChannel() {
-        super(null, null, null, XMap.EMPTY_XMAP);
+    public OSGiServiceWithAdapter() {
+        super(null, null, null, null, new HashMap<String, Adapter>(), new HashMap<String, Destination>());
     }
 
     @Property(name = "ID", mandatory = true)
@@ -64,40 +66,38 @@ public class OSGiChannel extends SimpleChannel {
         this.ID = id;
     }
 
-    @Property(name = "CLASS", mandatory = true)
+    @Property(name = "MESSAGETYPES", mandatory = true)
+    private void setMessageTypes(String messageTypes) {
+        this.messageTypes = messageTypes;
+    }
+
+    @Property(name = "CLASS", mandatory = false, value = "flex.messaging.services.RemotingService")
     private void setClass(String className) {
         this.className = className;
     }
 
-    @Property(name = "ENDPOINT_URI", mandatory = true)
-    private void setEndPointURI(String epURI) {
-        this.ENDPOINT_URI = epURI;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
-    @Property(name = "ENDPOINT_CLASS", mandatory = false, value = "flex.messaging.endpoints.AMFEndpoint")
-    private void setEndPointClass(String epClass) {
-        this.ENDPOINT_CLASS = epClass;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
     @Validate
     public void start() {
-        log.debug("Start Channel: " + toString());
+        log.debug("Start Service: " + toString());
 
-        if (servicesConfig.findChannelById(id) == null) {
-            servicesConfig.addChannel(this);
+        if (servicesConfig.findServiceById(id) == null) {
+            servicesConfig.addService(this);
+
+            // Clear destinations
+            destinations.clear();
+
+            this.defaultAdapter = adapter;
             started = true;
         } else {
-            log.error("Channel \"" + id + "\" already registered");
+            log.error("Service \"" + id + "\" already registered");
         }
     }
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Channel: " + toString());
-        if (started) {
-            servicesConfig.removeChannel(id);
+        log.debug("Stop Service: " + toString());
+        if (servicesConfig != null) {
+            servicesConfig.removeService(this.id);
             started = false;
         }
     }
@@ -107,7 +107,7 @@ public class OSGiChannel extends SimpleChannel {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiChannel that = (OSGiChannel) o;
+        OSGiServiceWithAdapter that = (OSGiServiceWithAdapter) o;
 
         if (this != that) return false;
 
@@ -116,11 +116,11 @@ public class OSGiChannel extends SimpleChannel {
 
     @Override
     public String toString() {
-        return "OSGiChannel{" +
+        return "OSGiServiceWithAdapter{" +
                 "ID=" + id +
-                ", CLASS='" + className + '\'' +
-                ", ENDPOINT_CLASS='" + ENDPOINT_CLASS + '\'' +
-                ", ENDPOINT_URI='" + ENDPOINT_URI + '\'' +
+                ", CLASS=" + className +
+                ", MESSAGETYPES=" + messageTypes +
+                ", DEFAULT_ADAPTER='" + adapter.getId() + '\'' +
                 '}';
     }
 }

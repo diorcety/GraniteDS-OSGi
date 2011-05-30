@@ -25,22 +25,6 @@ import java.lang.annotation.RetentionPolicy;
 
 public interface GraniteDestination {
 
-    public enum SCOPE {
-        REQUEST("request"),
-        SESSION("session"),
-        APPLICATION("application");
-        private final String value;
-
-        SCOPE(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return value;
-        }
-    }
-
     @Retention(RetentionPolicy.RUNTIME)
     public @interface UsedClasses {
         boolean analyze() default true;

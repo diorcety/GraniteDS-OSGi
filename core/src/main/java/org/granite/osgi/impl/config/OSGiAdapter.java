@@ -24,6 +24,7 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -31,7 +32,7 @@ import org.granite.config.flex.SimpleAdapter;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-@Component(name = "org.granite.config.flex.Adapter")
+@Component
 @Provides
 public class OSGiAdapter extends SimpleAdapter {
 
@@ -47,31 +48,22 @@ public class OSGiAdapter extends SimpleAdapter {
         super(null, null, XMap.EMPTY_XMAP);
     }
 
-    @Validate
-    public void starting() {
-        started = true;
-        start();
-    }
-
-    @Invalidate
-    public void stopping() {
-        started = false;
-        stop();
-    }
-
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
+    @Validate
     public void start() {
         log.debug("Start Adapter: " + toString());
+        started = true;
     }
 
-
+    @Invalidate
     public void stop() {
         log.debug("Stop Adapter: " + toString());
+        started = false;
     }
 
     @Override

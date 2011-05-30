@@ -20,7 +20,6 @@
 
 package org.granite.osgi.impl.config;
 
-import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
@@ -28,9 +27,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
-import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.config.flex.Adapter;
 import org.granite.config.flex.Destination;
 import org.granite.config.flex.ServicesConfig;
@@ -38,30 +35,20 @@ import org.granite.config.flex.SimpleService;
 import org.granite.logging.Logger;
 
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
 
-@Component(name = "org.granite.config.flex.Service")
+@Component
 @Provides
 public class OSGiService extends SimpleService {
 
-    private static final Logger LOG = Logger.getLogger(OSGiService.class);
+    private static final Logger log = Logger.getLogger(OSGiService.class);
 
     @Requires
     private ServicesConfig servicesConfig;
-
-    @Property(name = "DEFAULT_ADAPTER", mandatory = false)
-    public String DEFAULT_ADAPTER;
-
-    private Map<String, Adapter> _adapters = new Hashtable<String, Adapter>();
 
     @ServiceProperty(name = "ID")
     private String ID;
 
     //
-    @ServiceController
-    private boolean state = false;
-
     private boolean started = false;
 
     //
@@ -69,26 +56,13 @@ public class OSGiService extends SimpleService {
         super(null, null, null, null, new HashMap<String, Adapter>(), new HashMap<String, Destination>());
     }
 
-    @Validate
-    public void starting() {
-        started = true;
-        checkState();
-    }
-
-    @Invalidate
-    public void stopping() {
-        started = false;
-        checkState();
-    }
-
-
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
-    @Property(name = "MESSAGETYPES", mandatory = false, value = "flex.messaging.messages.RemotingMessage")
+    @Property(name = "MESSAGETYPES", mandatory = true)
     private void setMessageTypes(String messageTypes) {
         this.messageTypes = messageTypes;
     }
@@ -98,56 +72,27 @@ public class OSGiService extends SimpleService {
         this.className = className;
     }
 
-    @Bind(aggregate = true, optional = true)
-    private void bindAdapter(Adapter adapter) {
-        _adapters.put(adapter.getId(), adapter);
-        checkState();
-    }
-
-    @Unbind
-    private void unbindAdapter(Adapter adapter) {
-        _adapters.remove(adapter.getId());
-        checkState();
-    }
-
-    private void checkState() {
-        boolean new_state = false;
-
-        // Check state
-        if (started) {
-            if (DEFAULT_ADAPTER == null || _adapters.containsKey(DEFAULT_ADAPTER))
-                new_state = true;
-        }
-
-        // Update state
-        if (new_state != this.state) {
-            if (new_state)
-                start();
-            else
-                stop();
-
-            this.state = new_state;
-        }
-    }
-
+    @Validate
     public void start() {
-        LOG.debug("Start Service: " + toString());
+        log.debug("Start Service: " + toString());
 
-        // Clear destinations
-        destinations.clear();
+        if (servicesConfig.findServiceById(id) == null) {
+            // Clear destinations
+            destinations.clear();
 
-        // DEFAULT ADAPTER
-        this.defaultAdapter = null;
-        if (DEFAULT_ADAPTER != null)
-            this.defaultAdapter = _adapters.get(DEFAULT_ADAPTER);
-
-        servicesConfig.addService(this);
+            servicesConfig.addService(this);
+            started = true;
+        } else {
+            log.error("Service \"" + id + "\" already registered");
+        }
     }
 
+    @Invalidate
     public void stop() {
-        LOG.debug("Stop Service: " + toString());
+        log.debug("Stop Service: " + toString());
         if (servicesConfig != null) {
-            servicesConfig.removeService(this.id);
+            servicesConfig.removeService(id);
+            started = false;
         }
     }
 
@@ -169,7 +114,6 @@ public class OSGiService extends SimpleService {
                 "ID=" + id +
                 ", CLASS=" + className +
                 ", MESSAGETYPES=" + messageTypes +
-                ", DEFAULT_ADAPTER='" + DEFAULT_ADAPTER + '\'' +
                 '}';
     }
 }

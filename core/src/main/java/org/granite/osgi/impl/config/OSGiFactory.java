@@ -25,6 +25,7 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -33,7 +34,7 @@ import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-@Component(name = "org.granite.config.flex.Factory")
+@Component
 @Provides
 public class OSGiFactory extends SimpleFactory {
 
@@ -53,33 +54,30 @@ public class OSGiFactory extends SimpleFactory {
         super(null, null, XMap.EMPTY_XMAP);
     }
 
-    @Validate
-    public void starting() {
-        started = true;
-        start();
-    }
-
-    @Invalidate
-    public void stopping() {
-        started = false;
-        stop();
-    }
-
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
+    @Validate
     public void start() {
         log.debug("Start Factory: " + toString());
-        servicesConfig.addFactory(this);
+        if (servicesConfig.findFactoryById(id) == null) {
+            servicesConfig.addFactory(this);
+            started = true;
+        } else {
+            log.error("Factory \"" + id + "\" already registered");
+        }
     }
 
+    @Invalidate
     public void stop() {
         log.debug("Stop Factory: " + toString());
-        if (servicesConfig != null) {
-            servicesConfig.removeFactory(this.id);
+
+        if (started) {
+            servicesConfig.removeFactory(id);
+            started = false;
         }
     }
 

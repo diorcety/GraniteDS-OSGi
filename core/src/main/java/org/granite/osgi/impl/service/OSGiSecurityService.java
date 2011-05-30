@@ -69,21 +69,21 @@ public class OSGiSecurityService extends AbstractSecurityService {
 
     // Find the Security handler associated with this request
     private GraniteSecurity getSecurityHandler() {
-        GraniteContext graniteContext = GraniteManager.getCurrentInstance();
-        if (graniteContext != null) {
-            Message message = graniteContext.getAMFContext().getRequest();
-            List<Service> services = graniteContext.getServicesConfig().findServicesByMessageType(message.getClass().getName());
-            Service service = null;
-            for (Service ser : services) {
-                if (ser.findDestinationById(message.getDestination()) != null)
-                    service = ser;
-            }
-            if (service != null) {
-                synchronized (securityMap) {
-                    return securityMap.get(service.getId());
+            GraniteContext graniteContext = GraniteManager.getCurrentInstance();
+            if (graniteContext != null) {
+                Message message = graniteContext.getAMFContext().getRequest();
+                List<Service> services = graniteContext.getServicesConfig().findServicesByMessageType(message.getClass().getName());
+                Service service = null;
+                for (Service ser : services) {
+                    if (ser.findDestinationById(message.getDestination()) != null)
+                        service = ser;
+                }
+                if (service != null) {
+                    synchronized (securityMap) {
+                        return securityMap.get(service.getId());
+                    }
                 }
             }
-        }
         return null;
     }
 

@@ -25,38 +25,40 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
-
-import org.granite.config.flex.ServicesConfig;
-import org.granite.config.flex.SimpleChannel;
-import org.granite.config.flex.SimpleEndPoint;
+import org.granite.config.flex.Adapter;
+import org.granite.config.flex.Service;
+import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
+import java.util.ArrayList;
+
 @Component
 @Provides
-public class OSGiChannel extends SimpleChannel {
+public class OSGiDestinationWithAdapter extends SimpleDestination {
 
-    private static final Logger log = Logger.getLogger(OSGiChannel.class);
-
-    @Requires
-    private ServicesConfig servicesConfig;
+    private static final Logger log = Logger.getLogger(OSGiDestinationWithAdapter.class);
 
     @ServiceProperty(name = "ID")
     private String ID;
 
     //
-    public String ENDPOINT_URI;
-
-    public String ENDPOINT_CLASS;
-
     private boolean started = false;
 
+    @Requires(id="service")
+    private Service service;
+
+    @Requires(id = "adapter")
+    private Adapter adapter;
+
     //
-    protected OSGiChannel() {
-        super(null, null, null, XMap.EMPTY_XMAP);
+    protected OSGiDestinationWithAdapter() {
+        super(null, new ArrayList<String>(), new XMap(), new ArrayList<String>(), null, null);
     }
+
 
     @Property(name = "ID", mandatory = true)
     private void setId(String id) {
@@ -64,40 +66,28 @@ public class OSGiChannel extends SimpleChannel {
         this.ID = id;
     }
 
-    @Property(name = "CLASS", mandatory = true)
-    private void setClass(String className) {
-        this.className = className;
-    }
-
-    @Property(name = "ENDPOINT_URI", mandatory = true)
-    private void setEndPointURI(String epURI) {
-        this.ENDPOINT_URI = epURI;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
-    @Property(name = "ENDPOINT_CLASS", mandatory = false, value = "flex.messaging.endpoints.AMFEndpoint")
-    private void setEndPointClass(String epClass) {
-        this.ENDPOINT_CLASS = epClass;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+    @Override
+    public Adapter getAdapter() {
+        return this.adapter;
     }
 
     @Validate
     public void start() {
-        log.debug("Start Channel: " + toString());
+        log.debug("Start Destination: " + toString());
 
-        if (servicesConfig.findChannelById(id) == null) {
-            servicesConfig.addChannel(this);
+        if (service.findDestinationById(id) == null) {
+            service.addDestination(this);
             started = true;
         } else {
-            log.error("Channel \"" + id + "\" already registered");
+            log.error("Destination \"" + id + "\" already registered");
         }
     }
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Channel: " + toString());
+        log.debug("Stop Destination: " + toString());
         if (started) {
-            servicesConfig.removeChannel(id);
+            service.removeDestination(id);
             started = false;
         }
     }
@@ -107,7 +97,7 @@ public class OSGiChannel extends SimpleChannel {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiChannel that = (OSGiChannel) o;
+        OSGiDestinationWithAdapter that = (OSGiDestinationWithAdapter) o;
 
         if (this != that) return false;
 
@@ -116,11 +106,10 @@ public class OSGiChannel extends SimpleChannel {
 
     @Override
     public String toString() {
-        return "OSGiChannel{" +
-                "ID=" + id +
-                ", CLASS='" + className + '\'' +
-                ", ENDPOINT_CLASS='" + ENDPOINT_CLASS + '\'' +
-                ", ENDPOINT_URI='" + ENDPOINT_URI + '\'' +
+        return "OSGiDestinationWithAdapter{" +
+                "ID='" + id + '\'' +
+                ", SERVICE='" + service.getId() + '\'' +
+                ", ADAPTER='" + adapter.getId() + '\'' +
                 '}';
     }
 }

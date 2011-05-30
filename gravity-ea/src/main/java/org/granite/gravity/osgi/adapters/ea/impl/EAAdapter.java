@@ -37,6 +37,7 @@ import org.granite.gravity.Channel;
 import org.granite.gravity.osgi.adapters.ea.EAClient;
 import org.granite.gravity.osgi.adapters.ea.EAConstants;
 import org.granite.logging.Logger;
+import org.granite.osgi.ConfigurationHelper;
 import org.granite.osgi.service.GraniteAdapter;
 
 import java.util.Collection;
@@ -49,8 +50,8 @@ import java.util.Hashtable;
 public class EAAdapter implements GraniteAdapter {
     private static final Logger log = Logger.getLogger(EAAdapter.class);
 
-    @Requires(from = "org.granite.config.flex.Adapter")
-    private Factory adapterFactory;
+    @Requires
+    ConfigurationHelper confHelper;
 
     @Requires(specification = "org.granite.gravity.osgi.adapters.ea.EAClient", optional = true)
     private Collection<EAClient> clients;
@@ -65,11 +66,7 @@ public class EAAdapter implements GraniteAdapter {
     private void start() throws MissingHandlerException, ConfigurationException, UnacceptableConfiguration {
         log.debug("Start EAAdapter");
 
-        {
-            Dictionary properties = new Hashtable();
-            properties.put("ID", getId());
-            configuration = adapterFactory.createComponentInstance(properties);
-        }
+        configuration = confHelper.newAdapter(getId());
     }
 
     @Invalidate

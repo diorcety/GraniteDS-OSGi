@@ -32,6 +32,7 @@ import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.config.flex.Channel;
+import org.granite.context.AMFContextImpl;
 import org.granite.context.GraniteContext;
 import org.granite.context.GraniteManager;
 import org.granite.gravity.AbstractGravityServlet;
@@ -187,6 +188,7 @@ public class OSGiGravityMessageServlet extends AbstractGravityServlet {
             boolean accessed = false;
             for (int i = 0; i < amf3Requests.length; i++) {
                 Message amf3Request = amf3Requests[i];
+                ((AMFContextImpl) context.getAMFContext()).setCurrentAmf3Message(amf3Request);
 
                 // Ask gravity to create a specific response (will be null for connect request from tunnel).
                 Message amf3Response = gravity.handleMessage(amf3Request);
