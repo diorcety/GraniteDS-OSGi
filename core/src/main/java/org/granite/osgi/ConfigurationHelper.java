@@ -4,7 +4,7 @@ import org.apache.felix.ipojo.ComponentInstance;
 
 
 public interface ConfigurationHelper {
-        public enum SCOPE {
+    public enum SCOPE {
         REQUEST("request"),
         SESSION("session"),
         APPLICATION("application");
@@ -38,7 +38,7 @@ public interface ConfigurationHelper {
 
     ComponentInstance newGravityService(String id, String defaultAdapter);
 
-    ComponentInstance newGraniteChannel(String id, String uri);
+    ComponentInstance newGraniteChannel(String id, String uri, String context);
 
-    ComponentInstance newGravityChannel(String id, String uri);
+    ComponentInstance newGravityChannel(String id, String uri, String context);
 }

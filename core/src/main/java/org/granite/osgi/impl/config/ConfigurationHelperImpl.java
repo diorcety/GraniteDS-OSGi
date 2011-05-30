@@ -167,10 +167,11 @@ public class ConfigurationHelperImpl implements ConfigurationHelper {
         }
     }
 
-    public ComponentInstance newGraniteChannel(String id, String uri) {
+    public ComponentInstance newGraniteChannel(String id, String uri, String context) {
         try {
             Dictionary properties = new Hashtable();
             properties.put("ID", id);
+            properties.put("CONTEXT", context);
             properties.put("CLASS", "mx.messaging.channels.AMFChannel");
             properties.put("ENDPOINT_URI", uri);
             return channelBuilder.createComponentInstance(properties);
@@ -180,10 +181,11 @@ public class ConfigurationHelperImpl implements ConfigurationHelper {
         }
     }
 
-    public ComponentInstance newGravityChannel(String id, String uri) {
+    public ComponentInstance newGravityChannel(String id, String uri, String context) {
         try {
             Dictionary properties = new Hashtable();
             properties.put("ID", id);
+            properties.put("CONTEXT", context);
             properties.put("CLASS", "org.granite.gravity.channels.GravityChannel");
             properties.put("ENDPOINT_URI", uri);
             return channelBuilder.createComponentInstance(properties);

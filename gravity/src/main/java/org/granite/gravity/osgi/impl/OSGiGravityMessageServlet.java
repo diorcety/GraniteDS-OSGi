@@ -27,6 +27,8 @@ import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Property;
+import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -46,6 +48,7 @@ import org.granite.osgi.HttpGraniteContext;
 
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -56,7 +59,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@Instantiate
 public class OSGiGravityMessageServlet extends AbstractGravityServlet {
     private static final Logger log = Logger.getLogger(OSGiGravityMessageServlet.class);
 
@@ -66,82 +68,24 @@ public class OSGiGravityMessageServlet extends AbstractGravityServlet {
     @Requires
     private Gravity gravity;
 
+    @Requires(id = "context")
     private HttpContext httpContext;
 
-    private Map<String, String> aliases = new HashMap<String, String>();
+    @Property(name = "URI")
+    private String uri;
 
     @Validate
-    private void starting() throws ServletException {
-        log.debug("OSGiGravityMessageServlet started");
-
-        httpContext = httpService.createDefaultHttpContext();
+    private void starting() throws ServletException, NamespaceException {
+        log.debug("Start OSGiGravityMessageServlet: " + uri);
+        httpService.registerServlet(uri, this, null, httpContext);
     }
 
     @Invalidate
     private void stopping() {
-        log.debug("OSGiGravityMessageServlet stopped");
-
-        // Remove all aliases
-        synchronized (aliases) {
-            for (String uri : aliases.values()) {
-                httpService.unregister(uri);
-                log.info("Remove alias: " + uri);
-            }
-            aliases.clear();
-        }
+        log.debug("Stop OSGiGravityMessageServlet: " + uri);
+        httpService.unregister(uri);
     }
 
-    @Bind(aggregate = true, optional = true)
-    private void bindChannel(final Channel channel) {
-        try {
-            if (channel.getClassName().equals("org.granite.gravity.channels.GravityChannel")) {
-                synchronized (aliases) {
-                    String uri = aliases.get(channel.getId());
-                    if (uri == null) {
-                        uri = channel.getEndPoint().getUri();
-
-
-                        httpService.registerServlet(uri, this, null, httpContext);
-                        aliases.put(channel.getId(), uri);
-
-                        log.info("Add alias: " + uri);
-                    } else {
-                        log.warn("Try to add a existing channel: " + channel.getId());
-                    }
-                }
-            } else {
-                log.debug("Ignored channel : " + channel.getId());
-            }
-
-        } catch (Exception e) {
-            log.error(e, "Can't add channel: " + channel.getId());
-        }
-    }
-
-    @Unbind
-    private void unbindChannel(final Channel channel) {
-        try {
-            if (channel.getClassName().equals("org.granite.gravity.channels.GravityChannel")) {
-                synchronized (aliases) {
-                    String uri = aliases.get(channel.getId());
-
-                    if (uri != null) {
-
-                        aliases.remove(channel.getId());
-                        httpService.unregister(uri);
-
-                        log.info("Remove alias: " + uri);
-                    } else {
-                        log.warn("Try to remove an unnregistred channel: " + channel.getId());
-                    }
-                }
-            } else {
-                log.debug("Ignore remove channel: " + channel.getId());
-            }
-        } catch (Exception e) {
-            log.error(e, "Can't remove channel: " + channel.getId());
-        }
-    }
 
     @Override
     protected final void doPost(final HttpServletRequest request, final HttpServletResponse response) throws

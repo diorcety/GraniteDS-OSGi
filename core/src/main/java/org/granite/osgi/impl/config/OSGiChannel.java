@@ -20,6 +20,11 @@
 
 package org.granite.osgi.impl.config;
 
+import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.Factory;
+import org.apache.felix.ipojo.MissingHandlerException;
+import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
@@ -34,6 +39,9 @@ import org.granite.config.flex.SimpleEndPoint;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 @Component
 @Provides
 public class OSGiChannel extends SimpleChannel {
@@ -46,12 +54,19 @@ public class OSGiChannel extends SimpleChannel {
     @ServiceProperty(name = "ID")
     private String ID;
 
+    @Requires(from = "org.granite.gravity.osgi.impl.OSGiGravityMessageServlet", optional = true)
+    Factory gravityServletBuilder;
+    @Requires(from = "org.granite.osgi.impl.OSGiGraniteMessageServlet")
+    Factory graniteServletBuilder;
+
     //
     public String ENDPOINT_URI;
 
     public String ENDPOINT_CLASS;
 
     private boolean started = false;
+
+    private ComponentInstance servlet;
 
     //
     protected OSGiChannel() {
@@ -63,6 +78,9 @@ public class OSGiChannel extends SimpleChannel {
         this.id = id;
         this.ID = id;
     }
+
+    @Property(name = "CONTEXT", mandatory = true)
+    private String CONTEXT;
 
     @Property(name = "CLASS", mandatory = true)
     private void setClass(String className) {
@@ -82,11 +100,25 @@ public class OSGiChannel extends SimpleChannel {
     }
 
     @Validate
-    public void start() {
+    public void start() throws MissingHandlerException, ConfigurationException, UnacceptableConfiguration {
         log.debug("Start Channel: " + toString());
 
         if (servicesConfig.findChannelById(id) == null) {
             servicesConfig.addChannel(this);
+
+
+            Dictionary properties = new Hashtable();
+            properties.put("URI", ENDPOINT_URI);
+            Dictionary filters = new Hashtable();
+            filters.put("context", "(ID=" + CONTEXT + ")");
+            properties.put("requires.filters", filters);
+
+            if (className.equalsIgnoreCase("org.granite.gravity.channels.GravityChannel")) {
+                servlet = gravityServletBuilder.createComponentInstance(properties);
+            } else {
+                servlet = graniteServletBuilder.createComponentInstance(properties);
+            }
+
             started = true;
         } else {
             log.error("Channel \"" + id + "\" already registered");
@@ -97,6 +129,7 @@ public class OSGiChannel extends SimpleChannel {
     public void stop() {
         log.debug("Stop Channel: " + toString());
         if (started) {
+            servlet.dispose();
             servicesConfig.removeChannel(id);
             started = false;
         }
