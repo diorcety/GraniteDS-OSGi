@@ -100,26 +100,28 @@ public class OSGiChannel extends SimpleChannel {
     }
 
     @Validate
-    public void start() throws MissingHandlerException, ConfigurationException, UnacceptableConfiguration {
+    public void start() {
         log.debug("Start Channel: " + toString());
 
         if (servicesConfig.findChannelById(id) == null) {
-            servicesConfig.addChannel(this);
+            try {
+                Dictionary properties = new Hashtable();
+                properties.put("URI", ENDPOINT_URI);
+                Dictionary filters = new Hashtable();
+                filters.put("context", "(ID=" + CONTEXT + ")");
+                properties.put("requires.filters", filters);
 
+                if (className.equalsIgnoreCase("org.granite.gravity.channels.GravityChannel")) {
+                    servlet = gravityServletBuilder.createComponentInstance(properties);
+                } else {
+                    servlet = graniteServletBuilder.createComponentInstance(properties);
+                }
 
-            Dictionary properties = new Hashtable();
-            properties.put("URI", ENDPOINT_URI);
-            Dictionary filters = new Hashtable();
-            filters.put("context", "(ID=" + CONTEXT + ")");
-            properties.put("requires.filters", filters);
-
-            if (className.equalsIgnoreCase("org.granite.gravity.channels.GravityChannel")) {
-                servlet = gravityServletBuilder.createComponentInstance(properties);
-            } else {
-                servlet = graniteServletBuilder.createComponentInstance(properties);
+                servicesConfig.addChannel(this);
+                started = true;
+            } catch (Exception e) {
+                log.error("Can't create the servlet for \"" + id + "\"");
             }
-
-            started = true;
         } else {
             log.error("Channel \"" + id + "\" already registered");
         }

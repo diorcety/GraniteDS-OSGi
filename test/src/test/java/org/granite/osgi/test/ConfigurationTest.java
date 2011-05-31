@@ -148,7 +148,7 @@ public class ConfigurationTest {
         assertThat("Channel: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance channel;
-        channel = ch.newGraniteChannel("channel1", "/uri1");
+        channel = ch.newGraniteChannel("channel1", "/uri1", "");
 
         assertThat("Channel: Start failed!", sc.findChannelById("channel1"), is(notNullValue()));
         assertTrue("Channel: Misconfiguration of ep uri", sc.findChannelById("channel1").getEndPoint().getUri().equals("/uri1"));
@@ -201,7 +201,7 @@ public class ConfigurationTest {
         adapter1 = ch.newAdapter("adapter1");
         adapter2 = ch.newAdapter("adapter2");
         service1 = ch.newGravityService("service1");
-        channel1 = ch.newGravityChannel("channel1", "/uri");
+        channel1 = ch.newGravityChannel("channel1", "/uri", "");
         destination1 = ch.newGravityDestination("destination1", "service1");
 
         Service ser = sc.findServiceById("service1");
