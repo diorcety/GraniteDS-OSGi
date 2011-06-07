@@ -27,8 +27,10 @@ public class ConfigurationHelperImpl implements ConfigurationHelper {
     Factory adapterBuilder;
     @Requires(from = "org.granite.osgi.impl.config.OSGiFactory")
     Factory factoryBuilder;
-    @Requires(from = "org.granite.osgi.impl.config.OSGiChannel")
-    Factory channelBuilder;
+    @Requires(from = "org.granite.osgi.impl.config.OSGiGraniteChannel")
+    Factory graniteChannelBuilder;
+    @Requires(from = "org.granite.osgi.impl.config.OSGiGravityChannel")
+    Factory gravityChannelBuilder;
     @Requires(from = "org.granite.osgi.impl.config.OSGiDestination")
     Factory destinationBuilder;
     @Requires(from = "org.granite.osgi.impl.config.OSGiDestinationWithAdapter")
@@ -174,7 +176,7 @@ public class ConfigurationHelperImpl implements ConfigurationHelper {
             properties.put("CONTEXT", context);
             properties.put("CLASS", "mx.messaging.channels.AMFChannel");
             properties.put("ENDPOINT_URI", uri);
-            return channelBuilder.createComponentInstance(properties);
+            return graniteChannelBuilder.createComponentInstance(properties);
         } catch (Exception e) {
             log.error(e, "Can't create the channel: " + id);
             return null;
@@ -188,7 +190,7 @@ public class ConfigurationHelperImpl implements ConfigurationHelper {
             properties.put("CONTEXT", context);
             properties.put("CLASS", "org.granite.gravity.channels.GravityChannel");
             properties.put("ENDPOINT_URI", uri);
-            return channelBuilder.createComponentInstance(properties);
+            return gravityChannelBuilder.createComponentInstance(properties);
         } catch (Exception e) {
             log.error(e, "Can't create the channel: " + id);
             return null;

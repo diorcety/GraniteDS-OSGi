@@ -72,7 +72,7 @@ public class JMSAdapter implements GraniteAdapter {
     @Invalidate
     private void stop() {
         log.debug("Stop JMSAdapter");
-        configuration.stop();
+        configuration.dispose();
     }
 
     private JMSClient getJMSClient(String destination) {
@@ -81,7 +81,7 @@ public class JMSAdapter implements GraniteAdapter {
                 return client;
         }
 
-        return null;
+        throw new RuntimeException("Can't found the JMS destination: " + destination);
     }
 
     @Override

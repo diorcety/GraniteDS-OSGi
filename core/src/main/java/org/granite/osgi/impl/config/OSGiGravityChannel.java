@@ -21,10 +21,7 @@
 package org.granite.osgi.impl.config;
 
 import org.apache.felix.ipojo.ComponentInstance;
-import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
-import org.apache.felix.ipojo.MissingHandlerException;
-import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
@@ -32,7 +29,6 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.SimpleChannel;
 import org.granite.config.flex.SimpleEndPoint;
@@ -44,20 +40,18 @@ import java.util.Hashtable;
 
 @Component
 @Provides
-public class OSGiChannel extends SimpleChannel {
+public class OSGiGravityChannel extends SimpleChannel {
 
-    private static final Logger log = Logger.getLogger(OSGiChannel.class);
+    private static final Logger log = Logger.getLogger(OSGiGravityChannel.class);
 
-    @Requires
+    @Requires(proxy = false)
     private ServicesConfig servicesConfig;
 
     @ServiceProperty(name = "ID")
     private String ID;
 
-    @Requires(from = "org.granite.gravity.osgi.impl.OSGiGravityMessageServlet", optional = true)
-    Factory gravityServletBuilder;
-    @Requires(from = "org.granite.osgi.impl.OSGiGraniteMessageServlet")
-    Factory graniteServletBuilder;
+    @Requires(from = "org.granite.gravity.osgi.impl.OSGiGravityMessageServlet")
+    Factory servletBuilder;
 
     //
     public String ENDPOINT_URI;
@@ -69,7 +63,7 @@ public class OSGiChannel extends SimpleChannel {
     private ComponentInstance servlet;
 
     //
-    protected OSGiChannel() {
+    protected OSGiGravityChannel() {
         super(null, null, null, XMap.EMPTY_XMAP);
     }
 
@@ -111,11 +105,7 @@ public class OSGiChannel extends SimpleChannel {
                 filters.put("context", "(ID=" + CONTEXT + ")");
                 properties.put("requires.filters", filters);
 
-                if (className.equalsIgnoreCase("org.granite.gravity.channels.GravityChannel")) {
-                    servlet = gravityServletBuilder.createComponentInstance(properties);
-                } else {
-                    servlet = graniteServletBuilder.createComponentInstance(properties);
-                }
+                servlet = servletBuilder.createComponentInstance(properties);
 
                 servicesConfig.addChannel(this);
                 started = true;
@@ -142,7 +132,7 @@ public class OSGiChannel extends SimpleChannel {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiChannel that = (OSGiChannel) o;
+        OSGiGravityChannel that = (OSGiGravityChannel) o;
 
         if (this != that) return false;
 
@@ -151,7 +141,7 @@ public class OSGiChannel extends SimpleChannel {
 
     @Override
     public String toString() {
-        return "OSGiChannel{" +
+        return "OSGiGraniteChannel{" +
                 "ID=" + id +
                 ", CLASS='" + className + '\'' +
                 ", ENDPOINT_CLASS='" + ENDPOINT_CLASS + '\'' +

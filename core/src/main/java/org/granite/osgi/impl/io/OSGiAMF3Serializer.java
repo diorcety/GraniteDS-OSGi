@@ -20,9 +20,12 @@
 
 package org.granite.osgi.impl.io;
 
-import flex.messaging.messages.*;
-import org.granite.gravity.Gravity;
+
+import flex.messaging.messages.AbstractMessage;
+import flex.messaging.messages.CommandMessage;
+
 import org.granite.messaging.amf.io.AMF3Serializer;
+import org.granite.osgi.impl.OSGiConstants;
 import org.granite.osgi.impl.OSGiGraniteClassUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -40,10 +43,10 @@ public class OSGiAMF3Serializer extends AMF3Serializer {
 
     @Override
     public void writeObject(Object obj) throws IOException {
-        if (obj instanceof AbstractMessage  && ! (obj instanceof CommandMessage)) {
+        if (obj instanceof AbstractMessage && ! (obj instanceof CommandMessage)) {
             AbstractMessage abstractMessage = (AbstractMessage) obj;
             OSGiGraniteClassUtil.setDestination(abstractMessage.getDestination());
-            abstractMessage.setHeader(Gravity.BYTEARRAY_BODY_HEADER, Boolean.TRUE.toString());
+            abstractMessage.setHeader(OSGiConstants.BYTEARRAY_BODY_HEADER, Boolean.TRUE.toString());
             ByteArrayOutputStream bais = new ByteArrayOutputStream();
             AMF3Serializer ser = new AMF3Serializer(bais);
             ser.writeObject(abstractMessage.getBody());

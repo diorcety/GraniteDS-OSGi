@@ -48,10 +48,10 @@ public class OSGiDestinationWithFactory extends SimpleDestination {
     //
     private boolean started = false;
 
-    @Requires(id = "service")
+    @Requires(id = "service", proxy = false)
     private Service service;
 
-    @Requires(id = "factory")
+    @Requires(id = "factory", proxy = false)
     private Factory factory;
 
     //

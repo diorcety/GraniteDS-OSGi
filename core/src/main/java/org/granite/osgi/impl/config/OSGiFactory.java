@@ -40,7 +40,7 @@ public class OSGiFactory extends SimpleFactory {
 
     private static final Logger log = Logger.getLogger(OSGiFactory.class);
 
-    @Requires
+    @Requires(proxy = false)
     private ServicesConfig servicesConfig;
 
     @ServiceProperty(name = "ID")

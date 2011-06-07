@@ -120,15 +120,12 @@ public class OSGiAdapterFactory implements AdapterFactory {
 
             Adapter config = destination.getAdapter();
 
-            ServiceAdapter serviceAdapter = (ServiceAdapter) cache.get(key);
+            OSGiAdapterAbstraction serviceAdapter = (OSGiAdapterAbstraction) cache.get(key);
 
             // Check update in configuration
-            if (serviceAdapter != null && serviceAdapter instanceof OSGiAdapterAbstraction) {
-                OSGiAdapterAbstraction adapterAbstraction = (OSGiAdapterAbstraction) serviceAdapter;
-                if (adapterAbstraction.getAdapter() != config) {
-                    serviceAdapter = null;
-                    log.info("Flush \"" + key + "\" from cache");
-                }
+            if (serviceAdapter != null && !serviceAdapter.getAdapter().equals(config)) {
+                serviceAdapter = null;
+                log.info("Flush \"" + key + "\" from cache");
             }
 
             if (serviceAdapter == null) {

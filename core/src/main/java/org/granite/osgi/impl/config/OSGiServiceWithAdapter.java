@@ -43,14 +43,14 @@ public class OSGiServiceWithAdapter extends SimpleService {
 
     private static final Logger log = Logger.getLogger(OSGiServiceWithAdapter.class);
 
-    @Requires
-    private ServicesConfig servicesConfig;
-
-    @Requires(id = "defaultAdapter")
-    private Adapter adapter;
-
     @ServiceProperty(name = "ID")
     private String ID;
+
+    @Requires(proxy = false)
+    private ServicesConfig servicesConfig;
+
+    @Requires(id = "defaultAdapter", proxy = false)
+    private Adapter adapter;
 
     //
     private boolean started = false;

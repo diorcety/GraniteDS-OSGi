@@ -42,11 +42,11 @@ public class OSGiService extends SimpleService {
 
     private static final Logger log = Logger.getLogger(OSGiService.class);
 
-    @Requires
-    private ServicesConfig servicesConfig;
-
     @ServiceProperty(name = "ID")
     private String ID;
+
+    @Requires(proxy = false)
+    private ServicesConfig servicesConfig;
 
     //
     private boolean started = false;

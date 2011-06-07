@@ -21,16 +21,15 @@
 package org.granite.osgi.impl.io;
 
 import flex.messaging.messages.AbstractMessage;
-import flex.messaging.messages.AcknowledgeMessage;
 import flex.messaging.messages.CommandMessage;
-import org.granite.gravity.Gravity;
+
 import org.granite.messaging.amf.io.AMF3Deserializer;
+import org.granite.osgi.impl.OSGiConstants;
 import org.granite.osgi.impl.OSGiGraniteClassUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 public class OSGiAMF3Deserializer extends AMF3Deserializer {
 
@@ -45,7 +44,7 @@ public class OSGiAMF3Deserializer extends AMF3Deserializer {
         if (obj instanceof AbstractMessage  && ! (obj instanceof CommandMessage)) {
             AbstractMessage message = (AbstractMessage) obj;
             OSGiGraniteClassUtil.setDestination(message.getDestination());
-            if (Boolean.TRUE.equals(message.getHeader(Gravity.BYTEARRAY_BODY_HEADER))) {
+            if (Boolean.TRUE.equals(message.getHeader(OSGiConstants.BYTEARRAY_BODY_HEADER))) {
                 byte[] byteArray = (byte[]) message.getBody();
                 ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
                 AMF3Deserializer deser = new AMF3Deserializer(bais);

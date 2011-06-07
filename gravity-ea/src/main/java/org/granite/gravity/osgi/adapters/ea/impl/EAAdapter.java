@@ -72,7 +72,7 @@ public class EAAdapter implements GraniteAdapter {
     @Invalidate
     private void stop() {
         log.debug("Stop EAAdapter");
-        configuration.stop();
+        configuration.dispose();
     }
 
     private EAClient getClient(String destination) {
@@ -81,7 +81,7 @@ public class EAAdapter implements GraniteAdapter {
                 return client;
         }
 
-        return null;
+        throw new RuntimeException("Can't found the EventAdmin destination: " + destination);
     }
 
     @Override
