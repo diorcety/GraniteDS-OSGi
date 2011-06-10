@@ -18,14 +18,13 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.flex.Adapter;
@@ -38,9 +37,9 @@ import java.util.HashMap;
 
 @Component
 @Provides
-public class OSGiService extends SimpleService {
+public class OSGiServiceSimple extends SimpleService {
 
-    private static final Logger log = Logger.getLogger(OSGiService.class);
+    private static final Logger log = Logger.getLogger(OSGiServiceSimple.class);
 
     @ServiceProperty(name = "ID")
     private String ID;
@@ -52,29 +51,29 @@ public class OSGiService extends SimpleService {
     private boolean started = false;
 
     //
-    public OSGiService() {
+    public OSGiServiceSimple() {
         super(null, null, null, null, new HashMap<String, Adapter>(), new HashMap<String, Destination>());
     }
 
-    @Property(name = "ID", mandatory = true)
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
-    @Property(name = "MESSAGETYPES", mandatory = true)
+    @Property(name = "messageTypes", mandatory = true)
     private void setMessageTypes(String messageTypes) {
         this.messageTypes = messageTypes;
     }
 
-    @Property(name = "CLASS", mandatory = false, value = "flex.messaging.services.RemotingService")
+    @Property(name = "class", mandatory = false, value = "flex.messaging.services.RemotingService")
     private void setClass(String className) {
         this.className = className;
     }
 
     @Validate
     public void start() {
-        log.debug("Start Service: " + toString());
+        log.debug("Start OSGiServiceSimple: " + toString());
 
         if (servicesConfig.findServiceById(id) == null) {
             // Clear destinations
@@ -89,7 +88,7 @@ public class OSGiService extends SimpleService {
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Service: " + toString());
+        log.debug("Stop OSGiServiceSimple: " + toString());
         if (servicesConfig != null) {
             servicesConfig.removeService(id);
             started = false;
@@ -101,7 +100,7 @@ public class OSGiService extends SimpleService {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiService that = (OSGiService) o;
+        OSGiServiceSimple that = (OSGiServiceSimple) o;
 
         if (this != that) return false;
 
@@ -110,10 +109,10 @@ public class OSGiService extends SimpleService {
 
     @Override
     public String toString() {
-        return "OSGiService{" +
-                "ID=" + id +
-                ", CLASS=" + className +
-                ", MESSAGETYPES=" + messageTypes +
+        return "Service{" +
+                "id=" + id +
+                ", class=" + className +
+                ", messageTypes=" + messageTypes +
                 '}';
     }
 }

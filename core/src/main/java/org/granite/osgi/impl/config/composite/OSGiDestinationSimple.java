@@ -18,14 +18,13 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -39,9 +38,9 @@ import java.util.ArrayList;
 
 @Component
 @Provides
-public class OSGiDestination extends SimpleDestination {
+public class OSGiDestinationSimple extends SimpleDestination {
 
-    private static final Logger log = Logger.getLogger(OSGiDestination.class);
+    private static final Logger log = Logger.getLogger(OSGiDestinationSimple.class);
 
     @ServiceProperty(name = "ID")
     private String ID;
@@ -49,16 +48,16 @@ public class OSGiDestination extends SimpleDestination {
     //
     private boolean started = false;
 
-    @Requires(id="service", proxy = false)
+    @Requires(id = "service", proxy = false)
     private Service service;
 
     //
-    protected OSGiDestination() {
+    protected OSGiDestinationSimple() {
         super(null, new ArrayList<String>(), new XMap(), new ArrayList<String>(), null, null);
     }
 
 
-    @Property(name = "ID", mandatory = true)
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
@@ -71,7 +70,7 @@ public class OSGiDestination extends SimpleDestination {
 
     @Validate
     public void start() {
-        log.debug("Start Destination: " + toString());
+        log.debug("Start OSGiDestinationSimple: " + toString());
 
         if (service.findDestinationById(id) == null) {
             service.addDestination(this);
@@ -83,7 +82,7 @@ public class OSGiDestination extends SimpleDestination {
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Destination: " + toString());
+        log.debug("Stop OSGiDestinationSimple: " + toString());
         if (started) {
             service.removeDestination(id);
             started = false;
@@ -95,7 +94,7 @@ public class OSGiDestination extends SimpleDestination {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiDestination that = (OSGiDestination) o;
+        OSGiDestinationSimple that = (OSGiDestinationSimple) o;
 
         if (this != that) return false;
 
@@ -104,9 +103,9 @@ public class OSGiDestination extends SimpleDestination {
 
     @Override
     public String toString() {
-        return "OSGiDestination{" +
-                "ID='" + id + '\'' +
-                ", SERVICE='" + service.getId() + '\'' +
+        return "Destination{" +
+                "id='" + id + '\'' +
+                ", service='" + service.getId() + '\'' +
                 '}';
     }
 }

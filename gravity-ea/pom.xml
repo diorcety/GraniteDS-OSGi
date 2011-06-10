@@ -28,16 +28,17 @@
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
+            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
             <version>${ipojo.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>${ipojo.version}</version>
+            <artifactId>org.apache.felix.ipojo.api</artifactId>
+            <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

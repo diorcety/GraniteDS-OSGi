@@ -18,17 +18,16 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
-import org.granite.config.flex.Factory;
+import org.granite.config.flex.Adapter;
 import org.granite.config.flex.Service;
 import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
@@ -38,9 +37,9 @@ import java.util.ArrayList;
 
 @Component
 @Provides
-public class OSGiDestinationWithFactory extends SimpleDestination {
+public class OSGiDestinationAdapter extends SimpleDestination {
 
-    private static final Logger log = Logger.getLogger(OSGiDestinationWithFactory.class);
+    private static final Logger log = Logger.getLogger(OSGiDestinationAdapter.class);
 
     @ServiceProperty(name = "ID")
     private String ID;
@@ -51,33 +50,31 @@ public class OSGiDestinationWithFactory extends SimpleDestination {
     @Requires(id = "service", proxy = false)
     private Service service;
 
-    @Requires(id = "factory", proxy = false)
-    private Factory factory;
+    @Requires(id = "adapter", proxy = false)
+    private Adapter adapter;
 
     //
-    protected OSGiDestinationWithFactory() {
+    protected OSGiDestinationAdapter() {
         super(null, new ArrayList<String>(), new XMap(), new ArrayList<String>(), null, null);
     }
 
 
-    @Property(name = "ID", mandatory = true)
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
-    @Property(name = "SCOPE", mandatory = false)
-    private void setScope(String scope) {
-        this.properties.put("scope", scope);
+    @Override
+    public Adapter getAdapter() {
+        return this.adapter;
     }
 
     @Validate
     public void start() {
-        log.debug("Start Destination: " + toString());
+        log.debug("Start OSGiDestinationAdapter: " + toString());
 
         if (service.findDestinationById(id) == null) {
-            this.properties.put("factory", factory.getId());
-
             service.addDestination(this);
             started = true;
         } else {
@@ -87,7 +84,7 @@ public class OSGiDestinationWithFactory extends SimpleDestination {
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Destination: " + toString());
+        log.debug("Stop OSGiDestinationAdapter: " + toString());
         if (started) {
             service.removeDestination(id);
             started = false;
@@ -99,7 +96,7 @@ public class OSGiDestinationWithFactory extends SimpleDestination {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiDestinationWithFactory that = (OSGiDestinationWithFactory) o;
+        OSGiDestinationAdapter that = (OSGiDestinationAdapter) o;
 
         if (this != that) return false;
 
@@ -108,11 +105,10 @@ public class OSGiDestinationWithFactory extends SimpleDestination {
 
     @Override
     public String toString() {
-        return "OSGiDestinationWithFactory{" +
-                "ID='" + id + '\'' +
-                ", SERVICE='" + service.getId() + '\'' +
-                ", FACTORY='" + factory.getId() + '\'' +
-                ", SCOPE='" + properties.get("scope") + '\'' +
+        return "Destination{" +
+                "id='" + id + '\'' +
+                ", service='" + service.getId() + '\'' +
+                ", adapter='" + adapter.getId() + '\'' +
                 '}';
     }
 }

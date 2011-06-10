@@ -35,7 +35,6 @@ import org.granite.gravity.Channel;
 import org.granite.gravity.osgi.adapters.jms.JMSClient;
 import org.granite.gravity.osgi.adapters.jms.JMSConstants;
 import org.granite.logging.Logger;
-import org.granite.osgi.ConfigurationHelper;
 import org.granite.osgi.service.GraniteAdapter;
 
 import flex.messaging.messages.AcknowledgeMessage;
@@ -50,8 +49,8 @@ public class JMSAdapter implements GraniteAdapter {
 
     private static final Logger log = Logger.getLogger(JMSAdapter.class);
 
-    @Requires
-    ConfigurationHelper confHelper;
+    @Requires(from = "org.granite.config.flex.Adapter")
+    private Factory adapterFactory;
 
     @Requires(specification = "org.granite.gravity.osgi.adapters.jms.JMSClient", optional = true)
     private Collection<JMSClient> clients;
@@ -66,7 +65,11 @@ public class JMSAdapter implements GraniteAdapter {
     private void start() throws MissingHandlerException, ConfigurationException, UnacceptableConfiguration {
         log.debug("Start JMSAdapter");
 
-        configuration = confHelper.newAdapter(getId());
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", getId());
+            configuration = adapterFactory.createComponentInstance(properties);
+        }
     }
 
     @Invalidate

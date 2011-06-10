@@ -3,9 +3,7 @@ package org.granite.osgi.test;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.log4j.Logger;
-import org.granite.config.flex.Service;
 import org.granite.config.flex.ServicesConfig;
-import org.granite.osgi.ConfigurationHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.CoreOptions;
@@ -26,7 +24,6 @@ import java.util.*;
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsNull.*;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.LibraryOptions.*;
 
@@ -37,6 +34,7 @@ public class ConfigurationTest {
     private final static Logger logger = Logger.getLogger(ConfigurationTest.class);
 
     OSGiHelper osgi;
+    IPOJOHelper ipojo;
 
     @Configuration()
     public Option[] config() {
@@ -62,6 +60,7 @@ public class ConfigurationTest {
 
     public void setup(BundleContext context) throws IOException {
         osgi = new OSGiHelper(context);
+        ipojo = new IPOJOHelper(context);
 
         // ConfigurationAdmin for logging
         osgi.waitForService(ConfigurationAdmin.class.getName(), null, 60000);
@@ -74,12 +73,13 @@ public class ConfigurationTest {
 
         // Needed for all the tests
         osgi.waitForService(ServicesConfig.class.getName(), null, 60000);
-        osgi.waitForService(ConfigurationHelper.class.getName(), null, 60000);
+
         logger.debug("Start!");
     }
 
     void unsetup() {
         osgi.dispose();
+        ipojo.dispose();
     }
 
     @Test
@@ -89,15 +89,16 @@ public class ConfigurationTest {
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        ServiceReference sr2 = osgi.getServiceReference("org.granite.osgi.ConfigurationHelper");
-        ConfigurationHelper ch = (ConfigurationHelper) osgi.getServiceObject(sr2);
         assertThat("Service: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance adapter1, adapter2, service1;
 
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "service1");
 
-        service1 = ch.newGraniteService("service1");
-
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
 
         // Correct start
         assertThat("Service: Start failed!", sc.findServiceById("service1"), is(notNullValue()));
@@ -107,9 +108,24 @@ public class ConfigurationTest {
         // Correct stop
         assertThat("Service: Stop failed!", sc.findServiceById("service1"), is(nullValue()));
 
-        adapter1 = ch.newAdapter("adapter1");
-        adapter2 = ch.newAdapter("adapter2");
-        service1 = ch.newGravityService("service1", "adapter1");
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "adapter1");
+            adapter1 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "adapter2");
+            adapter2 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            Collection<String> adapters = new LinkedList<String>();
+            properties.put("id", "service1");
+            properties.put("messageTypes", "flex.messaging.messages.AsyncMessage");
+            properties.put("defaultAdapter", "adapter1");
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
 
         // Complex test
         assertThat("Service: Service unavailable", sc.findServiceById("service1"), is(notNullValue()));
@@ -121,8 +137,13 @@ public class ConfigurationTest {
         // Test if the service stop it self (adapter dependency)
         assertThat("Service: Invalid service state", sc.findServiceById("service1"), is(nullValue()));
 
-        service1.dispose();
-        service1 = ch.newGravityService("service2", "adapter2");
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "service2");
+            properties.put("defaultAdapter", "adapter2");
+            service1.dispose();
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
 
         // Correct behaviour on stop & start
         assertThat("Service: Invalid restart state", sc.findServiceById("service2"), is(notNullValue()));
@@ -143,12 +164,16 @@ public class ConfigurationTest {
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        ServiceReference sr2 = osgi.getServiceReference("org.granite.osgi.ConfigurationHelper");
-        ConfigurationHelper ch = (ConfigurationHelper) osgi.getServiceObject(sr2);
         assertThat("Channel: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance channel;
-        channel = ch.newGraniteChannel("channel1", "/uri1", "");
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "channel1");
+            properties.put("uri", "/uri1");
+            properties.put("context", "");
+            channel = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
+        }
 
         assertThat("Channel: Start failed!", sc.findChannelById("channel1"), is(notNullValue()));
         assertTrue("Channel: Misconfiguration of ep uri", sc.findChannelById("channel1").getEndPoint().getUri().equals("/uri1"));
@@ -168,13 +193,14 @@ public class ConfigurationTest {
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        ServiceReference sr2 = osgi.getServiceReference("org.granite.osgi.ConfigurationHelper");
-        ConfigurationHelper ch = (ConfigurationHelper) osgi.getServiceObject(sr2);
         assertThat("Factory: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance factory;
-        factory = ch.newFactory("factory1");
-
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "factory1");
+            factory = ipojo.createComponentInstance("org.granite.config.flex.Factory", properties);
+        }
 
         assertThat("Factory: Start failed!", sc.findFactoryById("factory1"), is(notNullValue()));
 
@@ -192,88 +218,114 @@ public class ConfigurationTest {
 
         ServiceReference sr = osgi.getServiceReference("org.granite.config.flex.ServicesConfig");
         ServicesConfig sc = (ServicesConfig) osgi.getServiceObject(sr);
-        ServiceReference sr2 = osgi.getServiceReference("org.granite.osgi.ConfigurationHelper");
-        ConfigurationHelper ch = (ConfigurationHelper) osgi.getServiceObject(sr2);
         assertThat("Destination: ServicesConfig unavailable", sc, is(notNullValue()));
 
         ComponentInstance destination1, channel1, service1, adapter1, adapter2, factory;
 
-        adapter1 = ch.newAdapter("adapter1");
-        adapter2 = ch.newAdapter("adapter2");
-        service1 = ch.newGravityService("service1");
-        channel1 = ch.newGravityChannel("channel1", "/uri", "");
-        destination1 = ch.newGravityDestination("destination1", "service1");
-
-        Service ser = sc.findServiceById("service1");
-        assertThat("Destination: No service!", ser, is(notNullValue()));
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "adapter1");
+            adapter1 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "adapter2");
+            adapter2 = ipojo.createComponentInstance("org.granite.config.flex.Adapter", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "service1");
+            properties.put("messageTypes", "MS1");
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "channel1");
+            properties.put("uri", "/uri");
+            properties.put("context", "");
+            channel1 = ipojo.createComponentInstance("org.granite.config.flex.Channel", properties);
+        }
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "destination1");
+            properties.put("service", "service1");
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
 
         // Correct start
-        assertThat("Destination: No destination!", ser.findDestinationById("destination1"), is(notNullValue()));
+        assertThat("Destination: Start failed!", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
 
         destination1.dispose();
 
         // Correct stop
-        assertThat("Destination: Stop failed!", ser.findDestinationById("destination1"), is(nullValue()));
+        assertThat("Destination: Stop failed!", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
-        destination1 = ch.newGravityDestination("destination1", "service1");
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "destination1");
+            properties.put("service", "service1");
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
+
+        // Invalid find following messagetype
+        assertThat("Destination: Invalid configuration messagetypes ignored", sc.findDestinationById("MS2", "service1"), is(nullValue()));
+
         service1.dispose();
 
-        ser = sc.findServiceById("service1");
+        // Check stop of destination (service dependency)
+        assertThat("Destination: Invalid destination state 1", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
-        // Check stop of service
-        assertThat("Destination: Invalid service state", ser, is(nullValue()));
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "service1");
+            properties.put("defaultAdapter", "adapter1");
+            properties.put("messageTypes", "MS1");
+            service1 = ipojo.createComponentInstance("org.granite.config.flex.Service", properties);
+        }
 
-        service1 = ch.newGravityService("service1", "adapter1");
-
-        ser = sc.findServiceById("service1");
         // Check adapter of destination (service default adapter)
-        assertThat("Destination: no adapter 1", ser.findDestinationById("destination1").getAdapter(), is(notNullValue()));
-        assertTrue("Destination: Invalid adapter 1", ser.findDestinationById("destination1").getAdapter().getId().equals("adapter1"));
+        assertThat("Destination: no adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
+        assertTrue("Destination: Invalid adapter 1", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter1"));
 
-        destination1.dispose();
-        destination1 = ch.newGravityDestination("destination1", "service1", "adapter2");
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "destination1");
+            properties.put("adapter", "adapter2");
+            properties.put("service", "service1");
+            destination1.dispose();
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
 
-        ser = sc.findServiceById("service1");
         // Check if destination's adapter overload default service adapter
-        assertThat("Destination: no adapter 2", ser.findDestinationById("destination1").getAdapter(), is(notNullValue()));
-        assertTrue("Destination: Invalid adapter 2", ser.findDestinationById("destination1").getAdapter().getId().equals("adapter2"));
+        assertThat("Destination: no adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter(), is(notNullValue()));
+        assertTrue("Destination: Invalid adapter 2", sc.findDestinationById("MS1", "destination1").getAdapter().getId().equals("adapter2"));
 
         adapter2.dispose();
 
         // Check stop of destination (adapter dependency)
         assertThat("Destination: Invalid destination state 2", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
-        destination1.dispose();
-        service1.dispose();
 
-        service1 = ch.newGraniteService("service1");
-        ser = sc.findServiceById("service1");
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "destination1");
+            properties.put("factory", "factory1");
+            properties.put("service", "service1");
+            destination1.dispose();
+            destination1 = ipojo.createComponentInstance("org.granite.config.flex.Destination", properties);
+        }
 
-        // Check start of service
-        assertThat("Destination: No service 2!", ser, is(notNullValue()));
+        // Check stop of destination (factory dependency)
+        assertThat("Destination: Invalid destination state 3", sc.findDestinationById("MS1", "destination1"), is(nullValue()));
 
-        //
-        // Granite
-        //
+        {
+            Dictionary properties = new Hashtable();
+            properties.put("id", "factory1");
+            factory = ipojo.createComponentInstance("org.granite.config.flex.Factory", properties);
+        }
 
-        destination1 = ch.newGraniteDestination("destination1", "service1");
-
-        ser = sc.findServiceById("service1");
-
-        // Check start of destination
-        assertThat("Destination: Invalid destination state 3", ser.findDestinationById("destination1"), is(notNullValue()));
-
-        destination1.dispose();
-        destination1 = ch.newGraniteDestination("destination1", "service1", "factory1", ConfigurationHelper.SCOPE.SESSION);
-
-        ser = sc.findServiceById("service1");
-
-        // Check stop of destination
-        assertThat("Destination: Invalid destination state 4", ser.findDestinationById("destination1"), is(nullValue()));
-        factory = ch.newFactory("factory1");
-
-        // Check stop of destination
-        assertThat("Destination: Invalid destination state 5", ser.findDestinationById("destination1"), is(notNullValue()));
+        // Check stop of destination (factory dependency)
+        assertThat("Destination: Invalid destination state 4", sc.findDestinationById("MS1", "destination1"), is(notNullValue()));
 
         destination1.dispose();
         factory.dispose();

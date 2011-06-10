@@ -18,86 +18,77 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
-
-import org.granite.config.flex.Adapter;
-import org.granite.config.flex.Destination;
-import org.granite.config.flex.ServicesConfig;
-import org.granite.config.flex.SimpleService;
+import org.granite.config.flex.Factory;
+import org.granite.config.flex.Service;
+import org.granite.config.flex.SimpleDestination;
 import org.granite.logging.Logger;
+import org.granite.util.XMap;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 @Component
 @Provides
-public class OSGiServiceWithAdapter extends SimpleService {
+public class OSGiDestinationFactory extends SimpleDestination {
 
-    private static final Logger log = Logger.getLogger(OSGiServiceWithAdapter.class);
+    private static final Logger log = Logger.getLogger(OSGiDestinationFactory.class);
 
     @ServiceProperty(name = "ID")
     private String ID;
 
-    @Requires(proxy = false)
-    private ServicesConfig servicesConfig;
-
-    @Requires(id = "defaultAdapter", proxy = false)
-    private Adapter adapter;
-
     //
     private boolean started = false;
 
+    @Requires(id = "service", proxy = false)
+    private Service service;
+
+    @Requires(id = "factory", proxy = false)
+    private Factory factory;
+
     //
-    public OSGiServiceWithAdapter() {
-        super(null, null, null, null, new HashMap<String, Adapter>(), new HashMap<String, Destination>());
+    protected OSGiDestinationFactory() {
+        super(null, new ArrayList<String>(), new XMap(), new ArrayList<String>(), null, null);
     }
 
-    @Property(name = "ID", mandatory = true)
+
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
-    @Property(name = "MESSAGETYPES", mandatory = true)
-    private void setMessageTypes(String messageTypes) {
-        this.messageTypes = messageTypes;
-    }
-
-    @Property(name = "CLASS", mandatory = false, value = "flex.messaging.services.RemotingService")
-    private void setClass(String className) {
-        this.className = className;
+    @Property(name = "scope", mandatory = false)
+    private void setScope(String scope) {
+        this.properties.put("scope", scope);
     }
 
     @Validate
     public void start() {
-        log.debug("Start Service: " + toString());
+        log.debug("Start OSGiDestinationFactory: " + toString());
 
-        if (servicesConfig.findServiceById(id) == null) {
-            servicesConfig.addService(this);
+        if (service.findDestinationById(id) == null) {
+            this.properties.put("factory", factory.getId());
 
-            // Clear destinations
-            destinations.clear();
-
-            this.defaultAdapter = adapter;
+            service.addDestination(this);
             started = true;
         } else {
-            log.error("Service \"" + id + "\" already registered");
+            log.error("Destination \"" + id + "\" already registered");
         }
     }
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Service: " + toString());
-        if (servicesConfig != null) {
-            servicesConfig.removeService(this.id);
+        log.debug("Stop OSGiDestinationFactory: " + toString());
+        if (started) {
+            service.removeDestination(id);
             started = false;
         }
     }
@@ -107,7 +98,7 @@ public class OSGiServiceWithAdapter extends SimpleService {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiServiceWithAdapter that = (OSGiServiceWithAdapter) o;
+        OSGiDestinationFactory that = (OSGiDestinationFactory) o;
 
         if (this != that) return false;
 
@@ -116,11 +107,11 @@ public class OSGiServiceWithAdapter extends SimpleService {
 
     @Override
     public String toString() {
-        return "OSGiServiceWithAdapter{" +
-                "ID=" + id +
-                ", CLASS=" + className +
-                ", MESSAGETYPES=" + messageTypes +
-                ", DEFAULT_ADAPTER='" + adapter.getId() + '\'' +
+        return "Destination{" +
+                "id='" + id + '\'' +
+                ", service='" + service.getId() + '\'' +
+                ", factory='" + factory.getId() + '\'' +
+                ", scope='" + properties.get("scope") + '\'' +
                 '}';
     }
 }

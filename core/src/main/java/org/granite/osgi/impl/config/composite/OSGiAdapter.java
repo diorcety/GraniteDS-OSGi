@@ -18,78 +18,50 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
-import org.granite.config.flex.Adapter;
-import org.granite.config.flex.Service;
-import org.granite.config.flex.SimpleDestination;
+import org.granite.config.flex.SimpleAdapter;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-import java.util.ArrayList;
-
-@Component
+@Component(name = "org.granite.config.flex.Adapter")
 @Provides
-public class OSGiDestinationWithAdapter extends SimpleDestination {
+public class OSGiAdapter extends SimpleAdapter {
 
-    private static final Logger log = Logger.getLogger(OSGiDestinationWithAdapter.class);
+    private static final Logger log = Logger.getLogger(OSGiAdapter.class);
+
+    private boolean started = false;
 
     @ServiceProperty(name = "ID")
     private String ID;
 
     //
-    private boolean started = false;
-
-    @Requires(id="service", proxy = false)
-    private Service service;
-
-    @Requires(id = "adapter", proxy = false)
-    private Adapter adapter;
-
-    //
-    protected OSGiDestinationWithAdapter() {
-        super(null, new ArrayList<String>(), new XMap(), new ArrayList<String>(), null, null);
+    protected OSGiAdapter() {
+        super(null, null, XMap.EMPTY_XMAP);
     }
 
-
-    @Property(name = "ID", mandatory = true)
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
-    @Override
-    public Adapter getAdapter() {
-        return this.adapter;
-    }
-
     @Validate
     public void start() {
-        log.debug("Start Destination: " + toString());
-
-        if (service.findDestinationById(id) == null) {
-            service.addDestination(this);
-            started = true;
-        } else {
-            log.error("Destination \"" + id + "\" already registered");
-        }
+        log.debug("Start Adapter: " + toString());
+        started = true;
     }
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Destination: " + toString());
-        if (started) {
-            service.removeDestination(id);
-            started = false;
-        }
+        log.debug("Stop Adapter: " + toString());
+        started = false;
     }
 
     @Override
@@ -97,7 +69,7 @@ public class OSGiDestinationWithAdapter extends SimpleDestination {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiDestinationWithAdapter that = (OSGiDestinationWithAdapter) o;
+        OSGiAdapter that = (OSGiAdapter) o;
 
         if (this != that) return false;
 
@@ -106,10 +78,9 @@ public class OSGiDestinationWithAdapter extends SimpleDestination {
 
     @Override
     public String toString() {
-        return "OSGiDestinationWithAdapter{" +
-                "ID='" + id + '\'' +
-                ", SERVICE='" + service.getId() + '\'' +
-                ", ADAPTER='" + adapter.getId() + '\'' +
+        return "Adapter{" +
+                "id=" + id +
                 '}';
     }
 }
+

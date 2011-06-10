@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.Factory;
@@ -41,9 +41,9 @@ import java.util.Hashtable;
 
 @Component
 @Provides
-public class OSGiGraniteChannel extends SimpleChannel {
+public class OSGiChannelGranite extends SimpleChannel {
 
-    private static final Logger log = Logger.getLogger(OSGiGraniteChannel.class);
+    private static final Logger log = Logger.getLogger(OSGiChannelGranite.class);
 
     @Requires(proxy = false)
     private ServicesConfig servicesConfig;
@@ -54,56 +54,39 @@ public class OSGiGraniteChannel extends SimpleChannel {
     @Requires(from = "org.granite.osgi.impl.OSGiGraniteMessageServlet")
     Factory servletBuilder;
 
-    //
-    public String ENDPOINT_URI;
-
-    public String ENDPOINT_CLASS;
-
     private boolean started = false;
 
     private ComponentInstance servlet;
 
     //
-    protected OSGiGraniteChannel() {
-        super(null, null, null, XMap.EMPTY_XMAP);
+    protected OSGiChannelGranite() {
+        super(null, "mx.messaging.channels.AMFChannel", null, XMap.EMPTY_XMAP);
     }
 
-    @Property(name = "ID", mandatory = true)
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
     }
 
-    @Property(name = "CONTEXT", mandatory = true)
-    private String CONTEXT;
+    @Property(name = "context", mandatory = true)
+    private String context;
 
-    @Property(name = "CLASS", mandatory = true)
-    private void setClass(String className) {
-        this.className = className;
-    }
-
-    @Property(name = "ENDPOINT_URI", mandatory = true)
+    @Property(name = "uri", mandatory = true)
     private void setEndPointURI(String epURI) {
-        this.ENDPOINT_URI = epURI;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
-    }
-
-    @Property(name = "ENDPOINT_CLASS", mandatory = false, value = "flex.messaging.endpoints.AMFEndpoint")
-    private void setEndPointClass(String epClass) {
-        this.ENDPOINT_CLASS = epClass;
-        this.endPoint = new SimpleEndPoint(ENDPOINT_URI, ENDPOINT_CLASS);
+        this.endPoint = new SimpleEndPoint(epURI, "flex.messaging.endpoints.AMFEndpoint");
     }
 
     @Validate
     public void start() {
-        log.debug("Start Channel: " + toString());
+        log.debug("Start OSGiChannelGranite: " + toString());
 
         if (servicesConfig.findChannelById(id) == null) {
             try {
                 Dictionary properties = new Hashtable();
-                properties.put("URI", ENDPOINT_URI);
+                properties.put("URI", endPoint.getUri());
                 Dictionary filters = new Hashtable();
-                filters.put("context", "(ID=" + CONTEXT + ")");
+                filters.put("context", "(ID=" + context + ")");
                 properties.put("requires.filters", filters);
 
                 servlet = servletBuilder.createComponentInstance(properties);
@@ -120,7 +103,7 @@ public class OSGiGraniteChannel extends SimpleChannel {
 
     @Invalidate
     public void stop() {
-        log.debug("Stop Channel: " + toString());
+        log.debug("Stop OSGiChannelGranite: " + toString());
         if (started) {
             servlet.dispose();
             servicesConfig.removeChannel(id);
@@ -133,7 +116,7 @@ public class OSGiGraniteChannel extends SimpleChannel {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OSGiGraniteChannel that = (OSGiGraniteChannel) o;
+        OSGiChannelGranite that = (OSGiChannelGranite) o;
 
         if (this != that) return false;
 
@@ -142,11 +125,11 @@ public class OSGiGraniteChannel extends SimpleChannel {
 
     @Override
     public String toString() {
-        return "OSGiGraniteChannel{" +
-                "ID=" + id +
-                ", CLASS='" + className + '\'' +
-                ", ENDPOINT_CLASS='" + ENDPOINT_CLASS + '\'' +
-                ", ENDPOINT_URI='" + ENDPOINT_URI + '\'' +
+        return "GraniteChannel{" +
+                "id=" + id +
+                ", uri=" + endPoint.getUri() +
+                ", context=" + context +
+                ", gravity=false" +
                 '}';
     }
 }

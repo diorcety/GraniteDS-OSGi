@@ -18,23 +18,21 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.osgi.impl.config;
+package org.granite.osgi.impl.config.composite;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
-
 import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
 import org.granite.util.XMap;
 
-@Component
+@Component(name = "org.granite.config.flex.Factory")
 @Provides
 public class OSGiFactory extends SimpleFactory {
 
@@ -54,7 +52,7 @@ public class OSGiFactory extends SimpleFactory {
         super(null, null, XMap.EMPTY_XMAP);
     }
 
-    @Property(name = "ID", mandatory = true)
+    @Property(name = "id", mandatory = true)
     private void setId(String id) {
         this.id = id;
         this.ID = id;
@@ -95,8 +93,8 @@ public class OSGiFactory extends SimpleFactory {
 
     @Override
     public String toString() {
-        return "OSGiFactory{" +
-                "ID=" + id +
+        return "Factory{" +
+                "id=" + id +
                 '}';
     }
 }
