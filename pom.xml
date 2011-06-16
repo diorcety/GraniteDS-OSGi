@@ -16,6 +16,7 @@
         <project.build.source>1.6</project.build.source>
         <project.build.target>1.6</project.build.target>
 
+        <graniteds.version>2.2.1.GA</graniteds.version>
         <osgi.core.version>4.2.0</osgi.core.version>
         <osgi.compendium.version>4.2.0</osgi.compendium.version>
         <ipojo.version>1.8.0</ipojo.version>
