@@ -9,7 +9,7 @@
     <groupId>org.graniteds-osgi</groupId>
     <artifactId>granite</artifactId>
 
-    <version>1.0.0-M1</version>
+    <version>1.0.0-M2-SNAPSHOT</version>
 
     <name>GraniteDS - OSGi</name>
 

@@ -37,7 +37,6 @@ import org.granite.messaging.service.security.SecurityServiceException;
 import org.granite.osgi.service.GraniteSecurity;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Component
