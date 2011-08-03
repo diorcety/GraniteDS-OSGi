@@ -107,7 +107,7 @@ class OSGiMessageResponder extends MessageResponder
     {
 
         // Unpack the body of a ByteArray
-        if (msg.headers[BYTEARRAY_BODY_HEADER] && msg.body is ByteArray) {
+        if (msg && msg.headers[BYTEARRAY_BODY_HEADER] && msg.body is ByteArray) {
             GraniteClassRegistry.useClasses(msg.destination);
 	        msg.body = ByteArray(msg.body).readObject();
             delete msg.headers[BYTEARRAY_BODY_HEADER];

@@ -34,7 +34,7 @@ public class GravityOSGiChannel extends GravityChannel {
     }
 
     override internal function callResponder(responder:MessageResponder, response:IMessage):void {
-        if (response.headers[BYTEARRAY_BODY_HEADER] && response.body is ByteArray) {
+        if (responder && response.headers[BYTEARRAY_BODY_HEADER] && response.body is ByteArray) {
             GraniteClassRegistry.useClasses(response.destination);
             response.body = ByteArray(response.body).readObject();
             delete response.headers[BYTEARRAY_BODY_HEADER];
