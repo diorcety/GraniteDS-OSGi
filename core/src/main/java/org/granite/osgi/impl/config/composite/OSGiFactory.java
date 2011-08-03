@@ -30,9 +30,10 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.config.flex.SimpleFactory;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 import org.granite.util.XMap;
 
-@Component(name = "org.granite.config.flex.Factory")
+@Component(name = GraniteConstants.FACTORY)
 @Provides
 public class OSGiFactory extends SimpleFactory {
 

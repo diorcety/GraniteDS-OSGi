@@ -18,15 +18,17 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity.osgi.adapters.ea;
+package org.granite.gravity.osgi.adapters.jms.impl;
 
-public final class EAConstants {
+import flex.messaging.messages.Message;
+import org.granite.gravity.Channel;
 
-    private EAConstants() {
+public interface JMSClient {
+    public String getDestination();
 
-    }
+    public void subscribe(Channel channel, Message message) throws Exception;
 
-    public final static String CONFIGURATION_ID = "org.granite.gravity.osgi.adapters.EA";
-    public final static String ADAPTER_ID = "gravity-ea";
-    public final static String DATA = "user.data";
+    public void unsubscribe(Channel channel, Message message) throws Exception;
+
+    public void send(Message message) throws Exception;
 }

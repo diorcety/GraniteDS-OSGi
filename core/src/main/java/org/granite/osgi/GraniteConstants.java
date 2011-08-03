@@ -18,17 +18,12 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity.osgi.adapters.jms;
+package org.granite.osgi;
 
-import flex.messaging.messages.Message;
-import org.granite.gravity.Channel;
-
-public interface JMSClient {
-    public String getDestination();
-
-    public void subscribe(Channel channel, Message message) throws Exception;
-
-    public void unsubscribe(Channel channel, Message message) throws Exception;
-
-    public void send(Message message) throws Exception;
+public class GraniteConstants {
+    public static final String ADAPTER = "org.granite.config.flex.Adapter";
+    public static final String CHANNEL = "org.granite.config.flex.Channel";
+    public static final String FACTORY = "org.granite.config.flex.Factory";
+    public static final String SERVICE = "org.granite.config.flex.Service";
+    public static final String DESTINATION = "org.granite.config.flex.Destination";
 }

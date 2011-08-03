@@ -31,11 +31,12 @@ import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.flex.ServicesConfig;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-@Component(name = "org.granite.config.flex.Service")
+@Component(name = GraniteConstants.SERVICE)
 public class OSGiService {
     private static final Logger log = Logger.getLogger(OSGiService.class);
 

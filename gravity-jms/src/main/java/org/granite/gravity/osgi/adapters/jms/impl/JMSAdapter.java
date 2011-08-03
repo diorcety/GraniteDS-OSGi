@@ -23,6 +23,7 @@ package org.granite.gravity.osgi.adapters.jms.impl;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.LinkedList;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -32,9 +33,9 @@ import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.*;
 
 import org.granite.gravity.Channel;
-import org.granite.gravity.osgi.adapters.jms.JMSClient;
 import org.granite.gravity.osgi.adapters.jms.JMSConstants;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 import org.granite.osgi.service.GraniteAdapter;
 
 import flex.messaging.messages.AcknowledgeMessage;
@@ -49,11 +50,10 @@ public class JMSAdapter implements GraniteAdapter {
 
     private static final Logger log = Logger.getLogger(JMSAdapter.class);
 
-    @Requires(from = "org.granite.config.flex.Adapter")
+    @Requires(from = GraniteConstants.ADAPTER)
     private Factory adapterFactory;
 
-    @Requires(specification = "org.granite.gravity.osgi.adapters.jms.JMSClient", optional = true)
-    private Collection<JMSClient> clients;
+    private Collection<JMSClient> clients = new LinkedList<JMSClient>();
 
     private ComponentInstance configuration;
 
@@ -78,10 +78,26 @@ public class JMSAdapter implements GraniteAdapter {
         configuration.dispose();
     }
 
+    @Bind(aggregate = true, optional = true)
+    private void bindClient(JMSClient client) {
+        synchronized (clients) {
+            clients.add(client);
+        }
+    }
+
+    @Unbind
+    private void unbindClient(JMSClient client) {
+        synchronized (clients) {
+            clients.remove(client);
+        }
+    }
+
     private JMSClient getJMSClient(String destination) {
-        for (JMSClient client : clients) {
-            if (client.getDestination().equals(destination))
-                return client;
+        synchronized (clients) {
+            for (JMSClient client : clients) {
+                if (client.getDestination().equals(destination))
+                    return client;
+            }
         }
 
         throw new RuntimeException("Can't found the JMS destination: " + destination);

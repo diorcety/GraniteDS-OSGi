@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 import org.granite.gravity.Channel;
 import org.granite.gravity.MessageReceivingException;
-import org.granite.gravity.osgi.adapters.jms.JMSClient;
+import org.granite.gravity.osgi.adapters.jms.JMSConstants;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.ServiceException;
 
@@ -52,7 +52,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-@Component(name = "org.granite.gravity.osgi.adapters.jms.configuration")
+@Component(name = JMSConstants.CONFIGURATION_ID)
 @Provides
 public class JMSClientImpl implements JMSClient {
 

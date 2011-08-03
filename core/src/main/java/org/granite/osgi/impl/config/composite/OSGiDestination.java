@@ -29,11 +29,12 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-@Component(name = "org.granite.config.flex.Destination")
+@Component(name = GraniteConstants.DESTINATION)
 public class OSGiDestination {
     private static final Logger log = Logger.getLogger(OSGiDestination.class);
 

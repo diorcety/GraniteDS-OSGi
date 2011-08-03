@@ -28,9 +28,10 @@ import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.config.flex.SimpleAdapter;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 import org.granite.util.XMap;
 
-@Component(name = "org.granite.config.flex.Adapter")
+@Component(name = GraniteConstants.ADAPTER)
 @Provides
 public class OSGiAdapter extends SimpleAdapter {
 

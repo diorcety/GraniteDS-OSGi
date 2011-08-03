@@ -34,14 +34,15 @@ import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.*;
 
 import org.granite.gravity.Channel;
-import org.granite.gravity.osgi.adapters.ea.EAClient;
 import org.granite.gravity.osgi.adapters.ea.EAConstants;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 import org.granite.osgi.service.GraniteAdapter;
 
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.LinkedList;
 
 @Component
 @Instantiate
@@ -49,11 +50,10 @@ import java.util.Hashtable;
 public class EAAdapter implements GraniteAdapter {
     private static final Logger log = Logger.getLogger(EAAdapter.class);
 
-    @Requires(from = "org.granite.config.flex.Adapter")
+    @Requires(from = GraniteConstants.ADAPTER)
     private Factory adapterFactory;
 
-    @Requires(specification = "org.granite.gravity.osgi.adapters.ea.EAClient", optional = true)
-    private Collection<EAClient> clients;
+    private Collection<EAClient> clients = new LinkedList<EAClient>();
 
     private ComponentInstance configuration;
 
@@ -78,10 +78,26 @@ public class EAAdapter implements GraniteAdapter {
         configuration.dispose();
     }
 
+    @Bind(aggregate = true, optional = true)
+    private void bindClient(EAClient client) {
+        synchronized (clients) {
+            clients.add(client);
+        }
+    }
+
+    @Unbind
+    private void unbindClient(EAClient client) {
+        synchronized (clients) {
+            clients.remove(client);
+        }
+    }
+
     private EAClient getClient(String destination) {
-        for (EAClient client : clients) {
-            if (client.getDestination().equals(destination))
-                return client;
+        synchronized (clients) {
+            for (EAClient client : clients) {
+                if (client.getDestination().equals(destination))
+                    return client;
+            }
         }
 
         throw new RuntimeException("Can't found the EventAdmin destination: " + destination);

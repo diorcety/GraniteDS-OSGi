@@ -28,11 +28,12 @@ import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.logging.Logger;
+import org.granite.osgi.GraniteConstants;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-@Component(name = "org.granite.config.flex.Channel")
+@Component(name = GraniteConstants.CHANNEL)
 public class OSGiChannel {
     private static final Logger log = Logger.getLogger(OSGiChannel.class);
 

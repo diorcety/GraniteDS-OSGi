@@ -32,7 +32,6 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.granite.gravity.Channel;
 import org.granite.gravity.MessageReceivingException;
-import org.granite.gravity.osgi.adapters.ea.EAClient;
 import org.granite.gravity.osgi.adapters.ea.EAConstants;
 import org.granite.logging.Logger;
 import org.granite.messaging.service.ServiceException;
@@ -50,7 +49,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-@Component(name = "org.granite.gravity.osgi.adapters.ea.configuration")
+@Component(name = EAConstants.CONFIGURATION_ID)
 @Provides
 public class EAClientImpl implements EAClient {
     private static final Logger log = Logger.getLogger(EAClientImpl.class);

@@ -18,7 +18,7 @@
   along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.granite.gravity.osgi.adapters.ea;
+package org.granite.gravity.osgi.adapters.ea.impl;
 
 import flex.messaging.messages.Message;
 

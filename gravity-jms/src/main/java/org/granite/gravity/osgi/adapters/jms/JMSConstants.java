@@ -25,5 +25,6 @@ public final class JMSConstants {
     private JMSConstants() {
     }
 
+    public final static String CONFIGURATION_ID = "org.granite.gravity.osgi.adapters.JMS";
     public final static String ADAPTER_ID = "gravity-jms";
 }
