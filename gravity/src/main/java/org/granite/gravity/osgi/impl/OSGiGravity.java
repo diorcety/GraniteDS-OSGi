@@ -76,7 +76,7 @@ import flex.messaging.messages.Message;
 @Component
 @Instantiate
 @Provides
-public class OSGiGravity implements Gravity{
+public class OSGiGravity implements Gravity {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields.
@@ -669,8 +669,13 @@ public class OSGiGravity implements Gravity{
 
         ServiceAdapter adapter = adapterFactory.getServiceAdapter(message);
 
-        reply = (AcknowledgeMessage) adapter.manage(channel, message);
-
+        if (adapter != null) {
+            reply = (AcknowledgeMessage) adapter.manage(channel, message);
+        } else {
+            // Simulate the unsubscribe (avoid exception when a unsubscribe call comes after adapter departure)
+            log.warn("Can't find adapter for destination: " + message.getDestination());
+            reply = new AcknowledgeMessage(message);
+        }
         postManage(channel);
 
         reply.setDestination(message.getDestination());
